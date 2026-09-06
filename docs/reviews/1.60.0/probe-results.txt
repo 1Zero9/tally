@@ -1,0 +1,8 @@
+RUN  v4.1.11 /Users/stephencranfield/Projects/tally
+
+{"parse10000Ms":24.800618999999983,"match2000Against500Ms":98.99388199999999}
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  20:22:26
+   Duration  970ms (transform 274ms, setup 0ms, import 466ms, tests 177ms, environment 0ms)

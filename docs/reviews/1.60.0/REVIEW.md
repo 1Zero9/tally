@@ -29,7 +29,7 @@ This is a local source and synthetic runtime review, not evidence of an active c
 
 Measurements are single local runs under other review work, not benchmark distributions or mobile-device timings. Browser DOM counts in the stress output are **after filtering**, not peak rendered list size. An early stress fixture omitted required `paymentMethod`, causing a fixture-induced search crash; it was corrected and the final run above is the valid result. Screenshot animations were disabled for stable captures.
 
-Evidence: [test plan](TEST-PLAN.md), [route probes](review.probe.ts), [probe output](probe-results.log), [HTTP results](http-results.json), [browser results](browser-results.json), [large-data results](browser-stress-results.json).
+Evidence: [test plan](TEST-PLAN.md), [route probes](review.probe.ts), [probe output](probe-results.txt), [HTTP results](http-results.json), [browser results](browser-results.json), [large-data results](browser-stress-results.json).
 
 ## Prioritized defects
 

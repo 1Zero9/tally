@@ -1,0 +1,18 @@
+> tally@1.60.0 test
+> vitest run
+
+
+ RUN  v4.1.11 /Users/stephencranfield/Projects/tally
+
+
+ Test Files  6 passed (6)
+      Tests  97 passed (97)
+   Start at  20:26:24
+   Duration  610ms (transform 882ms, setup 0ms, import 1.10s, tests 128ms, environment 1ms)
+
+
+ESLint: exit 0
+TypeScript --noEmit: exit 0
+Next.js 15.5.25 production build: exit 0; 44 pages generated.
+npm audit: 0 reported vulnerabilities; 504 dependency entries.
+Build and audit details recorded from tool execution during this review.
