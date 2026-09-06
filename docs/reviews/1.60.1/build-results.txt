@@ -1,0 +1,81 @@
+▲ Next.js 15.5.25
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.9s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/44) ...
+   Generating static pages (11/44)
+   Generating static pages (22/44)
+   Generating static pages (33/44)
+ ✓ Generating static pages (44/44)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                              Size  First Load JS
+┌ ○ /                                                  107 kB         218 kB
+├ ○ /_not-found                                         996 B         104 kB
+├ ○ /ai-transparency                                    197 B         111 kB
+├ ƒ /api/accounts                                       247 B         103 kB
+├ ƒ /api/accounts/[id]/compare-statement                247 B         103 kB
+├ ƒ /api/accounts/[id]/reveal                           247 B         103 kB
+├ ƒ /api/accounts/match-statement                       247 B         103 kB
+├ ƒ /api/admin/audit-log                                247 B         103 kB
+├ ƒ /api/admin/backup                                   247 B         103 kB
+├ ƒ /api/assistant/ask                                  247 B         103 kB
+├ ƒ /api/assistant/scan-receipt                         247 B         103 kB
+├ ƒ /api/auth/logout                                    247 B         103 kB
+├ ƒ /api/auth/me                                        247 B         103 kB
+├ ƒ /api/auth/send-code                                 247 B         103 kB
+├ ƒ /api/auth/sessions                                  247 B         103 kB
+├ ƒ /api/auth/verify-code                               247 B         103 kB
+├ ƒ /api/budgets                                        247 B         103 kB
+├ ƒ /api/bugs                                           247 B         103 kB
+├ ƒ /api/categories                                     247 B         103 kB
+├ ƒ /api/categories/[id]                                247 B         103 kB
+├ ƒ /api/cron/backup                                    247 B         103 kB
+├ ƒ /api/cron/reminders                                 247 B         103 kB
+├ ƒ /api/exchange-rate                                  247 B         103 kB
+├ ƒ /api/exchange-rate-cache                            247 B         103 kB
+├ ƒ /api/expenses                                       247 B         103 kB
+├ ƒ /api/expenses/[id]/draft-email                      247 B         103 kB
+├ ƒ /api/expenses/[id]/send-vendor-email                247 B         103 kB
+├ ƒ /api/goals                                          247 B         103 kB
+├ ƒ /api/history                                        247 B         103 kB
+├ ƒ /api/income                                         247 B         103 kB
+├ ƒ /api/insights/money-flow                            247 B         103 kB
+├ ƒ /api/insights/summary                               247 B         103 kB
+├ ƒ /api/map                                            247 B         103 kB
+├ ƒ /api/map/edges                                      247 B         103 kB
+├ ƒ /api/map/edges/[id]                                 247 B         103 kB
+├ ƒ /api/map/nodes                                      247 B         103 kB
+├ ƒ /api/map/nodes/[id]                                 247 B         103 kB
+├ ƒ /api/reports/transactions                           247 B         103 kB
+├ ƒ /api/statements                                     247 B         103 kB
+├ ƒ /api/statements/[id]                                247 B         103 kB
+├ ƒ /api/statements/[id]/recheck                        247 B         103 kB
+├ ƒ /api/statements/[id]/transactions                   247 B         103 kB
+├ ƒ /api/statements/[id]/transactions/[txId]/resolve    247 B         103 kB
+├ ƒ /api/statements/[id]/transactions/group-resolve     247 B         103 kB
+├ ƒ /api/statements/[id]/undo                           247 B         103 kB
+├ ƒ /api/statements/extract                             247 B         103 kB
+├ ƒ /api/transfers                                      247 B         103 kB
+├ ƒ /api/users                                          247 B         103 kB
+├ ƒ /api/workspace                                      247 B         103 kB
+├ ƒ /api/workspace/invite                               247 B         103 kB
+├ ƒ /api/workspace/join                                 247 B         103 kB
+├ ○ /guide                                              197 B         111 kB
+├ ○ /privacy                                            197 B         111 kB
+├ ○ /technical-overview                                 197 B         111 kB
+└ ○ /terms                                              197 B         111 kB
++ First Load JS shared by all                          103 kB
+  ├ chunks/1255-7316b50163a428e6.js                   46.4 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js               54.2 kB
+  └ other shared chunks (total)                       1.93 kB
+
+
+ƒ Middleware                                          34.2 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

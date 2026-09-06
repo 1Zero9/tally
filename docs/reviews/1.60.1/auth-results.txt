@@ -1,0 +1,7 @@
+RUN  v4.1.11 /Users/stephencranfield/Projects/tally
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  21:14:20
+   Duration  704ms (transform 154ms, setup 0ms, import 302ms, tests 78ms, environment 0ms)
