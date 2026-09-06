@@ -54,6 +54,8 @@ import { useSensitiveReveal } from '@/src/hooks/useSensitiveReveal';
 import { useIdleLogout } from '@/src/hooks/useIdleLogout';
 import { ChangelogModal } from '@/src/components/ChangelogModal';
 import { ScanReceiptModal } from '@/src/components/ScanReceiptModal';
+import { useActionFeedback } from '@/src/hooks/useActionFeedback';
+import { CheckCircle2, AlertTriangle, X as XIcon } from 'lucide-react';
 
 export default function TallyPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking
@@ -71,6 +73,7 @@ export default function TallyPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [moneyMapView, setMoneyMapView] = useState<'auto' | 'custom'>('auto');
+  const { feedback, dismissFeedback, runMutation } = useActionFeedback();
 
   const SPENDING_CHIPS: { id: TabId; label: string }[] = [
     { id: 'all', label: 'All spending' },
@@ -372,171 +375,116 @@ export default function TallyPage() {
   const handleToggleActive = async (id: string) => {
     const item = expenses.find((e) => e.id === id);
     if (!item) return;
-
     const updatedActive = !item.isActive;
-    // Optimistic update
-    setExpenses((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isActive: updatedActive } : e))
+    await runMutation(
+      () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isActive: updatedActive }) }),
+      {
+        optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isActive: updatedActive } : e))),
+        rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
+        errorMessage: 'Failed to update status — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/expenses', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isActive: updatedActive }),
-      });
-    } catch (err) {
-      console.error('Failed to update status in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
   // Activate a planned/pending expense — it starts counting towards totals, bills and insights
   const handleActivatePending = async (id: string) => {
     const item = expenses.find((e) => e.id === id);
     if (!item) return;
-
-    setExpenses((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isPending: false, isActive: true } : e))
+    await runMutation(
+      () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isPending: false, isActive: true }) }),
+      {
+        optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isPending: false, isActive: true } : e))),
+        rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
+        errorMessage: 'Failed to activate planned expense — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/expenses', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isPending: false, isActive: true }),
-      });
-    } catch (err) {
-      console.error('Failed to activate planned expense in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
   // Toggle paid/unpaid status with PostgreSQL sync
   const handleTogglePaid = async (id: string) => {
     const item = expenses.find((e) => e.id === id);
     if (!item) return;
-
     const updatedPaid = !item.isPaidThisCycle;
-    // Optimistic update
-    setExpenses((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isPaidThisCycle: updatedPaid } : e))
+    await runMutation(
+      () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isPaidThisCycle: updatedPaid }) }),
+      {
+        optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isPaidThisCycle: updatedPaid } : e))),
+        rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
+        errorMessage: 'Failed to update paid status — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/expenses', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isPaidThisCycle: updatedPaid }),
-      });
-    } catch (err) {
-      console.error('Failed to update paid status in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
-  // Save new or edited expense with PostgreSQL sync
+  // Save new or edited expense with PostgreSQL sync. Returns whether it
+  // actually succeeded, so the modal knows whether to close or stay open.
   const handleSaveExpense = async (
     expenseData: Omit<ExpenseItem, 'id' | 'createdAt' | 'updatedAt'>,
     existingId?: string
-  ) => {
+  ): Promise<boolean> => {
     if (existingId) {
-      // Optimistic update
-      setExpenses((prev) =>
-        prev.map((item) =>
-          item.id === existingId
-            ? { ...item, ...expenseData, updatedAt: new Date().toISOString() }
-            : item
-        )
+      const previous = expenses.find((item) => item.id === existingId);
+      const result = await runMutation(
+        () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...expenseData, id: existingId }) }),
+        {
+          optimistic: () => setExpenses((prev) => prev.map((item) => (item.id === existingId ? { ...item, ...expenseData, updatedAt: new Date().toISOString() } : item))),
+          rollback: () => { if (previous) setExpenses((prev) => prev.map((item) => (item.id === existingId ? previous : item))); },
+          errorMessage: 'Failed to update expense — please try again.',
+        }
       );
+      return result.ok;
+    }
 
-      try {
-        await fetch('/api/expenses', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...expenseData, id: existingId }),
-        });
-      } catch (err) {
-        console.error('Failed to update expense in DB:', err);
-        fetchDatabaseData();
-      }
-    } else {
-      const tempId = `exp-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const newItem: ExpenseItem = {
-        ...expenseData,
-        id: tempId,
-        createdById: expenseData.createdById || currentUser?.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Optimistic update
-      setExpenses((prev) => [newItem, ...prev]);
-
-      try {
-        const res = await fetch('/api/expenses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...expenseData, createdById: expenseData.createdById || currentUser?.id }),
-        });
-        const data = await res.json();
-        if (data.status === 'ok' && data.expense) {
-          setExpenses((prev) =>
-            prev.map((e) => (e.id === tempId ? data.expense : e))
-          );
+    const tempId = `exp-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    const newItem: ExpenseItem = {
+      ...expenseData,
+      id: tempId,
+      createdById: expenseData.createdById || currentUser?.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const result = await runMutation<{ expense: ExpenseItem; possibleDuplicate?: { type: string; label: string; date: string } }>(
+      () => fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...expenseData, createdById: expenseData.createdById || currentUser?.id }) }),
+      {
+        optimistic: () => setExpenses((prev) => [newItem, ...prev]),
+        rollback: () => setExpenses((prev) => prev.filter((e) => e.id !== tempId)),
+        errorMessage: 'Failed to create expense — please try again.',
+        onSuccess: (data) => {
+          setExpenses((prev) => prev.map((e) => (e.id === tempId ? data.expense : e)));
           if (data.possibleDuplicate) {
             const d = data.possibleDuplicate;
-            setDuplicateWarning(
-              `This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`
-            );
+            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`);
           }
-        }
-      } catch (err) {
-        console.error('Failed to create expense in DB:', err);
-        fetchDatabaseData();
+        },
       }
-    }
+    );
+    return result.ok;
   };
 
   // Duplicate an expense
   const handleDuplicateExpense = async (item: ExpenseItem) => {
-    const duplicatedData = {
-      ...item,
-      name: `${item.name} (Copy)`,
-      createdById: currentUser?.id,
-    };
-
-    try {
-      const res = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(duplicatedData),
-      });
-      const data = await res.json();
-      if (data.status === 'ok' && data.expense) {
-        setExpenses((prev) => [data.expense, ...prev]);
+    const duplicatedData = { ...item, name: `${item.name} (Copy)`, createdById: currentUser?.id };
+    await runMutation<{ expense: ExpenseItem }>(
+      () => fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(duplicatedData) }),
+      {
+        errorMessage: 'Failed to duplicate expense — please try again.',
+        onSuccess: (data) => setExpenses((prev) => [data.expense, ...prev]),
       }
-    } catch (err) {
-      console.error('Failed to duplicate expense in DB:', err);
-    }
+    );
   };
 
   // Delete an expense
   const handleDeleteExpense = async (id: string) => {
     const item = expenses.find((e) => e.id === id);
-    if (!window.confirm(`Remove "${item?.name || 'this record'}"?`)) return;
-
-    // Optimistic delete
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-
-    try {
-      await fetch(`/api/expenses?id=${id}`, {
-        method: 'DELETE',
-      });
-    } catch (err) {
-      console.error('Failed to delete expense from DB:', err);
-      fetchDatabaseData();
-    }
+    if (!item) return;
+    if (!window.confirm(`Remove "${item.name || 'this record'}"?`)) return;
+    await runMutation(
+      () => fetch(`/api/expenses?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setExpenses((prev) => prev.filter((e) => e.id !== id)),
+        rollback: () => setExpenses((prev) => [item, ...prev]),
+        errorMessage: 'Failed to delete expense — please try again.',
+      }
+    );
   };
 
   const handleCategoryCreated = (category: CustomCategoryItem) => {
@@ -544,42 +492,37 @@ export default function TallyPage() {
   };
 
   const handleSaveBudget = async (category: string, monthlyLimit: number) => {
-    try {
-      const res = await fetch('/api/budgets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, monthlyLimit, currency }),
-      });
-      const data = await res.json();
-      if (data.status === 'ok' && data.budget) {
-        setBudgets((prev) => {
+    await runMutation<{ budget: BudgetItem }>(
+      () => fetch('/api/budgets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category, monthlyLimit, currency }) }),
+      {
+        errorMessage: 'Failed to save budget — please try again.',
+        onSuccess: (data) => setBudgets((prev) => {
           const existingIndex = prev.findIndex((b) => b.category === category);
           if (existingIndex === -1) return [...prev, data.budget];
           const next = [...prev];
           next[existingIndex] = data.budget;
           return next;
-        });
+        }),
       }
-    } catch (err) {
-      console.error('Failed to save budget:', err);
-    }
+    );
   };
 
   const handleDeleteBudget = async (id: string) => {
-    setBudgets((prev) => prev.filter((b) => b.id !== id));
-    try {
-      await fetch(`/api/budgets?id=${id}`, { method: 'DELETE' });
-    } catch (err) {
-      console.error('Failed to delete budget from DB:', err);
-      fetchDatabaseData();
-    }
+    const item = budgets.find((b) => b.id === id);
+    await runMutation(
+      () => fetch(`/api/budgets?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setBudgets((prev) => prev.filter((b) => b.id !== id)),
+        rollback: () => { if (item) setBudgets((prev) => [...prev, item]); },
+        errorMessage: 'Failed to delete budget — please try again.',
+      }
+    );
   };
 
   // Add from catalog preset
   const handleAddFromPreset = async (preset: PresetItem) => {
     const now = new Date();
     const nextRenewalDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-
     const presetExpense = {
       name: preset.name,
       amount: preset.defaultAmount,
@@ -596,294 +539,224 @@ export default function TallyPage() {
       usageRating: 'high' as const,
       createdById: currentUser?.id,
     };
-
-    try {
-      const res = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(presetExpense),
-      });
-      const data = await res.json();
-      if (data.status === 'ok' && data.expense) {
-        setExpenses((prev) => [data.expense, ...prev]);
+    await runMutation<{ expense: ExpenseItem }>(
+      () => fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(presetExpense) }),
+      {
+        errorMessage: `Failed to add "${preset.name}" — please try again.`,
+        onSuccess: (data) => setExpenses((prev) => [data.expense, ...prev]),
       }
-    } catch (err) {
-      console.error('Failed to add preset to DB:', err);
-    }
+    );
   };
 
   // Quick update amount for variable bills (electric, gas, shopping, etc.)
   const handleQuickUpdateAmount = async (expense: ExpenseItem, newAmount: number) => {
-    setExpenses((prev) =>
-      prev.map((e) => (e.id === expense.id ? { ...e, amount: newAmount } : e))
+    await runMutation(
+      () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...expense, amount: newAmount }) }),
+      {
+        optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === expense.id ? { ...e, amount: newAmount } : e))),
+        rollback: () => setExpenses((prev) => prev.map((e) => (e.id === expense.id ? expense : e))),
+        errorMessage: 'Failed to update amount — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/expenses', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...expense, amount: newAmount }),
-      });
-    } catch (err) {
-      console.error('Failed to quick-update amount in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
   // Toggle income active/paused status with PostgreSQL sync
   const handleToggleIncomeActive = async (id: string) => {
     const item = incomes.find((i) => i.id === id);
     if (!item) return;
-
     const updatedActive = !item.isActive;
-    setIncomes((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, isActive: updatedActive } : i))
+    await runMutation(
+      () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isActive: updatedActive }) }),
+      {
+        optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isActive: updatedActive } : i))),
+        rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
+        errorMessage: 'Failed to update income status — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/income', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isActive: updatedActive }),
-      });
-    } catch (err) {
-      console.error('Failed to update income status in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
   const handleToggleIncomeReceived = async (id: string) => {
     const item = incomes.find((i) => i.id === id);
     if (!item) return;
-
     const updatedReceived = !item.isReceivedThisCycle;
-    setIncomes((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: updatedReceived } : i))
+    await runMutation(
+      () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isReceivedThisCycle: updatedReceived }) }),
+      {
+        optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: updatedReceived } : i))),
+        rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
+        errorMessage: 'Failed to update income received status — please try again.',
+      }
     );
-
-    try {
-      await fetch('/api/income', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isReceivedThisCycle: updatedReceived }),
-      });
-    } catch (err) {
-      console.error('Failed to update income received status in DB:', err);
-      fetchDatabaseData();
-    }
   };
 
   // Marking income received with the actual amount/date (which may differ
   // from the income's usual figure — e.g. a fluctuating salary). Unlike the
-  // plain toggle above, this always refetches afterward since the server
+  // plain toggle above, this always refetches on success since the server
   // creates a real linked Transfer that "this month's real total" now
   // depends on (see getIncomeMonthlyContribution in calculations.ts).
   const handleMarkIncomeReceived = async (id: string, actualAmount: number, receivedDate: string) => {
     const item = incomes.find((i) => i.id === id);
     if (!item) return;
-
-    setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: true } : i)));
-
-    try {
-      await fetch('/api/income', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, isReceivedThisCycle: true, receivedAmount: actualAmount, receivedDate }),
-      });
-    } catch (err) {
-      console.error('Failed to mark income received in DB:', err);
-    } finally {
-      fetchDatabaseData();
-    }
+    await runMutation(
+      () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isReceivedThisCycle: true, receivedAmount: actualAmount, receivedDate }) }),
+      {
+        optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: true } : i))),
+        rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
+        errorMessage: 'Failed to mark income received — please try again.',
+        onSuccess: () => fetchDatabaseData(),
+      }
+    );
   };
 
-  // Save new or edited income with PostgreSQL sync
+  // Save new or edited income with PostgreSQL sync. Returns whether it
+  // actually succeeded, so the modal knows whether to close or stay open.
   const handleSaveIncome = async (
     incomeData: Omit<IncomeItem, 'id' | 'createdAt' | 'updatedAt'>,
     existingId?: string
-  ) => {
+  ): Promise<boolean> => {
     if (existingId) {
-      setIncomes((prev) =>
-        prev.map((item) =>
-          item.id === existingId
-            ? { ...item, ...incomeData, updatedAt: new Date().toISOString() }
-            : item
-        )
-      );
-
-      try {
-        await fetch('/api/income', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...incomeData, id: existingId }),
-        });
-      } catch (err) {
-        console.error('Failed to update income in DB:', err);
-        fetchDatabaseData();
-      }
-    } else {
-      const tempId = `inc-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const newItem: IncomeItem = {
-        ...incomeData,
-        id: tempId,
-        createdById: incomeData.createdById || currentUser?.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setIncomes((prev) => [newItem, ...prev]);
-
-      try {
-        const res = await fetch('/api/income', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...incomeData, createdById: incomeData.createdById || currentUser?.id }),
-        });
-        const data = await res.json();
-        if (data.status === 'ok' && data.income) {
-          setIncomes((prev) =>
-            prev.map((i) => (i.id === tempId ? data.income : i))
-          );
+      const previous = incomes.find((item) => item.id === existingId);
+      const result = await runMutation(
+        () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...incomeData, id: existingId }) }),
+        {
+          optimistic: () => setIncomes((prev) => prev.map((item) => (item.id === existingId ? { ...item, ...incomeData, updatedAt: new Date().toISOString() } : item))),
+          rollback: () => { if (previous) setIncomes((prev) => prev.map((item) => (item.id === existingId ? previous : item))); },
+          errorMessage: 'Failed to update income — please try again.',
         }
-      } catch (err) {
-        console.error('Failed to create income in DB:', err);
-        fetchDatabaseData();
-      }
+      );
+      return result.ok;
     }
+
+    const tempId = `inc-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    const newItem: IncomeItem = {
+      ...incomeData,
+      id: tempId,
+      createdById: incomeData.createdById || currentUser?.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const result = await runMutation<{ income: IncomeItem }>(
+      () => fetch('/api/income', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...incomeData, createdById: incomeData.createdById || currentUser?.id }) }),
+      {
+        optimistic: () => setIncomes((prev) => [newItem, ...prev]),
+        rollback: () => setIncomes((prev) => prev.filter((i) => i.id !== tempId)),
+        errorMessage: 'Failed to create income — please try again.',
+        onSuccess: (data) => setIncomes((prev) => prev.map((i) => (i.id === tempId ? data.income : i))),
+      }
+    );
+    return result.ok;
   };
 
   // Delete an income record
   const handleDeleteIncome = async (id: string) => {
     const item = incomes.find((i) => i.id === id);
-    if (!window.confirm(`Remove "${item?.name || 'this income source'}"?`)) return;
-
-    setIncomes((prev) => prev.filter((i) => i.id !== id));
-
-    try {
-      await fetch(`/api/income?id=${id}`, {
-        method: 'DELETE',
-      });
-    } catch (err) {
-      console.error('Failed to delete income from DB:', err);
-      fetchDatabaseData();
-    }
+    if (!item) return;
+    if (!window.confirm(`Remove "${item.name || 'this income source'}"?`)) return;
+    await runMutation(
+      () => fetch(`/api/income?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setIncomes((prev) => prev.filter((i) => i.id !== id)),
+        rollback: () => setIncomes((prev) => [item, ...prev]),
+        errorMessage: 'Failed to delete income — please try again.',
+      }
+    );
   };
 
-  // Save new or edited account with PostgreSQL sync
-  const handleSaveAccount = async (data: Record<string, unknown>, existingId?: string) => {
-    try {
-      const res = await fetch('/api/accounts', {
-        method: existingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(existingId ? { ...data, id: existingId } : data),
-      });
-      const resData = await res.json();
-      if (resData.status === 'ok' && resData.account) {
-        setAccounts((prev) =>
-          existingId
-            ? prev.map((a) => (a.id === existingId ? resData.account : a))
-            : [...prev, resData.account]
-        );
-        fetchDatabaseData();
+  // Save new or edited account with PostgreSQL sync. Returns whether it
+  // actually succeeded, so the modal knows whether to close or stay open.
+  const handleSaveAccount = async (data: Record<string, unknown>, existingId?: string): Promise<boolean> => {
+    const result = await runMutation<{ account: AccountItem }>(
+      () => fetch('/api/accounts', { method: existingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(existingId ? { ...data, id: existingId } : data) }),
+      {
+        errorMessage: existingId ? 'Failed to update account — please try again.' : 'Failed to create account — please try again.',
+        onSuccess: (resData) => {
+          setAccounts((prev) => (existingId ? prev.map((a) => (a.id === existingId ? resData.account : a)) : [...prev, resData.account]));
+          fetchDatabaseData();
+        },
       }
-    } catch (err) {
-      console.error('Failed to save account:', err);
-    }
+    );
+    return result.ok;
   };
 
   // Delete an account
   const handleDeleteAccount = async (id: string) => {
     const item = accounts.find((a) => a.id === id);
-    if (!window.confirm(`Remove "${item?.name || 'this account'}"? Linked expenses/income will be unlinked.`)) return;
-
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
-
-    try {
-      await fetch(`/api/accounts?id=${id}`, { method: 'DELETE' });
-      fetchDatabaseData();
-    } catch (err) {
-      console.error('Failed to delete account from DB:', err);
-      fetchDatabaseData();
-    }
+    if (!item) return;
+    if (!window.confirm(`Remove "${item.name || 'this account'}"? Linked expenses/income will be unlinked.`)) return;
+    await runMutation(
+      () => fetch(`/api/accounts?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setAccounts((prev) => prev.filter((a) => a.id !== id)),
+        rollback: () => setAccounts((prev) => [...prev, item]),
+        errorMessage: 'Failed to delete account — please try again.',
+        onSuccess: () => fetchDatabaseData(), // other entities' local state may reference the now-deleted account
+      }
+    );
   };
 
-  // Save new or edited transfer with PostgreSQL sync
-  const handleSaveTransfer = async (data: Record<string, unknown>, existingId?: string) => {
-    try {
-      const res = await fetch('/api/transfers', {
-        method: existingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(existingId ? { ...data, id: existingId } : data),
-      });
-      const resData = await res.json();
-      if (resData.status === 'ok' && resData.transfer) {
-        setTransfers((prev) =>
-          existingId
-            ? prev.map((t) => (t.id === existingId ? resData.transfer : t))
-            : [resData.transfer, ...prev]
-        );
-        if (resData.possibleDuplicate) {
-          const d = resData.possibleDuplicate;
-          setDuplicateWarning(
-            `This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`
-          );
-        }
-        fetchDatabaseData();
+  // Save new or edited transfer with PostgreSQL sync. Returns whether it
+  // actually succeeded, so the modal knows whether to close or stay open.
+  const handleSaveTransfer = async (data: Record<string, unknown>, existingId?: string): Promise<boolean> => {
+    const result = await runMutation<{ transfer: TransferItem; possibleDuplicate?: { type: string; label: string; date: string } }>(
+      () => fetch('/api/transfers', { method: existingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(existingId ? { ...data, id: existingId } : data) }),
+      {
+        errorMessage: existingId ? 'Failed to update transfer — please try again.' : 'Failed to create transfer — please try again.',
+        onSuccess: (resData) => {
+          setTransfers((prev) => (existingId ? prev.map((t) => (t.id === existingId ? resData.transfer : t)) : [resData.transfer, ...prev]));
+          if (resData.possibleDuplicate) {
+            const d = resData.possibleDuplicate;
+            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`);
+          }
+          fetchDatabaseData();
+        },
       }
-    } catch (err) {
-      console.error('Failed to save transfer:', err);
-    }
+    );
+    return result.ok;
   };
 
   // Delete a transfer
   const handleDeleteTransfer = async (id: string) => {
+    const item = transfers.find((t) => t.id === id);
     if (!window.confirm('Remove this transfer record?')) return;
-
-    setTransfers((prev) => prev.filter((t) => t.id !== id));
-
-    try {
-      await fetch(`/api/transfers?id=${id}`, { method: 'DELETE' });
-    } catch (err) {
-      console.error('Failed to delete transfer from DB:', err);
-      fetchDatabaseData();
-    }
+    await runMutation(
+      () => fetch(`/api/transfers?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setTransfers((prev) => prev.filter((t) => t.id !== id)),
+        rollback: () => { if (item) setTransfers((prev) => [item, ...prev]); },
+        errorMessage: 'Failed to delete transfer — please try again.',
+      }
+    );
   };
 
-  // Save new or edited goal with PostgreSQL sync
-  const handleSaveGoal = async (data: Record<string, unknown>, existingId?: string) => {
-    try {
-      const res = await fetch('/api/goals', {
-        method: existingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(existingId ? { ...data, id: existingId } : data),
-      });
-      const resData = await res.json();
-      if (resData.status === 'ok' && resData.goal) {
-        setGoals((prev) =>
-          existingId
-            ? prev.map((g) => (g.id === existingId ? resData.goal : g))
-            : [...prev, resData.goal]
-        );
-        fetchDatabaseData();
+  // Save new or edited goal with PostgreSQL sync. Returns whether it
+  // actually succeeded, so the modal knows whether to close or stay open.
+  const handleSaveGoal = async (data: Record<string, unknown>, existingId?: string): Promise<boolean> => {
+    const result = await runMutation<{ goal: GoalItem }>(
+      () => fetch('/api/goals', { method: existingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(existingId ? { ...data, id: existingId } : data) }),
+      {
+        errorMessage: existingId ? 'Failed to update goal — please try again.' : 'Failed to create goal — please try again.',
+        onSuccess: (resData) => {
+          setGoals((prev) => (existingId ? prev.map((g) => (g.id === existingId ? resData.goal : g)) : [...prev, resData.goal]));
+          fetchDatabaseData();
+        },
       }
-    } catch (err) {
-      console.error('Failed to save goal:', err);
-    }
+    );
+    return result.ok;
   };
 
   // Delete a goal
   const handleDeleteGoal = async (id: string) => {
     const item = goals.find((g) => g.id === id);
-    if (!window.confirm(`Remove "${item?.name || 'this goal'}"?`)) return;
-
-    setGoals((prev) => prev.filter((g) => g.id !== id));
-
-    try {
-      await fetch(`/api/goals?id=${id}`, { method: 'DELETE' });
-    } catch (err) {
-      console.error('Failed to delete goal from DB:', err);
-      fetchDatabaseData();
-    }
+    if (!item) return;
+    if (!window.confirm(`Remove "${item.name || 'this goal'}"?`)) return;
+    await runMutation(
+      () => fetch(`/api/goals?id=${id}`, { method: 'DELETE' }),
+      {
+        optimistic: () => setGoals((prev) => prev.filter((g) => g.id !== id)),
+        rollback: () => setGoals((prev) => [...prev, item]),
+        errorMessage: 'Failed to delete goal — please try again.',
+      }
+    );
   };
 
   // Scroll to and focus the Ask Tally input
@@ -1468,6 +1341,48 @@ export default function TallyPage() {
         </div>
       </footer>
       </PrivacyBlurOverlay>
+
+      {/* Save feedback toast — success briefly, error until dismissed */}
+      {feedback && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            bottom: '1.25rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 200,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.7rem 1rem',
+            borderRadius: 'var(--ha-radius-sm)',
+            boxShadow: 'var(--ha-shadow-elevated)',
+            maxWidth: 'min(90vw, 420px)',
+            backgroundColor: feedback.type === 'success' ? 'var(--ha-blue-light)' : 'var(--ha-red-tint)',
+            color: feedback.type === 'success' ? 'var(--ha-blue)' : 'var(--ha-red)',
+            border: `1px solid ${feedback.type === 'success' ? 'var(--ha-blue)' : 'var(--ha-red)'}`,
+            fontSize: '0.85rem',
+          }}
+        >
+          {feedback.type === 'success' ? (
+            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+          ) : (
+            <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+          )}
+          <span style={{ flex: 1 }}>{feedback.message}</span>
+          <button
+            onClick={dismissFeedback}
+            title="Dismiss"
+            aria-label="Dismiss"
+            className="ha-icon-btn"
+            style={{ color: 'inherit', flexShrink: 0 }}
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Quick-hide panic button — always on top, instantly blurs the screen */}
       {!isPrivacyBlurred && (

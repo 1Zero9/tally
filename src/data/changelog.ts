@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.61.1';
+export const APP_VERSION = '1.62.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.62.0',
+    date: '2026-09-06',
+    changes: [
+      'A failed save now always looks different from a successful one: any bill, income, account, transfer or goal change that doesn\'t actually reach the database now shows a clear error message and reverses itself, instead of silently looking like it worked.',
+      'The Add/Edit forms for bills, income, accounts, goals and transfers now show a spinner while saving and stay open with what you typed if the save fails, so nothing you entered is lost.',
+    ],
+  },
   {
     version: '1.61.1',
     date: '2026-09-06',

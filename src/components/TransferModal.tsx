@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import type { TransferItem, AccountItem, ExpenseItem, IncomeItem, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
-import { X, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Loader2 } from 'lucide-react';
 
 const EXTERNAL_VALUE = '__external__';
 
 interface TransferModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Record<string, unknown>, existingId?: string) => void;
+  onSave: (data: Record<string, unknown>, existingId?: string) => Promise<boolean>;
   editingTransfer?: TransferItem | null;
   accounts: AccountItem[];
   expenses?: ExpenseItem[];
@@ -33,6 +33,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   const [note, setNote] = useState('');
   const [linkedIncomeId, setLinkedIncomeId] = useState<string>('');
   const [linkedExpenseId, setLinkedExpenseId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editingTransfer) {
@@ -64,12 +65,13 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   const toIsExternal = toAccountId === EXTERNAL_VALUE;
   const bothExternal = fromIsExternal && toIsExternal;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = Number(amount);
-    if (!numAmount || numAmount <= 0 || !date || bothExternal) return;
+    if (!numAmount || numAmount <= 0 || !date || bothExternal || isSaving) return;
 
-    onSave(
+    setIsSaving(true);
+    const ok = await onSave(
       {
         amount: numAmount,
         currency,
@@ -83,7 +85,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
       },
       editingTransfer?.id
     );
-    onClose();
+    setIsSaving(false);
+    if (ok) onClose();
   };
 
   const currencySymbol = CURRENCIES[currency]?.symbol || '€';
@@ -261,11 +264,12 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             paddingTop: '1rem',
             borderTop: '1px solid var(--ha-line)',
           }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary">
+            <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={bothExternal}>
-              {editingTransfer ? 'Save changes' : 'Log transfer'}
+            <button type="submit" className="btn btn-primary" disabled={bothExternal || isSaving}>
+              {isSaving ? <Loader2 size={15} className="spin" /> : null}
+              {isSaving ? 'Saving…' : editingTransfer ? 'Save changes' : 'Log transfer'}
             </button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { IncomeItem, IncomeCategory, BillingCycle, CurrencyCode, UserProfile, AccountItem } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 
 const INCOME_CATEGORIES: { id: IncomeCategory; label: string }[] = [
   { id: 'salary', label: 'Salary / wages' },
@@ -14,7 +14,7 @@ const INCOME_CATEGORIES: { id: IncomeCategory; label: string }[] = [
 interface IncomeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (income: Omit<IncomeItem, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string) => void;
+  onSave: (income: Omit<IncomeItem, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string) => Promise<boolean>;
   editingIncome?: IncomeItem | null;
   users?: UserProfile[];
   currentUserId?: string;
@@ -39,6 +39,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
   const [assignedUserId, setAssignedUserId] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [depositAccountId, setDepositAccountId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editingIncome) {
@@ -66,12 +67,13 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSaving) return;
     const numAmount = Number(amount) || 0;
 
-    onSave(
+    setIsSaving(true);
+    const ok = await onSave(
       {
         name: name.trim(),
         amount: numAmount,
@@ -86,7 +88,8 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
       },
       editingIncome?.id
     );
-    onClose();
+    setIsSaving(false);
+    if (ok) onClose();
   };
 
   const currencySymbol = CURRENCIES[currency]?.symbol || '€';
@@ -287,11 +290,12 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
             paddingTop: '1rem',
             borderTop: '1px solid var(--ha-line)',
           }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary">
+            <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              {editingIncome ? 'Save changes' : 'Add income'}
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? <Loader2 size={15} className="spin" /> : null}
+              {isSaving ? 'Saving…' : editingIncome ? 'Save changes' : 'Add income'}
             </button>
           </div>
         </form>

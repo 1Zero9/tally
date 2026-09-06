@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import type { GoalItem, AccountItem, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
-import { X, Divide } from 'lucide-react';
+import { X, Divide, Loader2 } from 'lucide-react';
 
 const SPLIT_PRESETS = [2, 4, 12, 20];
 
 interface GoalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Record<string, unknown>, existingId?: string) => void;
+  onSave: (data: Record<string, unknown>, existingId?: string) => Promise<boolean>;
   editingGoal?: GoalItem | null;
   accounts: AccountItem[];
 }
@@ -29,6 +29,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({
   const [linkedAccountId, setLinkedAccountId] = useState('');
   const [notes, setNotes] = useState('');
   const [splitCount, setSplitCount] = useState<number | ''>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editingGoal) {
@@ -54,13 +55,14 @@ export const GoalModal: React.FC<GoalModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSaving) return;
     const numTarget = Number(targetAmount) || 0;
     if (numTarget <= 0) return;
 
-    onSave(
+    setIsSaving(true);
+    const ok = await onSave(
       {
         name: name.trim(),
         targetAmount: numTarget,
@@ -73,7 +75,8 @@ export const GoalModal: React.FC<GoalModalProps> = ({
       },
       editingGoal?.id
     );
-    onClose();
+    setIsSaving(false);
+    if (ok) onClose();
   };
 
   const currencySymbol = CURRENCIES[currency]?.symbol || '€';
@@ -281,11 +284,12 @@ export const GoalModal: React.FC<GoalModalProps> = ({
             paddingTop: '1rem',
             borderTop: '1px solid var(--ha-line)',
           }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary">
+            <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              {editingGoal ? 'Save changes' : 'Add goal'}
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? <Loader2 size={15} className="spin" /> : null}
+              {isSaving ? 'Saving…' : editingGoal ? 'Save changes' : 'Add goal'}
             </button>
           </div>
         </form>

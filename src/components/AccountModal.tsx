@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { AccountItem, AccountType, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
-import { X, Lock, ShieldAlert } from 'lucide-react';
+import { X, Lock, ShieldAlert, Loader2 } from 'lucide-react';
 
 const ACCOUNT_TYPES: { id: AccountType; label: string }[] = [
   { id: 'CHECKING', label: 'Current' },
@@ -28,7 +28,7 @@ interface AccountModalProps {
   onSave: (
     data: Record<string, unknown>,
     existingId?: string
-  ) => void;
+  ) => Promise<boolean>;
   editingAccount?: AccountItem | null;
   encryptionConfigured: boolean;
 }
@@ -62,6 +62,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [interestRate, setInterestRate] = useState<number | string>('');
   const [termMonths, setTermMonths] = useState<number | string>('');
   const [payoffDate, setPayoffDate] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editingAccount) {
@@ -103,9 +104,9 @@ export const AccountModal: React.FC<AccountModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSaving) return;
 
     const data: Record<string, unknown> = {
       name: name.trim(),
@@ -131,8 +132,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     if (loginUrl.touched) data.loginUrl = loginUrl.value;
     if (securityNotes.touched) data.securityNotes = securityNotes.value;
 
-    onSave(data, editingAccount?.id);
-    onClose();
+    setIsSaving(true);
+    const ok = await onSave(data, editingAccount?.id);
+    setIsSaving(false);
+    if (ok) onClose();
   };
 
   const sensitiveField = (
@@ -402,11 +405,12 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             paddingTop: '1rem',
             borderTop: '1px solid var(--ha-line)',
           }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary">
+            <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              {editingAccount ? 'Save changes' : 'Add account'}
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? <Loader2 size={15} className="spin" /> : null}
+              {isSaving ? 'Saving…' : editingAccount ? 'Save changes' : 'Add account'}
             </button>
           </div>
         </form>

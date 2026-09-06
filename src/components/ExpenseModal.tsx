@@ -5,7 +5,7 @@ import { CategorySelect } from './CategorySelect';
 import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
-import { X, ArrowRightLeft } from 'lucide-react';
+import { X, ArrowRightLeft, Loader2 } from 'lucide-react';
 
 const PAYMENT_METHODS = [
   'SEPA Direct Debit',
@@ -22,7 +22,7 @@ const PAYMENT_METHODS = [
 interface ExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (expense: Omit<ExpenseItem, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string) => void;
+  onSave: (expense: Omit<ExpenseItem, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string) => Promise<boolean>;
   editingExpense?: ExpenseItem | null;
   initialPresetId?: string | null;
   initialCategory?: string | null;
@@ -82,6 +82,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const [reimbursementExpected, setReimbursementExpected] = useState<number | string>('');
   const [reimbursementReceived, setReimbursementReceived] = useState<number | string>('');
   const [reimbursementReceivedDate, setReimbursementReceivedDate] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (editingExpense) {
@@ -197,9 +198,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSaving) return;
     const numAmount = Number(amount) || 0;
 
     const resolvedNextRenewalDate = nextRenewalDate || new Date().toISOString().split('T')[0];
@@ -207,7 +208,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
     const catInfo = getCategoryMeta(category, customCategories);
 
-    onSave(
+    setIsSaving(true);
+    const ok = await onSave(
       {
         name: name.trim(),
         vendor: vendor.trim() || undefined,
@@ -242,7 +244,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       },
       editingExpense?.id
     );
-    onClose();
+    setIsSaving(false);
+    if (ok) onClose();
   };
 
   const currencySymbol = CURRENCIES[currency]?.symbol || '€';
@@ -722,14 +725,17 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               type="button"
               onClick={onClose}
               className="btn btn-secondary"
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn-primary"
+              disabled={isSaving}
             >
-              {editingExpense ? 'Save changes' : 'Add expense'}
+              {isSaving ? <Loader2 size={15} className="spin" /> : null}
+              {isSaving ? 'Saving…' : editingExpense ? 'Save changes' : 'Add expense'}
             </button>
           </div>
         </form>
