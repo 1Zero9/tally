@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem, BudgetItem } from '../types/expense';
-import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
+import { convertCurrency, getMonthlyContribution } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import { getCategoryMeta } from '../data/categories';
 import { Wallet, Plus, Trash2, Edit2 } from 'lucide-react';
@@ -19,10 +19,11 @@ interface BudgetsSectionProps {
 
 /**
  * A deliberately simple budget: one static monthly limit per category,
- * compared against that category's current monthly-equivalent spend — the
- * same figure Overview/Spending already show, not a running ledger of
- * actual payments made this calendar month. No rollover, no history, no
- * per-member split.
+ * compared against that category's current-month spend — the same figure
+ * Overview/Spending already show (recurring bills at their steady-state
+ * rate, one-off costs counted in full in the month they're actually dated,
+ * see getMonthlyContribution()). No rollover, no history, no per-member
+ * split.
  */
 export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
   expenses,
@@ -42,8 +43,7 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
   const activeExpenses = expenses.filter((e) => e.isActive);
   const spendByCategory = new Map<string, number>();
   for (const item of activeExpenses) {
-    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
-    const monthly = getMonthlyEquivalent(amountInDisplay, item.billingCycle);
+    const monthly = convertCurrency(getMonthlyContribution(item), item.currency, currency);
     spendByCategory.set(item.category, (spendByCategory.get(item.category) || 0) + monthly);
   }
 

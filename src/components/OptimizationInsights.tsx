@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode } from '../types/expense';
-import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount, getMonthlyContribution } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -37,7 +37,7 @@ export const OptimizationInsights: React.FC<OptimizationInsightsProps> = ({
   // 2. Rarely used — active subscriptions marked low usage, prime cancellation candidates.
   const rarelyUsedItems = activeItems.filter((e) => e.usageRating === 'low');
   const rarelyUsedMonthly = rarelyUsedItems.reduce((sum, item) => {
-    return sum + getMonthlyEquivalent(convertCurrency(getEffectiveAmount(item), item.currency, currency), item.billingCycle);
+    return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
   }, 0);
 
   // 3. Already saving — subscriptions already paused.

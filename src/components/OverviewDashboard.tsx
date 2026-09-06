@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode, SpendingSummary, IncomeSummary, CustomCategoryItem, AccountItem } from '../types/expense';
 import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
-import { convertCurrency, getMonthlyEquivalent, getDaysUntilRenewal, getEffectiveAmount } from '../utils/calculations';
+import { convertCurrency, getDaysUntilRenewal, getMonthlyContribution } from '../utils/calculations';
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
 import { TrendingUp, Clock, PiggyBank, ArrowRight, Edit2, CalendarClock, Landmark } from 'lucide-react';
 import { SensitiveValue } from './SensitiveValue';
@@ -91,8 +91,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const categoryData = [...CATEGORY_LIST, ...customCategories].map((cat) => {
     const catItems = activeExpenses.filter((e) => e.category === cat.id);
     const monthlyAmount = catItems.reduce((sum, item) => {
-      const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
-      return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
+      return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
     }, 0);
     return { ...cat, monthlyAmount };
   }).filter((c) => c.monthlyAmount > 0).sort((a, b) => b.monthlyAmount - a.monthlyAmount);
@@ -112,12 +111,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   // Bills vs one-off split — recurring bills/contracts vs incidental spending, same monthly-equivalent basis as the category donut above.
   const billsTotal = activeExpenses.filter((e) => e.isBill !== false).reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
-    return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
+    return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
   }, 0);
   const oneOffTotal = activeExpenses.filter((e) => e.isBill === false).reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
-    return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
+    return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
   }, 0);
   const billsVsOneOffTotal = billsTotal + oneOffTotal;
   const billsPct = billsVsOneOffTotal > 0 ? (billsTotal / billsVsOneOffTotal) * 100 : 0;

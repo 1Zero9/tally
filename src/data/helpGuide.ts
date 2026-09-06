@@ -25,7 +25,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'Big one-off costs like a mortgage, loan repayment or large purchase have their own "Mortgage, Loans & Big Purchases" category, kept separate from everyday bills.',
       'Don\'t see a category that fits (e.g. road tolls)? Pick "+ Create new category…" at the bottom of the category dropdown, give it a name, and it\'s ready to use everywhere — for everyone in the household.',
       'Switch to the "Income" tab to record salary, freelance or rental income and see your money in vs money out.',
-      'Expecting money back on something — a health insurance claim on a doctor visit, for example? Set "Reimbursement/claim expected" when adding the expense. The full amount still counts as spend until you mark what was actually received, since it\'s genuinely out of pocket until then; once received, only the net cost counts toward Spending, Budgets and category totals. This only makes a visible difference on a recurring bill, though — a one-off (`once`-cycle) cost already doesn\'t count toward those monthly totals by itself, so a reimbursement on one won\'t change any of those figures either, even though it\'s still recorded on the expense.',
+      'Expecting money back on something — a health insurance claim on a doctor visit, for example? Set "Reimbursement/claim expected" when adding the expense. The full amount still counts as spend until you mark what was actually received, since it\'s genuinely out of pocket until then; once received, only the net cost counts toward Spending, Budgets and category totals — including for a one-off cost, in the month it\'s actually dated.',
     ],
   },
   {

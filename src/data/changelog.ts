@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.56.0';
+export const APP_VERSION = '1.57.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.57.0',
+    date: '2026-09-06',
+    changes: [
+      'One-off costs (a repair, a doctor visit, a large purchase) now count toward "This month spent", Budgets, and category totals in the calendar month they\'re actually dated — they used to be excluded from all of those figures entirely. A recurring bill\'s steady-state monthly rate is unaffected either way.',
+    ],
+  },
   {
     version: '1.56.0',
     date: '2026-09-06',

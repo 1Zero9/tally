@@ -20,13 +20,18 @@ export function getEffectiveAmount(item: { amount: number; reimbursementReceived
 }
 
 /**
- * Normalizes any billing cycle into a monthly cost.
+ * Normalizes any billing cycle into a monthly cost. A one-off payment has
+ * no steady-state monthly rate — it only ever really happened once — so it
+ * contributes 0 here; this is the *recurring run-rate* figure (the same
+ * number every month regardless of when you look), used anywhere that
+ * meaning is actually wanted (e.g. Money Map's projected/recurring flow
+ * view). For "what did this month actually cost" totals, use
+ * getMonthlyContribution() below instead, which counts a one-off in the
+ * specific month it happened.
  */
 export function getMonthlyEquivalent(amount: number, cycle: ExpenseItem['billingCycle']): number {
   switch (cycle) {
     case 'once':
-      // A single one-off payment isn't a recurring monthly commitment,
-      // so it's excluded from the recurring monthly/annual run-rate.
       return 0;
     case 'weekly':
       return (amount * 52) / 12;
@@ -41,6 +46,40 @@ export function getMonthlyEquivalent(amount: number, cycle: ExpenseItem['billing
     default:
       return amount;
   }
+}
+
+function isSameCalendarMonth(dateStr: string, referenceDate: Date): boolean {
+  if (!dateStr) return false;
+  const [year, month] = dateStr.split('-').map(Number);
+  return year === referenceDate.getFullYear() && month === referenceDate.getMonth() + 1;
+}
+
+/**
+ * What an expense contributes to a "this month" total — Overview's spend
+ * tile, Budgets, the category breakdown chart, Insights. A recurring bill
+ * contributes its steady-state monthly-equivalent rate every month,
+ * regardless of when it's dated — that's the whole point of a recurring
+ * rate. A one-off (`once`-cycle) cost has no such rate: it only really
+ * happened once, so it contributes its full (reimbursement-netted) amount
+ * in the one calendar month it's actually dated (`nextRenewalDate` doubles
+ * as "payment date" for a one-off — see ExpenseModal), and nothing in every
+ * other month, so last month's one-off spend doesn't linger forever.
+ * Structurally typed like getEffectiveAmount(), for the same reason.
+ */
+export function getMonthlyContribution(
+  item: {
+    amount: number;
+    billingCycle: ExpenseItem['billingCycle'];
+    nextRenewalDate: string;
+    reimbursementReceived?: number | null;
+  },
+  referenceDate: Date = new Date()
+): number {
+  const effectiveAmount = getEffectiveAmount(item);
+  if (item.billingCycle === 'once') {
+    return isSameCalendarMonth(item.nextRenewalDate, referenceDate) ? effectiveAmount : 0;
+  }
+  return getMonthlyEquivalent(effectiveAmount, item.billingCycle);
 }
 
 /**
@@ -93,9 +132,10 @@ export function calculateSpendingSummary(
   };
 
   expenses.forEach((item) => {
-    // Convert item amount to selected display currency
-    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, displayCurrency);
-    const monthlyAmount = getMonthlyEquivalent(amountInDisplay, item.billingCycle);
+    // Compute the "this month" contribution in the item's own currency
+    // first (so a one-off's month-gating and any reimbursement net off
+    // correctly), then convert the result to the display currency.
+    const monthlyAmount = convertCurrency(getMonthlyContribution(item), item.currency, displayCurrency);
 
     if (item.isActive) {
       activeCount += 1;

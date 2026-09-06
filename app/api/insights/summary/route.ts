@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { getMonthlyEquivalent, getEffectiveAmount } from '@/src/utils/calculations';
+import { getMonthlyEquivalent, getEffectiveAmount, getMonthlyContribution } from '@/src/utils/calculations';
 import { rolloverIfDue } from '@/src/lib/billing';
 import { getCategoryMeta } from '@/src/data/categories';
 import type { BillingCycle } from '@/src/types/expense';
@@ -51,7 +51,7 @@ export async function GET() {
     });
 
     const monthlyTotal = active.reduce(
-      (sum, e) => sum + getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle),
+      (sum, e) => sum + getMonthlyContribution({ ...e, billingCycle: e.billingCycle as BillingCycle }),
       0
     );
 
@@ -77,7 +77,7 @@ export async function GET() {
 
     const categoryTotals: Record<string, number> = {};
     active.forEach((e) => {
-      const monthly = getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle);
+      const monthly = getMonthlyContribution({ ...e, billingCycle: e.billingCycle as BillingCycle });
       categoryTotals[e.category] = (categoryTotals[e.category] || 0) + monthly;
     });
 

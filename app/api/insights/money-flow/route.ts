@@ -3,7 +3,7 @@ import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
 import { analyzeMoneyFlow, isAiConfigured } from '@/src/lib/ai';
-import { getMonthlyEquivalent, getEffectiveAmount } from '@/src/utils/calculations';
+import { getMonthlyEquivalent, getMonthlyContribution } from '@/src/utils/calculations';
 import type { BillingCycle } from '@/src/types/expense';
 
 const ACCOUNT_SELECT = { id: true, name: true, type: true, institution: true } as const;
@@ -72,6 +72,8 @@ export async function POST() {
         billingCycle: true,
         category: true,
         renewalDay: true,
+        nextRenewalDate: true,
+        reimbursementReceived: true,
         paymentAccount: { select: { id: true, name: true } },
       },
     });
@@ -89,7 +91,7 @@ export async function POST() {
 
     const expenseContext = expenses.map((e) => ({
       ...e,
-      monthlyEquivalent: Math.round(getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle) * 100) / 100,
+      monthlyEquivalent: Math.round(getMonthlyContribution({ ...e, billingCycle: e.billingCycle as BillingCycle }) * 100) / 100,
     }));
 
     const incomeContext = incomes.map((i) => ({
