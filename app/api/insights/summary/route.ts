@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { getMonthlyEquivalent, getEffectiveAmount, getMonthlyContribution } from '@/src/utils/calculations';
+import { getMonthlyEquivalent, getEffectiveAmount, getMonthlyContribution, getIncomeMonthlyContribution } from '@/src/utils/calculations';
 import { rolloverIfDue } from '@/src/lib/billing';
 import { getCategoryMeta } from '@/src/data/categories';
-import type { BillingCycle } from '@/src/types/expense';
+import type { BillingCycle, CurrencyCode } from '@/src/types/expense';
 
 function daysUntil(dateStr: string): number {
   const today = new Date();
@@ -27,6 +27,11 @@ export async function GET() {
 
     const incomes = await prisma.income.findMany({
       where: { householdId: auth.user.householdId },
+    });
+
+    const incomeTransfers = await prisma.transfer.findMany({
+      where: { householdId: auth.user.householdId, linkedIncomeId: { not: null } },
+      select: { linkedIncomeId: true, date: true, amount: true, currency: true },
     });
 
     const customCategories = await prisma.category.findMany({
@@ -106,7 +111,11 @@ export async function GET() {
 
     const activeIncomes = incomes.filter((i) => i.isActive);
     const monthlyIncome = activeIncomes.reduce(
-      (sum, i) => sum + getMonthlyEquivalent(i.amount, i.frequency as BillingCycle),
+      (sum, i) => sum + getIncomeMonthlyContribution(
+        { ...i, frequency: i.frequency as BillingCycle, currency: i.currency as CurrencyCode },
+        incomeTransfers as { linkedIncomeId: string | null; date: string; amount: number; currency: CurrencyCode }[],
+        i.currency as CurrencyCode
+      ),
       0
     );
     const netMonthly = monthlyIncome - monthlyTotal;

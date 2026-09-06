@@ -8,7 +8,7 @@ import type { ExpenseCategory } from '@/src/types/expense';
 
 const TX_INCLUDE = {
   matchedExpense: { select: { id: true, name: true, vendor: true, category: true } },
-  matchedTransfer: { select: { id: true, externalLabel: true } },
+  matchedTransfer: { select: { id: true, externalLabel: true, linkedIncome: { select: { id: true, name: true } } } },
 } as const;
 
 export async function POST(
@@ -170,6 +170,54 @@ export async function POST(
           });
         }
       }
+
+      return NextResponse.json({ status: 'ok', transaction: updated, transfer });
+    }
+
+    if (action === 'link_income') {
+      const incomeId = typeof body.incomeId === 'string' ? body.incomeId : null;
+      if (!incomeId) {
+        return NextResponse.json({ status: 'error', message: 'An income must be selected' }, { status: 400 });
+      }
+
+      const income = await prisma.income.findUnique({ where: { id: incomeId } });
+      if (!income || income.householdId !== auth.user.householdId) {
+        return NextResponse.json({ status: 'error', message: 'Income not found' }, { status: 404 });
+      }
+
+      const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
+
+      // Same shape as log_transfer — a real, dated Transfer at the
+      // statement's actual amount, not the Income's usual figure — plus
+      // linkedIncomeId so it reconciles against the household's Income
+      // record instead of sitting as an unlinked "money in" entry.
+      const transfer = await prisma.transfer.create({
+        data: {
+          amount: tx.amount,
+          currency: tx.currency,
+          date: tx.date,
+          note: 'Logged from statement import',
+          externalLabel: income.name,
+          toAccountId: statementImport?.accountId ?? null,
+          linkedIncomeId: income.id,
+          createdById: auth.user.id,
+          householdId: auth.user.householdId,
+          statementImportId: id,
+        },
+      });
+
+      const updated = await prisma.statementTransaction.update({
+        where: { id: txId },
+        data: { status: 'MATCHED', matchedTransferId: transfer.id, matchedExpenseId: null, matchConfidence: 1 },
+        include: TX_INCLUDE,
+      });
+
+      // Honest "this really happened" update, same as manually marking an
+      // income received — just sourced from the statement's real figures.
+      await prisma.income.update({
+        where: { id: income.id },
+        data: { isReceivedThisCycle: true, lastReceivedAt: new Date(tx.date) },
+      });
 
       return NextResponse.json({ status: 'ok', transaction: updated, transfer });
     }

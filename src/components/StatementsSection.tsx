@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FileSpreadsheet, Upload, Trash2, ChevronRight, Edit2, Loader2, Undo2 } from 'lucide-react';
-import type { ExpenseItem, StatementImportSummary, CurrencyCode, AccountItem, CustomCategoryItem } from '../types/expense';
+import type { ExpenseItem, IncomeItem, StatementImportSummary, CurrencyCode, AccountItem, CustomCategoryItem } from '../types/expense';
 import { StatementImportModal } from './StatementImportModal';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface StatementsSectionProps {
   expenses: ExpenseItem[];
+  incomes: IncomeItem[];
   accounts: AccountItem[];
   householdCurrency: CurrencyCode;
   onExpensesChanged?: () => void;
@@ -13,7 +14,7 @@ interface StatementsSectionProps {
   onCategoryCreated?: (category: CustomCategoryItem) => void;
 }
 
-export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, accounts, householdCurrency, onExpensesChanged, customCategories = [], onCategoryCreated }) => {
+export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, incomes, accounts, householdCurrency, onExpensesChanged, customCategories = [], onCategoryCreated }) => {
   const [imports, setImports] = useState<StatementImportSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -220,6 +221,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         expenses={expenses}
+        incomes={incomes}
         accounts={accounts}
         householdCurrency={householdCurrency}
         onImported={fetchImports}
@@ -232,6 +234,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
         isOpen={!!reviewImportId}
         onClose={() => { setReviewImportId(null); fetchImports(); }}
         expenses={expenses}
+        incomes={incomes}
         accounts={accounts}
         householdCurrency={householdCurrency}
         onImported={fetchImports}

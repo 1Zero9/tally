@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         isActive: typeof body.isActive === 'boolean' ? body.isActive : true,
         notes: body.notes || null,
         isReceivedThisCycle: typeof body.isReceivedThisCycle === 'boolean' ? body.isReceivedThisCycle : false,
-        ...(body.isReceivedThisCycle === true ? { lastReceivedAt: new Date() } : {}),
+        ...(body.isReceivedThisCycle === true ? { lastReceivedAt: body.receivedDate ? new Date(body.receivedDate) : new Date() } : {}),
         depositAccountId: body.depositAccountId || null,
         createdById: body.createdById !== undefined ? (body.createdById || null) : auth.user.id,
         householdId: auth.user.householdId,
@@ -107,11 +107,16 @@ export async function POST(request: Request) {
     });
 
     if (newIncome.isReceivedThisCycle) {
+      // A fluctuating income (e.g. salary) may have actually landed at a
+      // different amount/date than the record's usual figure — take those
+      // when supplied, falling back to the usual amount and today otherwise.
+      const receivedAmount = body.receivedAmount != null ? Number(body.receivedAmount) : newIncome.amount;
+      const receivedDate = body.receivedDate || new Date().toISOString().split('T')[0];
       await prisma.transfer.create({
         data: {
-          amount: newIncome.amount,
+          amount: receivedAmount,
           currency: newIncome.currency,
-          date: new Date().toISOString().split('T')[0],
+          date: receivedDate,
           externalLabel: newIncome.name,
           note: 'Marked received',
           toAccountId: newIncome.depositAccountId,
@@ -174,7 +179,7 @@ export async function PUT(request: Request) {
         ...(body.depositAccountId !== undefined ? { depositAccountId: body.depositAccountId || null } : {}),
         ...(body.createdById !== undefined ? { createdById: body.createdById || null } : {}),
         ...(typeof body.isReceivedThisCycle === 'boolean' ? { isReceivedThisCycle: body.isReceivedThisCycle } : {}),
-        ...(markingReceived ? { lastReceivedAt: new Date() } : {}),
+        ...(markingReceived ? { lastReceivedAt: body.receivedDate ? new Date(body.receivedDate) : new Date() } : {}),
         ...(markingUnreceived ? { lastReceivedAt: null } : {}),
       },
       include: {
@@ -187,12 +192,32 @@ export async function PUT(request: Request) {
       },
     });
 
+    if (markingUnreceived) {
+      // Undoing a mark-received (e.g. to fix a wrong amount before
+      // re-confirming) must clean up the real Transfer(s) it logged for
+      // this month — otherwise re-marking received creates a second one
+      // and this month's real total (see getIncomeMonthlyContribution)
+      // would double-count both.
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const monthEnd = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      await prisma.transfer.deleteMany({
+        where: { linkedIncomeId: existing.id, date: { gte: monthStart, lt: monthEnd } },
+      });
+    }
+
     if (markingReceived) {
+      // See the matching comment in POST — take the actual received
+      // amount/date when supplied, since a fluctuating income (e.g. salary)
+      // may genuinely differ from its usual figure this cycle.
+      const receivedAmount = body.receivedAmount != null ? Number(body.receivedAmount) : updatedIncome.amount;
+      const receivedDate = body.receivedDate || new Date().toISOString().split('T')[0];
       await prisma.transfer.create({
         data: {
-          amount: updatedIncome.amount,
+          amount: receivedAmount,
           currency: updatedIncome.currency,
-          date: new Date().toISOString().split('T')[0],
+          date: receivedDate,
           externalLabel: updatedIncome.name,
           note: 'Marked received',
           toAccountId: updatedIncome.depositAccountId,

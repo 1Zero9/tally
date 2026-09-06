@@ -288,7 +288,7 @@ export interface StatementTransactionItem {
   matchedExpense?: { id: string; name: string; vendor?: string | null; category: ExpenseCategory } | null;
 
   matchedTransferId?: string | null;
-  matchedTransfer?: { id: string; externalLabel?: string | null } | null;
+  matchedTransfer?: { id: string; externalLabel?: string | null; linkedIncome?: { id: string; name: string } | null } | null;
 
   createdAt?: string;
   updatedAt?: string;

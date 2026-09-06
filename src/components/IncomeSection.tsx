@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { IncomeItem, CurrencyCode } from '../types/expense';
 import { convertCurrency, getMonthlyEquivalent, getDaysUntilRenewal } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
-import { Edit2, Trash2, Plus, Wallet, User } from 'lucide-react';
+import { Edit2, Trash2, Plus, Wallet, User, CheckCircle2 } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SensitiveValue } from './SensitiveValue';
 
@@ -19,6 +19,7 @@ interface IncomeSectionProps {
   currency: CurrencyCode;
   onToggleActive: (id: string) => void;
   onToggleReceived: (id: string) => void;
+  onMarkReceived: (id: string, actualAmount: number, receivedDate: string) => void;
   onEditIncome: (income: IncomeItem) => void;
   onDeleteIncome: (id: string) => void;
   onOpenAddModal: () => void;
@@ -31,12 +32,30 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
   currency,
   onToggleActive,
   onToggleReceived,
+  onMarkReceived,
   onEditIncome,
   onDeleteIncome,
   onOpenAddModal,
   isSensitiveRevealed,
   onRevealSensitive,
 }) => {
+  const [markingReceivedId, setMarkingReceivedId] = useState<string | null>(null);
+  const [receivedAmountInput, setReceivedAmountInput] = useState('');
+  const [receivedDateInput, setReceivedDateInput] = useState('');
+
+  const startMarkingReceived = (item: IncomeItem) => {
+    setMarkingReceivedId(item.id);
+    setReceivedAmountInput(String(item.amount));
+    setReceivedDateInput(new Date().toISOString().split('T')[0]);
+  };
+
+  const confirmMarkReceived = (id: string) => {
+    const amount = Number(receivedAmountInput);
+    if (!receivedAmountInput || Number.isNaN(amount) || amount <= 0 || !receivedDateInput) return;
+    onMarkReceived(id, amount, receivedDateInput);
+    setMarkingReceivedId(null);
+  };
+
   const monthlyTotal = incomes
     .filter((i) => i.isActive)
     .reduce((sum, i) => sum + getMonthlyEquivalent(convertCurrency(i.amount, i.currency, currency), i.frequency), 0);
@@ -112,8 +131,8 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
             {incomes.map((item) => {
               const monthlyAmount = getMonthlyEquivalent(convertCurrency(item.amount, item.currency, currency), item.frequency);
               return (
+                <React.Fragment key={item.id}>
                 <div
-                  key={item.id}
                   className="ha-ledger-row"
                   style={{ opacity: item.isActive ? 1 : 0.55 }}
                 >
@@ -178,7 +197,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
                   <div className="ha-ledger-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '1rem' }}>
                     <button
                       className={`ha-payment-status${item.isReceivedThisCycle ? ' is-paid' : ' is-unpaid'}`}
-                      onClick={() => onToggleReceived(item.id)}
+                      onClick={() => (item.isReceivedThisCycle ? onToggleReceived(item.id) : startMarkingReceived(item))}
                       title={item.isReceivedThisCycle ? 'Received — click to mark not received' : 'Not received yet — click to mark received'}
                     >
                       {item.isReceivedThisCycle ? 'Received' : 'Not yet'}
@@ -212,6 +231,56 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {markingReceivedId === item.id && (
+                  <div style={{
+                    display: 'flex', alignItems: 'flex-end', gap: '0.6rem', flexWrap: 'wrap',
+                    padding: '0.75rem 1rem', backgroundColor: '#fafaf7', borderTop: '1px solid var(--ha-line)',
+                  }}>
+                    <div>
+                      <label style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.2rem' }}>
+                        Actual amount received
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={receivedAmountInput}
+                        onChange={(e) => setReceivedAmountInput(e.target.value)}
+                        className="ha-input"
+                        style={{ fontSize: '0.85rem', width: '140px' }}
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.2rem' }}>
+                        Date received
+                      </label>
+                      <input
+                        type="date"
+                        value={receivedDateInput}
+                        onChange={(e) => setReceivedDateInput(e.target.value)}
+                        className="ha-input"
+                        style={{ fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => confirmMarkReceived(item.id)}
+                      className="btn btn-primary"
+                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.7rem' }}
+                    >
+                      <CheckCircle2 size={13} /> Confirm received
+                    </button>
+                    <button
+                      onClick={() => setMarkingReceivedId(null)}
+                      className="btn btn-ghost"
+                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                </React.Fragment>
               );
             })}
           </div>

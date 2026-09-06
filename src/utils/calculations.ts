@@ -1,4 +1,4 @@
-import type { ExpenseCategory, ExpenseItem, SpendingSummary, CurrencyCode, IncomeItem, IncomeSummary, CustomCategoryItem } from '../types/expense';
+import type { ExpenseCategory, ExpenseItem, SpendingSummary, CurrencyCode, IncomeItem, IncomeSummary, CustomCategoryItem, BillingCycle } from '../types/expense';
 import { CURRENCIES } from './currencies';
 import { getCategoryMeta } from '../data/categories';
 
@@ -189,10 +189,40 @@ export function calculateSpendingSummary(
 }
 
 /**
+ * What an income actually contributed this month — the real, dated
+ * Transfer(s) linked to it that landed in the current calendar month (from
+ * "Mark received" or a statement's "Link to income"), summed, if any exist;
+ * otherwise the steady-state estimate from its usual amount/frequency.
+ * Mirrors getMonthlyContribution()'s real-over-estimate principle, but
+ * income is recurring by nature (unlike a one-off expense) — what makes a
+ * month "real" here is a matching Transfer dated in it, not the income
+ * record's own date, since the same Income can have many real Transfers
+ * over time and only this month's are relevant to this month's total.
+ */
+export function getIncomeMonthlyContribution(
+  item: { id: string; amount: number; currency: CurrencyCode; frequency: BillingCycle },
+  transfers: { linkedIncomeId?: string | null; date: string; amount: number; currency: CurrencyCode }[],
+  displayCurrency: CurrencyCode,
+  referenceDate: Date = new Date()
+): number {
+  const realThisMonth = transfers.filter(
+    (t) => t.linkedIncomeId === item.id && isSameCalendarMonth(t.date, referenceDate)
+  );
+  if (realThisMonth.length > 0) {
+    return realThisMonth.reduce((sum, t) => sum + convertCurrency(t.amount, t.currency, displayCurrency), 0);
+  }
+  return getMonthlyEquivalent(convertCurrency(item.amount, item.currency, displayCurrency), item.frequency);
+}
+
+/**
  * Computes total household income, normalized to monthly/annual figures.
+ * "Monthly" here is the real total where real received-income Transfers
+ * exist for the current month, and the steady-state estimate otherwise —
+ * see getIncomeMonthlyContribution().
  */
 export function calculateIncomeSummary(
   incomes: IncomeItem[],
+  transfers: { linkedIncomeId?: string | null; date: string; amount: number; currency: CurrencyCode }[] = [],
   displayCurrency: CurrencyCode = 'EUR'
 ): IncomeSummary {
   let monthlyTotal = 0;
@@ -200,8 +230,7 @@ export function calculateIncomeSummary(
 
   incomes.forEach((item) => {
     if (!item.isActive) return;
-    const amountInDisplay = convertCurrency(item.amount, item.currency, displayCurrency);
-    monthlyTotal += getMonthlyEquivalent(amountInDisplay, item.frequency);
+    monthlyTotal += getIncomeMonthlyContribution(item, transfers, displayCurrency);
     activeCount += 1;
   });
 

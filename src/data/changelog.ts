@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.59.1';
+export const APP_VERSION = '1.60.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.60.0',
+    date: '2026-09-06',
+    changes: [
+      'Statement import can now link money-in rows to your Income records too — a credit shows "Link to income" instead of the bill-side buttons, logging the real amount and date so a fluctuating salary reconciles properly instead of only ever being logged as an unlinked transfer.',
+      'Marking income "received" now asks for the actual amount and date, instead of always assuming the usual figure landed today — every monthly income total (Overview, Insights) uses the real amount for a month it exists, the usual estimate otherwise.',
+      'Undoing a "received" mark now also removes the real entry it logged for that month, so fixing a wrong amount by unmarking and re-confirming no longer double-counts it.',
+    ],
+  },
   {
     version: '1.59.1',
     date: '2026-09-06',

@@ -362,7 +362,7 @@ export default function TallyPage() {
 
   // Compute spend analytics summary
   const summary = calculateSpendingSummary(liveExpenses, currency, customCategories);
-  const incomeSummary = calculateIncomeSummary(incomes, currency);
+  const incomeSummary = calculateIncomeSummary(incomes, transfers, currency);
   const hasData = liveExpenses.length > 0 || incomes.length > 0;
   const firstName = currentUser?.name?.split(' ')[0] || 'there';
   const greetingHour = new Date().getHours();
@@ -669,6 +669,30 @@ export default function TallyPage() {
       });
     } catch (err) {
       console.error('Failed to update income received status in DB:', err);
+      fetchDatabaseData();
+    }
+  };
+
+  // Marking income received with the actual amount/date (which may differ
+  // from the income's usual figure — e.g. a fluctuating salary). Unlike the
+  // plain toggle above, this always refetches afterward since the server
+  // creates a real linked Transfer that "this month's real total" now
+  // depends on (see getIncomeMonthlyContribution in calculations.ts).
+  const handleMarkIncomeReceived = async (id: string, actualAmount: number, receivedDate: string) => {
+    const item = incomes.find((i) => i.id === id);
+    if (!item) return;
+
+    setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: true } : i)));
+
+    try {
+      await fetch('/api/income', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...item, isReceivedThisCycle: true, receivedAmount: actualAmount, receivedDate }),
+      });
+    } catch (err) {
+      console.error('Failed to mark income received in DB:', err);
+    } finally {
       fetchDatabaseData();
     }
   };
@@ -1118,6 +1142,7 @@ export default function TallyPage() {
               currency={currency}
               onToggleActive={handleToggleIncomeActive}
               onToggleReceived={handleToggleIncomeReceived}
+              onMarkReceived={handleMarkIncomeReceived}
               onEditIncome={(item) => {
                 setEditingIncome(item);
                 setIsIncomeModalOpen(true);
@@ -1340,6 +1365,7 @@ export default function TallyPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             <StatementsSection
               expenses={liveExpenses}
+              incomes={incomes}
               accounts={accounts}
               householdCurrency={currency}
               onExpensesChanged={fetchDatabaseData}
@@ -1581,6 +1607,7 @@ export default function TallyPage() {
         isOpen={isStatementModalOpen}
         onClose={() => setIsStatementModalOpen(false)}
         expenses={liveExpenses}
+        incomes={incomes}
         accounts={accounts}
         householdCurrency={currency}
         onImported={fetchDatabaseData}

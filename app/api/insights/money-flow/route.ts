@@ -8,6 +8,12 @@ import type { BillingCycle } from '@/src/types/expense';
 
 const ACCOUNT_SELECT = { id: true, name: true, type: true, institution: true } as const;
 
+function isCurrentMonth(dateStr: string): boolean {
+  const now = new Date();
+  const [year, month] = dateStr.split('-').map(Number);
+  return year === now.getFullYear() && month === now.getMonth() + 1;
+}
+
 export async function POST() {
   const auth = await requireHouseholdUser();
   if ('error' in auth) return auth.error;
@@ -81,6 +87,7 @@ export async function POST() {
     const incomes = await prisma.income.findMany({
       where: { householdId: auth.user.householdId, isActive: true },
       select: {
+        id: true,
         name: true,
         amount: true,
         currency: true,
@@ -94,10 +101,21 @@ export async function POST() {
       monthlyEquivalent: Math.round(getMonthlyContribution({ ...e, billingCycle: e.billingCycle as BillingCycle }) * 100) / 100,
     }));
 
-    const incomeContext = incomes.map((i) => ({
-      ...i,
-      monthlyEquivalent: Math.round(getMonthlyEquivalent(i.amount, i.frequency as BillingCycle) * 100) / 100,
-    }));
+    const incomeContext = incomes.map((i) => {
+      // The real amount already received this calendar month, if any real
+      // linked Transfer exists (from "Mark received" or a statement's
+      // "Link to income") — lets the AI see that a fluctuating income has
+      // actually landed, and at what real figure, instead of only ever
+      // seeing the usual/expected amount.
+      const actualThisMonth = transfers
+        .filter((t) => t.linkedIncome?.id === i.id && isCurrentMonth(t.date))
+        .reduce((sum, t) => sum + t.amount, 0);
+      return {
+        ...i,
+        monthlyEquivalent: Math.round(getMonthlyEquivalent(i.amount, i.frequency as BillingCycle) * 100) / 100,
+        actualReceivedThisMonth: actualThisMonth > 0 ? Math.round(actualThisMonth * 100) / 100 : null,
+      };
+    });
 
     const context = {
       accounts,

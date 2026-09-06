@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getEffectiveAmount, getMonthlyEquivalent, getMonthlyContribution } from '../calculations';
+import { getEffectiveAmount, getMonthlyEquivalent, getMonthlyContribution, getIncomeMonthlyContribution } from '../calculations';
 
 describe('getEffectiveAmount', () => {
   it('returns the full amount when no reimbursement is set', () => {
@@ -84,5 +84,42 @@ describe('getMonthlyContribution', () => {
   it('a pending (not-yet-received) reimbursement does not reduce the contribution', () => {
     const item = { amount: 60, billingCycle: 'once' as const, nextRenewalDate: '2026-09-03', reimbursementExpected: 45 };
     expect(getMonthlyContribution(item, referenceDate)).toBe(60);
+  });
+});
+
+describe('getIncomeMonthlyContribution', () => {
+  const referenceDate = new Date(2026, 8, 15); // 2026-09-15
+  const income = { id: 'inc-1', amount: 3000, currency: 'EUR' as const, frequency: 'monthly' as const };
+
+  it('falls back to the steady-state estimate when no real transfer exists this month', () => {
+    expect(getIncomeMonthlyContribution(income, [], 'EUR', referenceDate)).toBe(3000);
+  });
+
+  it('uses the real transfer amount for the current month instead of the estimate', () => {
+    const transfers = [{ linkedIncomeId: 'inc-1', date: '2026-09-10', amount: 3450, currency: 'EUR' as const }];
+    expect(getIncomeMonthlyContribution(income, transfers, 'EUR', referenceDate)).toBe(3450);
+  });
+
+  it('sums multiple real transfers dated in the current month', () => {
+    const transfers = [
+      { linkedIncomeId: 'inc-1', date: '2026-09-05', amount: 1500, currency: 'EUR' as const },
+      { linkedIncomeId: 'inc-1', date: '2026-09-20', amount: 1500, currency: 'EUR' as const },
+    ];
+    expect(getIncomeMonthlyContribution(income, transfers, 'EUR', referenceDate)).toBe(3000);
+  });
+
+  it('ignores a real transfer dated in a different month', () => {
+    const transfers = [{ linkedIncomeId: 'inc-1', date: '2026-08-10', amount: 2500, currency: 'EUR' as const }];
+    expect(getIncomeMonthlyContribution(income, transfers, 'EUR', referenceDate)).toBe(3000);
+  });
+
+  it('ignores a real transfer linked to a different income', () => {
+    const transfers = [{ linkedIncomeId: 'inc-2', date: '2026-09-10', amount: 9999, currency: 'EUR' as const }];
+    expect(getIncomeMonthlyContribution(income, transfers, 'EUR', referenceDate)).toBe(3000);
+  });
+
+  it('ignores an unlinked transfer (linkedIncomeId null)', () => {
+    const transfers = [{ linkedIncomeId: null, date: '2026-09-10', amount: 9999, currency: 'EUR' as const }];
+    expect(getIncomeMonthlyContribution(income, transfers, 'EUR', referenceDate)).toBe(3000);
   });
 });

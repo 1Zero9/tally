@@ -21,7 +21,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
 } from 'lucide-react';
-import type { ExpenseItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
+import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
 import { formatCurrency } from '../utils/formatters';
 import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
 import type { StatementAccountInfo } from '../lib/ai';
@@ -33,6 +33,7 @@ interface StatementImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   expenses: ExpenseItem[];
+  incomes: IncomeItem[];
   accounts: AccountItem[];
   householdCurrency: CurrencyCode;
   onImported: () => void;
@@ -138,6 +139,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   isOpen,
   onClose,
   expenses,
+  incomes,
   accounts,
   householdCurrency,
   onImported,
@@ -178,6 +180,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [busyTxId, setBusyTxId] = useState<string | null>(null);
   const [linkingTxId, setLinkingTxId] = useState<string | null>(null);
   const [selectedExpenseId, setSelectedExpenseId] = useState<Record<string, string>>({});
+  const [linkingIncomeTxId, setLinkingIncomeTxId] = useState<string | null>(null);
+  const [selectedIncomeId, setSelectedIncomeId] = useState<Record<string, string>>({});
   const [categorizingTxId, setCategorizingTxId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Record<string, ExpenseCategory | ''>>({});
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
@@ -240,6 +244,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setBusyTxId(null);
     setLinkingTxId(null);
     setSelectedExpenseId({});
+    setLinkingIncomeTxId(null);
+    setSelectedIncomeId({});
     setCategorizingTxId(null);
     setSelectedCategory({});
     setNoteInput({});
@@ -665,10 +671,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       if (data.status === 'ok') {
         setTransactions((prev) => prev.map((t) => (t.id === txId || (action === 'rename_merchant' && t.normalizedDescription === data.transaction.normalizedDescription) ? { ...t, vendorName: data.transaction.vendorName ?? t.vendorName, ...(t.id === txId ? data.transaction : {}) } : t)));
         setLinkingTxId(null);
+        setLinkingIncomeTxId(null);
         setCategorizingTxId(null);
         setLoggingTransferTxId(null);
         setRenamingTxId(null);
-        if (['categorize', 'confirm', 'link_expense', 'log_transfer'].includes(action)) {
+        if (['categorize', 'confirm', 'link_expense', 'link_income', 'log_transfer'].includes(action)) {
           onExpensesChanged?.();
         }
       }
@@ -1845,6 +1852,29 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     Cancel
                                   </button>
                                 </div>
+                              ) : linkingIncomeTxId === tx.id ? (
+                                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                  <select
+                                    className="ha-input"
+                                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                                    value={selectedIncomeId[tx.id] || ''}
+                                    onChange={(e) => setSelectedIncomeId((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                  >
+                                    <option value="">— Choose an income —</option>
+                                    {incomes.map((inc) => <option key={inc.id} value={inc.id}>{inc.name}</option>)}
+                                  </select>
+                                  <button
+                                    disabled={!selectedIncomeId[tx.id] || isBusy}
+                                    onClick={() => resolveTx(tx.id, 'link_income', { incomeId: selectedIncomeId[tx.id] })}
+                                    className="btn btn-primary"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    Link
+                                  </button>
+                                  <button onClick={() => setLinkingIncomeTxId(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                    Cancel
+                                  </button>
+                                </div>
                               ) : categorizingTxId === tx.id ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                   <CategorySelect
@@ -1908,6 +1938,48 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                       Cancel
                                     </button>
                                   </div>
+                                </div>
+                              ) : tx.direction === 'CREDIT' ? (
+                                // Money in — the only real destinations are the household's
+                                // Income records, or an unlinked "log as transfer" for a
+                                // one-off credit (a refund, a gift) that isn't tracked income.
+                                // "Link to a bill" / "Add as expense" are expense-side concepts
+                                // that don't apply here.
+                                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                  {(tx.matchedExpense || tx.matchedTransfer) && (
+                                    <button
+                                      disabled={isBusy}
+                                      onClick={() => resolveTx(tx.id, 'confirm')}
+                                      className="btn btn-secondary"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', color: 'var(--ha-blue)', borderColor: 'var(--ha-blue)' }}
+                                    >
+                                      {isBusy ? <Loader2 size={12} className="spin" /> : <CheckCircle2 size={12} />} Yes, that&apos;s right
+                                    </button>
+                                  )}
+                                  <button
+                                    disabled={isBusy}
+                                    onClick={() => setLinkingIncomeTxId(tx.id)}
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    <Link2 size={12} /> {(tx.matchedExpense || tx.matchedTransfer) ? 'No, link a different income' : 'Link to income'}
+                                  </button>
+                                  <button
+                                    disabled={isBusy}
+                                    onClick={() => setLoggingTransferTxId(tx.id)}
+                                    className="btn btn-ghost"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    <PlusCircle size={12} /> Log as transfer
+                                  </button>
+                                  <button
+                                    disabled={isBusy}
+                                    onClick={() => resolveTx(tx.id, 'ignore')}
+                                    className="btn btn-ghost"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    <EyeOff size={12} /> Ignore
+                                  </button>
                                 </div>
                               ) : (
                                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
