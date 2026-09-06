@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.63.0';
+export const APP_VERSION = '1.64.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.64.0',
+    date: '2026-09-06',
+    changes: [
+      'The Add/Edit expense form now shows just the essentials by default — amount, name, cycle, category, due date, payment method — with member assignment, contract end date, reimbursement, vendor contact and notes tucked behind an "Add optional details" toggle. Editing a bill that already has any of that set expands it automatically, so nothing already recorded is hidden.',
+    ],
+  },
   {
     version: '1.63.0',
     date: '2026-09-06',

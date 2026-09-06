@@ -5,7 +5,7 @@ import { CategorySelect } from './CategorySelect';
 import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
-import { X, ArrowRightLeft, Loader2 } from 'lucide-react';
+import { X, ArrowRightLeft, Loader2, ChevronDown } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
 
 const PAYMENT_METHODS = [
@@ -84,6 +84,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const [reimbursementReceived, setReimbursementReceived] = useState<number | string>('');
   const [reimbursementReceivedDate, setReimbursementReceivedDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  // Optional/advanced fields (assignment, contract, reimbursement, vendor
+  // contact, notes) start collapsed for a new expense — but auto-expand
+  // when editing one that already has any of that data set, so nothing
+  // already recorded is hidden from view.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     if (editingExpense) {
@@ -113,6 +118,15 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setReimbursementExpected(editingExpense.reimbursementExpected ?? '');
       setReimbursementReceived(editingExpense.reimbursementReceived ?? '');
       setReimbursementReceivedDate(editingExpense.reimbursementReceivedDate ?? '');
+      setAdvancedOpen(!!(
+        editingExpense.contractEndDate ||
+        editingExpense.vendor ||
+        editingExpense.vendorEmail ||
+        editingExpense.notes ||
+        editingExpense.reimbursementExpected ||
+        editingExpense.reimbursementReceived ||
+        (editingExpense.createdById && editingExpense.createdById !== currentUserId)
+      ));
     } else if (initialPresetId) {
       const preset = PRESETS.find((p) => p.id === initialPresetId);
       if (preset) {
@@ -139,6 +153,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         setReimbursementExpected('');
         setReimbursementReceived('');
         setReimbursementReceivedDate('');
+        setAdvancedOpen(false);
       }
     } else if (draftExpense) {
       setName(draftExpense.name || '');
@@ -167,6 +182,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setReimbursementExpected(draftExpense.reimbursementExpected ?? '');
       setReimbursementReceived(draftExpense.reimbursementReceived ?? '');
       setReimbursementReceivedDate(draftExpense.reimbursementReceivedDate ?? '');
+      // A scanned receipt that already read a vendor name is worth showing
+      // right away rather than tucking it behind an extra click.
+      setAdvancedOpen(!!draftExpense.vendor);
     } else {
       setName('');
       setVendor('');
@@ -194,6 +212,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setReimbursementExpected('');
       setReimbursementReceived('');
       setReimbursementReceivedDate('');
+      setAdvancedOpen(false);
     }
   }, [editingExpense, initialPresetId, initialCategory, initialIsPending, draftExpense, currentUserId, isOpen]);
 
@@ -461,42 +480,20 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </div>
           )}
 
-          {/* Member Assignment & Renewal Day */}
-          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
-            {users.length > 0 && (
-              <div>
-                <label htmlFor="expense-assigned-user" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
-                  Assigned Household Member
-                </label>
-                <select
-                  id="expense-assigned-user"
-                  value={assignedUserId}
-                  onChange={(e) => setAssignedUserId(e.target.value)}
-                  className="ha-input"
-                >
-                  <option value="">Household (Shared)</option>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.role.replace('_', ' ')})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="expense-next-renewal-date" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
-                {billingCycle === 'once' ? 'Payment date' : 'Next due date'}
-              </label>
-              <input
-                id="expense-next-renewal-date"
-                type="date"
-                required
-                value={nextRenewalDate}
-                onChange={(e) => setNextRenewalDate(e.target.value)}
-                className="ha-input tabular-nums"
-              />
-            </div>
+          {/* Next due / payment date */}
+          <div>
+            <label htmlFor="expense-next-renewal-date" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              {billingCycle === 'once' ? 'Payment date' : 'Next due date'}
+            </label>
+            <input
+              id="expense-next-renewal-date"
+              type="date"
+              required
+              value={nextRenewalDate}
+              onChange={(e) => setNextRenewalDate(e.target.value)}
+              className="ha-input tabular-nums"
+              style={{ maxWidth: '220px' }}
+            />
           </div>
 
           {/* Paid this cycle & variable amount toggles */}
@@ -550,42 +547,25 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             )}
           </div>
 
-          {/* Payment Method & Contract End Date */}
-          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: billingCycle === 'once' ? '1fr' : '1.4fr 1fr', gap: '1rem' }}>
-            <div>
-              <label htmlFor="expense-payment-method" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
-                Payment method
-              </label>
-              <select
-                id="expense-payment-method"
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="ha-input"
-              >
-                {!PAYMENT_METHODS.includes(paymentMethod) && paymentMethod && (
-                  <option value={paymentMethod}>{paymentMethod}</option>
-                )}
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
-            {billingCycle !== 'once' && (
-              <div>
-                <label htmlFor="expense-contract-end-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                  Contract end date (optional)
-                </label>
-                <input
-                  id="expense-contract-end-date"
-                  type="date"
-                  value={contractEndDate}
-                  onChange={(e) => setContractEndDate(e.target.value)}
-                  className="ha-input"
-                  style={{ fontSize: '0.82rem' }}
-                />
-              </div>
-            )}
+          {/* Payment method */}
+          <div>
+            <label htmlFor="expense-payment-method" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              Payment method
+            </label>
+            <select
+              id="expense-payment-method"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="ha-input"
+              style={{ maxWidth: '320px' }}
+            >
+              {!PAYMENT_METHODS.includes(paymentMethod) && paymentMethod && (
+                <option value={paymentMethod}>{paymentMethod}</option>
+              )}
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
 
           {accounts.length > 0 && (
@@ -607,121 +587,195 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </div>
           )}
 
-          {/* Partial reimbursement / insurance claim */}
-          <div>
-            <label htmlFor="expense-reimbursement-expected" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
-              Reimbursement / claim expected (optional)
-            </label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', maxWidth: '220px' }}>
-              <span style={{ position: 'absolute', left: '0.85rem', fontSize: '0.9rem', color: 'var(--ha-muted)', pointerEvents: 'none' }}>
-                {currencySymbol}
-              </span>
-              <input
-                id="expense-reimbursement-expected"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={reimbursementExpected}
-                onChange={(e) => setReimbursementExpected(e.target.value)}
-                className="ha-input"
-                style={{ paddingLeft: '1.7rem', fontSize: '0.85rem' }}
-              />
-            </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '0.3rem' }}>
-              e.g. a health insurance claim on a doctor visit — once you mark it received below, only the net cost counts toward Spending and Budgets. Until then, the full amount still counts, since it&apos;s genuinely out of pocket.
-            </p>
+          {/* Optional / advanced details — collapsed by default for a new
+              expense, auto-expanded when editing one that already has any
+              of this set (see the effect above). */}
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((v) => !v)}
+            aria-expanded={advancedOpen}
+            aria-controls="expense-advanced-fields"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              alignSelf: 'flex-start',
+              background: 'none',
+              border: 'none',
+              padding: '0.3rem 0',
+              cursor: 'pointer',
+              color: 'var(--ha-blue)',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+            }}
+          >
+            <ChevronDown
+              size={14}
+              style={{ transform: advancedOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.15s ease' }}
+            />
+            {advancedOpen ? 'Hide optional details' : 'Add optional details'}
+            <span style={{ fontWeight: 400, color: 'var(--ha-muted)' }}>
+              — assignment, contract, reimbursement, vendor contact, notes
+            </span>
+          </button>
 
-            {reimbursementExpected !== '' && Number(reimbursementExpected) > 0 && (
-              <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
+          {advancedOpen && (
+            <div id="expense-advanced-fields" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {users.length > 0 && (
                 <div>
-                  <label htmlFor="expense-reimbursement-received" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                    Amount received (leave blank until it arrives)
+                  <label htmlFor="expense-assigned-user" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+                    Assigned Household Member
+                  </label>
+                  <select
+                    id="expense-assigned-user"
+                    value={assignedUserId}
+                    onChange={(e) => setAssignedUserId(e.target.value)}
+                    className="ha-input"
+                    style={{ maxWidth: '320px' }}
+                  >
+                    <option value="">Household (Shared)</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.role.replace('_', ' ')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {billingCycle !== 'once' && (
+                <div>
+                  <label htmlFor="expense-contract-end-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                    Contract end date (optional)
                   </label>
                   <input
-                    id="expense-reimbursement-received"
+                    id="expense-contract-end-date"
+                    type="date"
+                    value={contractEndDate}
+                    onChange={(e) => setContractEndDate(e.target.value)}
+                    className="ha-input"
+                    style={{ fontSize: '0.82rem', maxWidth: '220px' }}
+                  />
+                </div>
+              )}
+
+              {/* Partial reimbursement / insurance claim */}
+              <div>
+                <label htmlFor="expense-reimbursement-expected" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+                  Reimbursement / claim expected (optional)
+                </label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', maxWidth: '220px' }}>
+                  <span style={{ position: 'absolute', left: '0.85rem', fontSize: '0.9rem', color: 'var(--ha-muted)', pointerEvents: 'none' }}>
+                    {currencySymbol}
+                  </span>
+                  <input
+                    id="expense-reimbursement-expected"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="0.00"
-                    value={reimbursementReceived}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setReimbursementReceived(value);
-                      if (value !== '' && Number(value) > 0 && !reimbursementReceivedDate) {
-                        setReimbursementReceivedDate(new Date().toISOString().split('T')[0]);
-                      }
-                    }}
+                    value={reimbursementExpected}
+                    onChange={(e) => setReimbursementExpected(e.target.value)}
                     className="ha-input"
-                    style={{ fontSize: '0.85rem' }}
+                    style={{ paddingLeft: '1.7rem', fontSize: '0.85rem' }}
                   />
                 </div>
-                {reimbursementReceived !== '' && Number(reimbursementReceived) > 0 && (
-                  <div>
-                    <label htmlFor="expense-reimbursement-received-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                      Received date
-                    </label>
-                    <input
-                      id="expense-reimbursement-received-date"
-                      type="date"
-                      value={reimbursementReceivedDate}
-                      onChange={(e) => setReimbursementReceivedDate(e.target.value)}
-                      className="ha-input tabular-nums"
-                      style={{ fontSize: '0.85rem' }}
-                    />
+                <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '0.3rem' }}>
+                  e.g. a health insurance claim on a doctor visit — once you mark it received below, only the net cost counts toward Spending and Budgets. Until then, the full amount still counts, since it&apos;s genuinely out of pocket.
+                </p>
+
+                {reimbursementExpected !== '' && Number(reimbursementExpected) > 0 && (
+                  <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
+                    <div>
+                      <label htmlFor="expense-reimbursement-received" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                        Amount received (leave blank until it arrives)
+                      </label>
+                      <input
+                        id="expense-reimbursement-received"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={reimbursementReceived}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setReimbursementReceived(value);
+                          if (value !== '' && Number(value) > 0 && !reimbursementReceivedDate) {
+                            setReimbursementReceivedDate(new Date().toISOString().split('T')[0]);
+                          }
+                        }}
+                        className="ha-input"
+                        style={{ fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    {reimbursementReceived !== '' && Number(reimbursementReceived) > 0 && (
+                      <div>
+                        <label htmlFor="expense-reimbursement-received-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                          Received date
+                        </label>
+                        <input
+                          id="expense-reimbursement-received-date"
+                          type="date"
+                          value={reimbursementReceivedDate}
+                          onChange={(e) => setReimbursementReceivedDate(e.target.value)}
+                          className="ha-input tabular-nums"
+                          style={{ fontSize: '0.85rem' }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Vendor name & email (for contract-review outreach) */}
-          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label htmlFor="expense-vendor" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                Vendor / provider name (optional)
-              </label>
-              <input
-                id="expense-vendor"
-                type="text"
-                placeholder="e.g. Vodafone, Allianz — if different from the item name"
-                value={vendor}
-                onChange={(e) => setVendor(e.target.value)}
-                className="ha-input"
-                style={{ fontSize: '0.82rem' }}
-              />
-            </div>
-            <div>
-              <label htmlFor="expense-vendor-email" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                Vendor / provider email (optional)
-              </label>
-              <input
-                id="expense-vendor-email"
-                type="email"
-                placeholder="e.g. support@provider.com"
-                value={vendorEmail}
-                onChange={(e) => setVendorEmail(e.target.value)}
-                className="ha-input"
-                style={{ fontSize: '0.82rem' }}
-              />
-            </div>
-          </div>
+              {/* Vendor name & email (for contract-review outreach) */}
+              <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label htmlFor="expense-vendor" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                    Vendor / provider name (optional)
+                  </label>
+                  <input
+                    id="expense-vendor"
+                    type="text"
+                    placeholder="e.g. Vodafone, Allianz — if different from the item name"
+                    value={vendor}
+                    onChange={(e) => setVendor(e.target.value)}
+                    className="ha-input"
+                    style={{ fontSize: '0.82rem' }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="expense-vendor-email" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                    Vendor / provider email (optional)
+                  </label>
+                  <input
+                    id="expense-vendor-email"
+                    type="email"
+                    placeholder="e.g. support@provider.com"
+                    value={vendorEmail}
+                    onChange={(e) => setVendorEmail(e.target.value)}
+                    className="ha-input"
+                    style={{ fontSize: '0.82rem' }}
+                  />
+                </div>
+              </div>
 
-          {/* Optional Notes */}
-          <div>
-            <label htmlFor="expense-notes" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
-              Notes (optional)
-            </label>
-            <input
-              id="expense-notes"
-              type="text"
-              placeholder="e.g. Semester 1 fee, Year 2 college student contribution, Friday coaching"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="ha-input"
-              style={{ fontSize: '0.82rem' }}
-            />
-          </div>
+              {/* Optional Notes */}
+              <div>
+                <label htmlFor="expense-notes" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                  Notes (optional)
+                </label>
+                <input
+                  id="expense-notes"
+                  type="text"
+                  placeholder="e.g. Semester 1 fee, Year 2 college student contribution, Friday coaching"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="ha-input"
+                  style={{ fontSize: '0.82rem' }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div style={{
