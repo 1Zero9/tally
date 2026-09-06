@@ -67,8 +67,8 @@ Nearly every model index's `householdId`, since virtually every query is househo
 
 Tally uses **passwordless, 6-digit magic-code sign-in** — there are no stored passwords anywhere.
 
-1. `POST /api/auth/send-code` — issues a `VerificationToken` (6-digit code, 15-minute expiry) for the given email and emails it via Resend.
-2. `POST /api/auth/verify-code` — checks the code (with an `attempts` limit against brute-forcing), creates a `Session` row, and sets an httpOnly `tally_session` cookie.
+1. `POST /api/auth/send-code` — issues a `VerificationToken` (6-digit code from `crypto.randomInt`, 15-minute expiry, stored only as a keyed digest via `hashCode()` in `src/lib/otp.ts` — never in plain text, never logged) for the given email and emails it via Resend; fails loudly (503) rather than falling back to logging the code if email isn't configured.
+2. `POST /api/auth/verify-code` — checks the code against its digest, atomically (`{ increment: 1 }`, one SQL `UPDATE`, race-safe under concurrent guesses) enforcing a 5-`attempts` cap against brute-forcing, and atomically consumes a correct code (`deleteMany` + checked row count) so two concurrent requests with the same correct code can't both mint a session; creates a `Session` row and sets an httpOnly `tally_session` cookie. Both routes also apply a per-IP sliding-window throttle (`src/lib/rateLimit.ts`).
 3. `getSessionUser()` (`src/lib/auth.ts`) is the **single source of truth** for "who is making this request" on every API route — request bodies are never trusted for identity, user ID, household ID, or role.
 
 **Sliding expiration**: sessions last 30 days from creation, but `getSessionUser()` transparently extends (`touch`es) a session back out to a fresh 30 days once its remaining life drops under ~25 days. `middleware.ts` mirrors this by refreshing the cookie's own `maxAge` on every request, so the browser cookie and the DB session never drift out of sync — anyone who opens the app at least once every ~25–30 days stays signed in indefinitely without re-entering a code.
@@ -184,6 +184,7 @@ A structured inventory of user-facing functionality (see [`user-guide.md`](./use
 | `DATABASE_URL` | Yes | Pooled PostgreSQL connection string (Prisma Client) |
 | `DIRECT_URL` | Yes | Direct (non-pooled) PostgreSQL connection string (Prisma migrations) |
 | `CREDENTIALS_ENCRYPTION_KEY` | Yes, to store account credentials | Base64-encoded 32-byte AES-256-GCM key (`openssl rand -base64 32`) |
+| `AUTH_SECRET` | Recommended | Keys the digest sign-in codes are hashed with before storage (`src/lib/otp.ts`) — any string, e.g. `openssl rand -base64 32`. Falls back to `CREDENTIALS_ENCRYPTION_KEY` if unset, then to a built-in (weak) default with a logged warning — sign-in still works either way, but a dedicated value gives the strongest protection |
 | `GOOGLE_AI_API_KEY` | Yes, for any AI feature | Gemini API key |
 | `RESEND_API_KEY` (and related Resend config) | Yes, to send emails | Login codes, invites, renewal reminders |
 | `NEXT_PUBLIC_APP_URL` | Optional | Base URL used in emails/links (defaults to localhost in dev) |

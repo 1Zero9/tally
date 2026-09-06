@@ -84,8 +84,8 @@ export default function TechnicalOverviewPage() {
         passwords anywhere.
       </p>
       <ul>
-        <li><code>POST /api/auth/send-code</code> — issues a VerificationToken (6-digit code, 15-minute expiry) for the given email and emails it via Resend.</li>
-        <li><code>POST /api/auth/verify-code</code> — checks the code (with an attempts limit against brute-forcing), creates a Session row, and sets an httpOnly <code>tally_session</code> cookie.</li>
+        <li><code>POST /api/auth/send-code</code> — issues a VerificationToken (6-digit code from <code>crypto.randomInt</code>, 15-minute expiry, stored only as a keyed digest — never in plain text, never logged) for the given email and emails it via Resend; fails loudly rather than falling back to logging the code if email isn&apos;t configured.</li>
+        <li><code>POST /api/auth/verify-code</code> — checks the code against its digest, atomically enforcing a 5-attempts cap against brute-forcing (race-safe under concurrent guesses) and atomically consuming a correct code so two concurrent requests can&apos;t both mint a session, creates a Session row, and sets an httpOnly <code>tally_session</code> cookie. Both routes apply a per-IP throttle.</li>
         <li><code>getSessionUser()</code> (<code>src/lib/auth.ts</code>) is the single source of truth for &quot;who is making this request&quot; on every API route — request bodies are never trusted for identity, user ID, household ID, or role.</li>
       </ul>
       <p>
@@ -275,6 +275,7 @@ export default function TechnicalOverviewPage() {
           <tr><td><code>DATABASE_URL</code></td><td>Yes</td><td>Pooled PostgreSQL connection string (Prisma Client)</td></tr>
           <tr><td><code>DIRECT_URL</code></td><td>Yes</td><td>Direct (non-pooled) PostgreSQL connection string (Prisma migrations)</td></tr>
           <tr><td><code>CREDENTIALS_ENCRYPTION_KEY</code></td><td>Yes, to store account credentials</td><td>Base64-encoded 32-byte AES-256-GCM key</td></tr>
+          <tr><td><code>AUTH_SECRET</code></td><td>Recommended</td><td>Keys the digest sign-in codes are hashed with before storage — falls back to <code>CREDENTIALS_ENCRYPTION_KEY</code>, then a built-in default, so sign-in still works either way</td></tr>
           <tr><td><code>GOOGLE_AI_API_KEY</code></td><td>Yes, for any AI feature</td><td>Gemini API key</td></tr>
           <tr><td><code>RESEND_API_KEY</code></td><td>Yes, to send emails</td><td>Login codes, invites, renewal reminders</td></tr>
           <tr><td><code>NEXT_PUBLIC_APP_URL</code></td><td>Optional</td><td>Base URL used in emails/links (defaults to localhost in dev)</td></tr>

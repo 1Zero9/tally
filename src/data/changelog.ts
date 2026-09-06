@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.60.0';
+export const APP_VERSION = '1.60.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.60.1',
+    date: '2026-09-06',
+    changes: [
+      'Hardened sign-in codes following a security review: codes are now generated with a cryptographic random source (not a weaker general-purpose one), are never written to server logs, and are stored only as a keyed digest rather than in plain text.',
+      'Fixed a race condition where many simultaneous wrong-code guesses could bypass the 5-attempt limit; a correct code can also no longer be used twice by two requests arriving at the same moment.',
+    ],
+  },
   {
     version: '1.60.0',
     date: '2026-09-06',

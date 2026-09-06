@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { isEmailConfigured, sendVerificationCodeEmail } from '@/src/lib/mail';
+import { hashCode } from '@/src/lib/otp';
+import { isRateLimited, getClientIp } from '@/src/lib/rateLimit';
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 30 * 1000;
@@ -14,26 +17,9 @@ const RESEND_COOLDOWN_MS = 30 * 1000;
 // for a single instance without adding infra dependencies.
 const IP_WINDOW_MS = 10 * 60 * 1000;
 const IP_MAX_REQUESTS = 20;
-const ipHits = new Map<string, number[]>();
 
 function isIpRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (ipHits.get(ip) || []).filter((t) => now - t < IP_WINDOW_MS);
-  hits.push(now);
-  ipHits.set(ip, hits);
-  if (ipHits.size > 5000) {
-    // Simple unbounded-growth guard for a long-lived instance.
-    for (const [key, times] of ipHits) {
-      if (times.every((t) => now - t >= IP_WINDOW_MS)) ipHits.delete(key);
-    }
-  }
-  return hits.length > IP_MAX_REQUESTS;
-}
-
-function getClientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return request.headers.get('x-real-ip') || 'unknown';
+  return isRateLimited(`send-code:${ip}`, IP_WINDOW_MS, IP_MAX_REQUESTS);
 }
 
 // This app is single-tenant / invite-only: nobody can self-register. A code
@@ -80,42 +66,45 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate 6-digit numeric OTP code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // A passwordless app can't function without a real delivery channel —
+    // fail loudly here rather than silently falling back to logging the
+    // live code (which used to happen below; never do that).
+    if (!isEmailConfigured()) {
+      return NextResponse.json(
+        { status: 'error', message: 'Sign-in email isn’t configured yet. Ask an admin to set RESEND_API_KEY.' },
+        { status: 503 }
+      );
+    }
+
+    // Generate a 6-digit numeric OTP using a CSPRNG (not Math.random).
+    const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
-    // Invalidate any previous outstanding codes for this email, then issue a new one.
+    // Store only a keyed digest — never the live code — so reading this
+    // table alone (a DB dump, a support person, a compromised log) can't
+    // reveal a usable sign-in code. See src/lib/otp.ts.
     await prisma.verificationToken.deleteMany({ where: { email } });
     await prisma.verificationToken.create({
       data: {
         email,
-        code,
+        code: hashCode(email, code),
         expiresAt,
       },
     });
 
-    // The code must NEVER be returned in the API response or shown in the
-    // browser, since that would let anyone sign in as anyone just by knowing
-    // their email. Always log server-side as a fallback/debug trail.
-    console.log(`[auth] Verification code for ${email}: ${code} (expires ${expiresAt.toISOString()})`);
-
-    if (isEmailConfigured()) {
-      try {
-        await sendVerificationCodeEmail(email, code);
-      } catch (emailError: unknown) {
-        console.error('Failed to send verification email:', emailError);
-        return NextResponse.json(
-          { status: 'error', message: 'Failed to send the verification email. Please try again.' },
-          { status: 502 }
-        );
-      }
+    try {
+      await sendVerificationCodeEmail(email, code);
+    } catch (emailError: unknown) {
+      console.error('Failed to send verification email:', emailError);
+      return NextResponse.json(
+        { status: 'error', message: 'Failed to send the verification email. Please try again.' },
+        { status: 502 }
+      );
     }
 
     return NextResponse.json({
       status: 'ok',
-      message: isEmailConfigured()
-        ? `A verification code has been sent to ${email}.`
-        : `Email isn't configured yet — check the server logs for the verification code.`,
+      message: `A verification code has been sent to ${email}.`,
     });
   } catch (error: unknown) {
     console.error('Failed to send code:', error);
