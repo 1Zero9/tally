@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.58.0';
+export const APP_VERSION = '1.59.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.59.0',
+    date: '2026-09-06',
+    changes: [
+      'Statement import now also reads the BIC/SWIFT code off a PDF or photo statement, alongside the account number, sort code, and IBAN it already extracted.',
+      'Importing a statement now cross-checks those details against every account you\'ve already saved, not just the one you pick — a clear single match is selected for you automatically, or you\'re shown a short list to choose from if it could be more than one.',
+      'Adding a new account straight from a statement import now saves all four extracted details (account number, sort code, IBAN, BIC), not just the first two.',
+    ],
+  },
   {
     version: '1.58.0',
     date: '2026-09-06',

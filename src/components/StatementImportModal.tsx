@@ -87,6 +87,20 @@ const STATUS_SORT_ORDER: Record<StatementTransactionItem['status'], number> = {
   IGNORED: 3,
 };
 
+const MATCHED_FIELD_LABELS: Record<string, string> = {
+  accountNumber: 'account number',
+  routingNumber: 'sort code',
+  iban: 'IBAN',
+  bic: 'BIC',
+};
+
+function joinFieldLabels(fields: string[]): string {
+  const labels = fields.map((f) => MATCHED_FIELD_LABELS[f] || f);
+  if (labels.length <= 1) return labels.join('');
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(', ')}, and ${labels[labels.length - 1]}`;
+}
+
 const CYCLE_LABELS: Record<DetectedBillingCycle, string> = {
   weekly: 'weekly',
   monthly: 'monthly',
@@ -178,9 +192,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [aiRows, setAiRows] = useState<PreparedRow[] | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [accountInfo, setAccountInfo] = useState<StatementAccountInfo | null>(null);
-  const [accountMatch, setAccountMatch] = useState<{ accountNumber: FieldMatch; routingNumber: FieldMatch } | null>(null);
-  const [savingField, setSavingField] = useState<'accountNumber' | 'routingNumber' | null>(null);
-  const [savedFields, setSavedFields] = useState<{ accountNumber?: boolean; routingNumber?: boolean }>({});
+  const [accountMatch, setAccountMatch] = useState<{ accountNumber: FieldMatch; routingNumber: FieldMatch; iban: FieldMatch; bic: FieldMatch } | null>(null);
+  const [savingField, setSavingField] = useState<'accountNumber' | 'routingNumber' | 'iban' | 'bic' | null>(null);
+  const [savedFields, setSavedFields] = useState<{ accountNumber?: boolean; routingNumber?: boolean; iban?: boolean; bic?: boolean }>({});
+  const [matchCandidates, setMatchCandidates] = useState<{ accountId: string; accountName: string; matchedFields: string[] }[]>([]);
+  const [autoMatchedAccountId, setAutoMatchedAccountId] = useState<string | null>(null);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountInstitution, setNewAccountInstitution] = useState('');
@@ -240,6 +256,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setAccountMatch(null);
     setSavingField(null);
     setSavedFields({});
+    setMatchCandidates([]);
+    setAutoMatchedAccountId(null);
     setIsCreatingAccount(false);
     setNewAccountName('');
     setNewAccountInstitution('');
@@ -432,9 +450,59 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     ? true
     : dateCol !== null && descCol !== null && (amountMode === 'single' ? amountCol !== null : debitCol !== null || creditCol !== null);
 
+  // The candidate that was actually auto-selected, if the currently
+  // selected account still is the one auto-matching picked (the user
+  // hasn't overridden it since) — used to show which fields matched.
+  const matchedWinner = autoMatchedAccountId && accountId === autoMatchedAccountId
+    ? matchCandidates.find((c) => c.accountId === autoMatchedAccountId) || null
+    : null;
+
+  // Cross-references the statement's extracted account details against
+  // EVERY account already saved in the household, so the right one can be
+  // suggested (or auto-selected, when unambiguous) before the user has to
+  // manually pick anything. Runs once per extracted statement, not on every
+  // accountId change — a manual selection is never fought once made (see
+  // the `prev || …` guard below).
+  useEffect(() => {
+    setMatchCandidates([]);
+    setAutoMatchedAccountId(null);
+    if (step !== 'map' || !accountInfo) return;
+    const { accountNumber, sortCode, iban, bic } = accountInfo;
+    if (!accountNumber && !sortCode && !iban && !bic) return;
+    let cancelled = false;
+    fetch('/api/accounts/match-statement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountNumber, sortCode, iban, bic }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || data.status !== 'ok') return;
+        const candidates: { accountId: string; accountName: string; matchedFields: string[] }[] = data.candidates || [];
+        setMatchCandidates(candidates);
+        // A single matched field (e.g. just a sort code, often shared across
+        // many accounts at the same bank) is a much weaker signal than
+        // several fields matching at once — so only auto-select when the
+        // top candidate clearly beats the runner-up on matched-field count,
+        // not merely whenever there happens to be exactly one candidate.
+        const isClearWinner =
+          candidates.length === 1 ||
+          (candidates.length > 1 && candidates[0].matchedFields.length > candidates[1].matchedFields.length);
+        if (isClearWinner && candidates.length > 0) {
+          setAccountId((prev) => prev || candidates[0].accountId);
+          setAutoMatchedAccountId(candidates[0].accountId);
+        }
+      })
+      .catch(() => { if (!cancelled) setMatchCandidates([]); });
+    return () => { cancelled = true; };
+  }, [accountInfo, step]);
+
   useEffect(() => {
     setSavedFields({});
-    if (step !== 'map' || !accountId || !accountInfo || (!accountInfo.accountNumber && !accountInfo.sortCode)) {
+    if (
+      step !== 'map' || !accountId || !accountInfo ||
+      (!accountInfo.accountNumber && !accountInfo.sortCode && !accountInfo.iban && !accountInfo.bic)
+    ) {
       setAccountMatch(null);
       return;
     }
@@ -442,18 +510,27 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     fetch(`/api/accounts/${accountId}/compare-statement`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accountNumber: accountInfo.accountNumber, sortCode: accountInfo.sortCode }),
+      body: JSON.stringify({
+        accountNumber: accountInfo.accountNumber,
+        sortCode: accountInfo.sortCode,
+        iban: accountInfo.iban,
+        bic: accountInfo.bic,
+      }),
     })
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        setAccountMatch(data.status === 'ok' ? { accountNumber: data.accountNumber, routingNumber: data.routingNumber } : null);
+        setAccountMatch(
+          data.status === 'ok'
+            ? { accountNumber: data.accountNumber, routingNumber: data.routingNumber, iban: data.iban, bic: data.bic }
+            : null
+        );
       })
       .catch(() => { if (!cancelled) setAccountMatch(null); });
     return () => { cancelled = true; };
   }, [accountId, accountInfo, step]);
 
-  const saveAccountField = async (field: 'accountNumber' | 'routingNumber', value: string) => {
+  const saveAccountField = async (field: 'accountNumber' | 'routingNumber' | 'iban' | 'bic', value: string) => {
     if (!accountId) return;
     setSavingField(field);
     try {
@@ -505,6 +582,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
           isActive: true,
           ...(accountInfo?.accountNumber ? { accountNumber: accountInfo.accountNumber } : {}),
           ...(accountInfo?.sortCode ? { routingNumber: accountInfo.sortCode } : {}),
+          ...(accountInfo?.iban ? { iban: accountInfo.iban } : {}),
+          ...(accountInfo?.bic ? { bic: accountInfo.bic } : {}),
         }),
       });
       const data = await res.json();
@@ -519,6 +598,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         ...prev,
         ...(accountInfo?.accountNumber ? { accountNumber: true } : {}),
         ...(accountInfo?.sortCode ? { routingNumber: true } : {}),
+        ...(accountInfo?.iban ? { iban: true } : {}),
+        ...(accountInfo?.bic ? { bic: true } : {}),
       }));
       onExpensesChanged?.();
     } catch {
@@ -925,6 +1006,33 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.3rem' }}>
                     Which account is this?
                   </label>
+                  {matchedWinner && (
+                    <p style={{ fontSize: '0.75rem', color: 'var(--ha-blue)', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <CheckCircle2 size={13} />
+                      Matched to <strong>{matchedWinner.accountName}</strong> — {joinFieldLabels(matchedWinner.matchedFields)} match{matchedWinner.matchedFields.length === 1 ? 'es' : ''}. Not right? Pick a different account below.
+                    </p>
+                  )}
+                  {matchCandidates.length > 1 && !accountId && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', margin: '0 0 0.35rem' }}>
+                        Could be one of these saved accounts:
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        {matchCandidates.map((c) => (
+                          <button
+                            key={c.accountId}
+                            type="button"
+                            onClick={() => setAccountId(c.accountId)}
+                            className="ha-chip"
+                            style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+                            title={`${joinFieldLabels(c.matchedFields)} match`}
+                          >
+                            {c.accountName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {(accounts.length > 0 || pendingNewAccount) ? (
                     <select className="ha-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
                       <option value="">Not sure / mixed</option>
@@ -1008,9 +1116,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                       placeholder="e.g. AIB, Revolut, PayPal"
                     />
                   </div>
-                  {(accountInfo?.accountNumber || accountInfo?.sortCode) && (
+                  {(accountInfo?.accountNumber || accountInfo?.sortCode || accountInfo?.iban || accountInfo?.bic) && (
                     <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', margin: 0 }}>
-                      The account {accountInfo.accountNumber && accountInfo.sortCode ? 'number and sort code' : accountInfo.accountNumber ? 'number' : 'sort code'} found on this statement will be saved to the new account, encrypted.
+                      The {joinFieldLabels([
+                        accountInfo.accountNumber && 'accountNumber',
+                        accountInfo.sortCode && 'routingNumber',
+                        accountInfo.iban && 'iban',
+                        accountInfo.bic && 'bic',
+                      ].filter((f): f is string => !!f))} found on this statement will be saved to the new account, encrypted.
                     </p>
                   )}
                   {newAccountError && (
@@ -1122,9 +1235,64 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   )}
 
                   {accountInfo.iban && (
-                    <div style={{ fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--ha-muted)' }}>IBAN </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+                      <span style={{ color: 'var(--ha-muted)' }}>IBAN</span>
                       <span style={{ fontWeight: 600, color: 'var(--ha-ink)' }}>{accountInfo.iban}</span>
+                      {accountMatch?.iban === 'match' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--ha-blue)', fontWeight: 600, fontSize: '0.75rem' }}>
+                          <CheckCircle2 size={13} /> Matches saved account
+                        </span>
+                      )}
+                      {accountMatch?.iban === 'mismatch' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--ha-red)', fontWeight: 600, fontSize: '0.75rem' }}>
+                          <AlertTriangle size={13} /> Doesn&apos;t match the saved IBAN
+                        </span>
+                      )}
+                      {accountMatch?.iban === 'not_set' && !savedFields.iban && (
+                        <button
+                          type="button"
+                          onClick={() => saveAccountField('iban', accountInfo.iban!)}
+                          disabled={savingField === 'iban'}
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem' }}
+                        >
+                          {savingField === 'iban' ? 'Saving…' : `Save to ${accounts.find((a) => a.id === accountId)?.name || 'account'}`}
+                        </button>
+                      )}
+                      {savedFields.iban && (
+                        <span style={{ color: 'var(--ha-blue)', fontSize: '0.75rem', fontWeight: 600 }}>Saved</span>
+                      )}
+                    </div>
+                  )}
+
+                  {accountInfo.bic && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+                      <span style={{ color: 'var(--ha-muted)' }}>BIC / SWIFT</span>
+                      <span style={{ fontWeight: 600, color: 'var(--ha-ink)' }}>{accountInfo.bic}</span>
+                      {accountMatch?.bic === 'match' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--ha-blue)', fontWeight: 600, fontSize: '0.75rem' }}>
+                          <CheckCircle2 size={13} /> Matches saved account
+                        </span>
+                      )}
+                      {accountMatch?.bic === 'mismatch' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--ha-red)', fontWeight: 600, fontSize: '0.75rem' }}>
+                          <AlertTriangle size={13} /> Doesn&apos;t match the saved BIC
+                        </span>
+                      )}
+                      {accountMatch?.bic === 'not_set' && !savedFields.bic && (
+                        <button
+                          type="button"
+                          onClick={() => saveAccountField('bic', accountInfo.bic!)}
+                          disabled={savingField === 'bic'}
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem' }}
+                        >
+                          {savingField === 'bic' ? 'Saving…' : `Save to ${accounts.find((a) => a.id === accountId)?.name || 'account'}`}
+                        </button>
+                      )}
+                      {savedFields.bic && (
+                        <span style={{ color: 'var(--ha-blue)', fontSize: '0.75rem', fontWeight: 600 }}>Saved</span>
+                      )}
                     </div>
                   )}
 

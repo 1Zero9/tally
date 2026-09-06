@@ -212,6 +212,7 @@ export interface StatementAccountInfo {
   accountNumber: string | null;
   sortCode: string | null;
   iban: string | null;
+  bic: string | null;
   statementPeriod: string | null;
   openingBalance: number | null;
   closingBalance: number | null;
@@ -228,6 +229,7 @@ const EMPTY_ACCOUNT_INFO: StatementAccountInfo = {
   accountNumber: null,
   sortCode: null,
   iban: null,
+  bic: null,
   statementPeriod: null,
   openingBalance: null,
   closingBalance: null,
@@ -270,6 +272,7 @@ Also extract these account-level details if they are printed anywhere on the doc
 - accountNumber: the account number exactly as printed — it is very often partially masked (e.g. "•••• 1234" or "****1234"), which is fine, extract it exactly as shown
 - sortCode: the sort code / routing number / branch code, exactly as printed
 - iban: the IBAN, exactly as printed
+- bic: the BIC/SWIFT code, exactly as printed
 - statementPeriod: the statement period as a short human string, e.g. "1 Aug 2026 – 31 Aug 2026"
 - openingBalance: the opening/starting balance as a plain number (no currency symbol, can be negative), or null
 - closingBalance: the closing/ending balance as a plain number (no currency symbol, can be negative), or null
@@ -277,7 +280,7 @@ Also extract these account-level details if they are printed anywhere on the doc
 Use null for any accountInfo field you cannot confidently find — never guess.
 
 Respond with ONLY valid JSON in this exact shape, no markdown fences, no commentary:
-{"transactions": [{"date": "YYYY-MM-DD", "rawDescription": "...", "amount": 0, "direction": "DEBIT"}], "accountInfo": {"bankName": null, "accountHolderName": null, "accountNumber": null, "sortCode": null, "iban": null, "statementPeriod": null, "openingBalance": null, "closingBalance": null}}`;
+{"transactions": [{"date": "YYYY-MM-DD", "rawDescription": "...", "amount": 0, "direction": "DEBIT"}], "accountInfo": {"bankName": null, "accountHolderName": null, "accountNumber": null, "sortCode": null, "iban": null, "bic": null, "statementPeriod": null, "openingBalance": null, "closingBalance": null}}`;
 
   const result = await model.generateContent([
     { inlineData: { data: fileBase64, mimeType } },
@@ -324,6 +327,7 @@ Respond with ONLY valid JSON in this exact shape, no markdown fences, no comment
     accountNumber: str(info.accountNumber),
     sortCode: str(info.sortCode),
     iban: str(info.iban),
+    bic: str(info.bic),
     statementPeriod: str(info.statementPeriod),
     openingBalance: num(info.openingBalance),
     closingBalance: num(info.closingBalance),
