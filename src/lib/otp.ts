@@ -12,27 +12,28 @@ import crypto from 'crypto';
  * Base secret, in priority order: a dedicated AUTH_SECRET (recommended —
  * any string, generate with `openssl rand -base64 32`), else the
  * already-configured CREDENTIALS_ENCRYPTION_KEY (reused only as a base
- * secret, never as the raw AES key), else a hardcoded fallback so sign-in
- * never breaks over this being unconfigured. Either way, one more HMAC
- * round with a fixed domain-separation label derives a purpose-specific
- * key, so this never reuses another feature's key material directly.
+ * secret, never as the raw AES key). If NEITHER is set, this throws rather
+ * than falling back to a hardcoded secret — a secret known from reading
+ * this file's source provides no real protection at all, so silently
+ * downgrading to one would just be lying about what "keyed" means here.
+ * Call isOtpSecretConfigured() to check availability before issuing a code,
+ * same pattern as isEmailConfigured() in src/lib/mail.ts.
  */
 const DOMAIN_LABEL = 'tally-otp-v1';
-const FALLBACK_SECRET = 'tally-otp-fallback-secret-set-AUTH_SECRET-in-production';
-
-let warnedMissingSecret = false;
 
 function baseSecret(): string {
-  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
-  if (process.env.CREDENTIALS_ENCRYPTION_KEY) return process.env.CREDENTIALS_ENCRYPTION_KEY;
-  if (!warnedMissingSecret) {
-    warnedMissingSecret = true;
-    console.warn(
-      '[auth] Neither AUTH_SECRET nor CREDENTIALS_ENCRYPTION_KEY is set — verification codes are hashed with a ' +
-      'built-in fallback secret. Set AUTH_SECRET (any string, e.g. `openssl rand -base64 32`) for real protection.'
+  const secret = process.env.AUTH_SECRET || process.env.CREDENTIALS_ENCRYPTION_KEY;
+  if (!secret) {
+    throw new Error(
+      'AUTH_SECRET is not set (and neither is CREDENTIALS_ENCRYPTION_KEY as a fallback). ' +
+      'Generate one with `openssl rand -base64 32` and add it to your environment before issuing sign-in codes.'
     );
   }
-  return FALLBACK_SECRET;
+  return secret;
+}
+
+export function isOtpSecretConfigured(): boolean {
+  return !!(process.env.AUTH_SECRET || process.env.CREDENTIALS_ENCRYPTION_KEY);
 }
 
 function deriveKey(): Buffer {

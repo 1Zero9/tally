@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { hashCode } from '../otp';
+import { hashCode, isOtpSecretConfigured } from '../otp';
 
 // hashCode() reads process.env fresh on every call (no module-level key
 // caching), so mutating these between tests is enough — no need to
@@ -32,8 +32,12 @@ describe('hashCode', () => {
     expect(hashCode('a@example.com', '123456')).not.toBe(hashCode('b@example.com', '123456'));
   });
 
-  it('never emits the raw code as a substring of the digest', () => {
-    expect(hashCode('user@example.com', '123456')).not.toContain('123456');
+  it('produces a 64-character hex digest, not the plaintext code', () => {
+    // A substring check (e.g. not.toContain('123456')) isn't a real
+    // guarantee — a hex digest can coincidentally contain any short decimal
+    // run. The actual property that matters is the *shape*: this is a full
+    // SHA-256 digest, structurally nothing like a 6-digit code.
+    expect(hashCode('user@example.com', '123456')).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('produces a different digest when AUTH_SECRET changes', () => {
@@ -50,9 +54,36 @@ describe('hashCode', () => {
     expect(hashCode('user@example.com', '123456')).toBe(hashCode('user@example.com', '123456'));
   });
 
-  it('still works (via the built-in fallback) with neither secret set', () => {
+  it('throws — never falls back to a public hardcoded secret — with neither configured', () => {
     delete process.env.AUTH_SECRET;
     delete process.env.CREDENTIALS_ENCRYPTION_KEY;
-    expect(() => hashCode('user@example.com', '123456')).not.toThrow();
+    expect(() => hashCode('user@example.com', '123456')).toThrow(/AUTH_SECRET/);
+  });
+});
+
+describe('isOtpSecretConfigured', () => {
+  afterEach(() => {
+    if (ORIGINAL_AUTH_SECRET === undefined) delete process.env.AUTH_SECRET;
+    else process.env.AUTH_SECRET = ORIGINAL_AUTH_SECRET;
+    if (ORIGINAL_ENCRYPTION_KEY === undefined) delete process.env.CREDENTIALS_ENCRYPTION_KEY;
+    else process.env.CREDENTIALS_ENCRYPTION_KEY = ORIGINAL_ENCRYPTION_KEY;
+  });
+
+  it('is true when AUTH_SECRET is set', () => {
+    process.env.AUTH_SECRET = 'test-secret';
+    delete process.env.CREDENTIALS_ENCRYPTION_KEY;
+    expect(isOtpSecretConfigured()).toBe(true);
+  });
+
+  it('is true when only CREDENTIALS_ENCRYPTION_KEY is set', () => {
+    delete process.env.AUTH_SECRET;
+    process.env.CREDENTIALS_ENCRYPTION_KEY = 'test-key';
+    expect(isOtpSecretConfigured()).toBe(true);
+  });
+
+  it('is false when neither is set', () => {
+    delete process.env.AUTH_SECRET;
+    delete process.env.CREDENTIALS_ENCRYPTION_KEY;
+    expect(isOtpSecretConfigured()).toBe(false);
   });
 });

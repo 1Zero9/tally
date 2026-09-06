@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { isEmailConfigured, sendVerificationCodeEmail } from '@/src/lib/mail';
-import { hashCode } from '@/src/lib/otp';
+import { hashCode, isOtpSecretConfigured } from '@/src/lib/otp';
 import { isRateLimited, getClientIp } from '@/src/lib/rateLimit';
 
 const CODE_TTL_MS = 15 * 60 * 1000;
@@ -76,6 +76,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Likewise, never silently hash codes with a secret known from reading
+    // this app's own source — that provides no real protection at all.
+    if (!isOtpSecretConfigured()) {
+      return NextResponse.json(
+        { status: 'error', message: 'Sign-in isn’t fully configured yet. Ask an admin to set AUTH_SECRET.' },
+        { status: 503 }
+      );
+    }
+
     // Generate a 6-digit numeric OTP using a CSPRNG (not Math.random).
     const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
@@ -95,7 +104,11 @@ export async function POST(request: Request) {
     try {
       await sendVerificationCodeEmail(email, code);
     } catch (emailError: unknown) {
-      console.error('Failed to send verification email:', emailError);
+      // Never log the raw exception — a provider error can plausibly echo
+      // back parts of the outbound message (subject/body), which contains
+      // the live code. Log only a bounded, safe classification instead.
+      const errorType = emailError instanceof Error ? emailError.constructor.name : typeof emailError;
+      console.error(`Failed to send verification email (error type: ${errorType})`);
       return NextResponse.json(
         { status: 'error', message: 'Failed to send the verification email. Please try again.' },
         { status: 502 }

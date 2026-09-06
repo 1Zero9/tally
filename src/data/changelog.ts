@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.60.1';
+export const APP_VERSION = '1.60.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.60.2',
+    date: '2026-09-06',
+    changes: [
+      'Closed a remaining sign-in race a follow-up security re-review caught: a correct code arriving right as the 5-guess limit was reached could previously still succeed. The guess-limit check now happens atomically as part of accepting or rejecting each attempt, not as a separate step afterward.',
+      'Sign-in code hashing no longer falls back to a secret built into the app itself when unconfigured — it now refuses to issue codes instead, since a secret readable in the source provides no real protection.',
+      'Stopped logging the raw email-delivery error on a failed send, since a provider error could echo back the outbound message contents.',
+    ],
+  },
   {
     version: '1.60.1',
     date: '2026-09-06',

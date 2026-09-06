@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { SESSION_COOKIE } from '@/src/lib/auth';
@@ -54,31 +53,51 @@ export async function POST(request: Request) {
       return NextResponse.json(INVALID_OR_EXPIRED, { status: 400 });
     }
 
-    if (outstanding.code !== hashCode(email, code)) {
-      // Atomic increment (a single SQL UPDATE ... SET attempts = attempts + 1)
-      // rather than a read-then-write — Postgres serializes concurrent
-      // updates to the same row, so this holds the cap exactly even under
-      // many simultaneous wrong guesses, unlike a separate read+increment+write.
-      let updated;
-      try {
-        updated = await prisma.verificationToken.update({
-          where: { id: outstanding.id },
-          data: { attempts: { increment: 1 } },
-        });
-      } catch (err: unknown) {
-        // A concurrent guess already pushed this row past MAX_ATTEMPTS and
-        // deleted it between our findFirst and this update — same outcome
-        // as never having found it, not a server error.
-        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-          return NextResponse.json(INVALID_OR_EXPIRED, { status: 400 });
-        }
-        throw err;
+    // `outstanding` may be stale by the time we act on it (another request
+    // could be concurrently consuming or incrementing this exact row) — so
+    // the code comparison above is only ever used to pick a branch, never
+    // to decide the outcome by itself. Every branch below re-validates
+    // "is this token still within its guess budget" as part of the SAME
+    // atomic write that accepts or records the guess, using a WHERE clause
+    // Postgres evaluates against the row's true current state at the
+    // instant the statement runs — not the possibly-stale value we read
+    // above. This is what actually closes the race a naive "increment,
+    // then separately check/delete" approach doesn't: a correct code
+    // arriving the instant after the 5th wrong guess is recorded, but
+    // before that guess's own cleanup runs, must still be rejected, and
+    // only re-checking the budget at write-time (not at read-time) does that.
+    const isCorrect = outstanding.code === hashCode(email, code);
+
+    if (isCorrect) {
+      const consumed = await prisma.verificationToken.deleteMany({
+        where: { id: outstanding.id, attempts: { lt: MAX_ATTEMPTS } },
+      });
+      if (consumed.count === 0) {
+        // Either already consumed by a concurrent request, or the guess
+        // budget was already exhausted at the true moment of consumption —
+        // never confirm which, to a client, either way.
+        return NextResponse.json(INVALID_OR_EXPIRED, { status: 400 });
       }
-      if (updated.attempts >= MAX_ATTEMPTS) {
-        // Invalidate the code entirely after too many wrong guesses — the
-        // user must request a fresh one rather than keep guessing.
-        // deleteMany (not delete): a safe no-op if another concurrent
-        // request already removed this same row.
+    } else {
+      const recorded = await prisma.verificationToken.updateMany({
+        where: { id: outstanding.id, attempts: { lt: MAX_ATTEMPTS } },
+        data: { attempts: { increment: 1 } },
+      });
+      if (recorded.count === 0) {
+        // Already exhausted (or consumed/gone) by a concurrent request —
+        // this guess was never actually counted against the budget.
+        return NextResponse.json(
+          { status: 'error', message: 'Too many incorrect attempts. Please request a new code.' },
+          { status: 429 }
+        );
+      }
+      // Read-after-write purely to word the response — never a decision
+      // point for whether the guess counted; the write above already
+      // enforced that atomically regardless of what this read sees.
+      const fresh = await prisma.verificationToken.findUnique({ where: { id: outstanding.id }, select: { attempts: true } });
+      if (!fresh || fresh.attempts >= MAX_ATTEMPTS) {
+        // Budget just now exhausted — clean up proactively so the row
+        // doesn't linger; deleteMany is a safe no-op if it's already gone.
         await prisma.verificationToken.deleteMany({ where: { id: outstanding.id } });
         return NextResponse.json(
           { status: 'error', message: 'Too many incorrect attempts. Please request a new code.' },
@@ -89,15 +108,6 @@ export async function POST(request: Request) {
         { status: 'error', message: 'Incorrect verification code.' },
         { status: 400 }
       );
-    }
-
-    // Consume the token atomically — deleteMany reports how many rows it
-    // actually removed, so if a concurrent request with the same correct
-    // code already consumed it, this one backs off instead of also
-    // succeeding (which would otherwise let one code mint two sessions).
-    const consumed = await prisma.verificationToken.deleteMany({ where: { id: outstanding.id } });
-    if (consumed.count === 0) {
-      return NextResponse.json(INVALID_OR_EXPIRED, { status: 400 });
     }
 
     // Find user
