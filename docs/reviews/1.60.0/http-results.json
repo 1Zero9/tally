@@ -1,0 +1,372 @@
+{
+  "anonymous": [
+    {
+      "url": "/api/accounts/review-id/compare-statement",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts/review-id/reveal",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts/match-statement",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/accounts",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/admin/audit-log",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/admin/backup",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/admin/backup",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/admin/backup",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/assistant/ask",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/assistant/scan-receipt",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/budgets",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/budgets",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/budgets",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/bugs",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/bugs",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/bugs",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/bugs",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/categories/review-id",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/categories",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/categories",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses/review-id/draft-email",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses/review-id/send-vendor-email",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/expenses",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/goals",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/goals",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/goals",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/goals",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/history",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/income",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/income",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/income",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/income",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/insights/money-flow",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/insights/summary",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/map/edges/review-id",
+      "method": "PATCH",
+      "status": 401
+    },
+    {
+      "url": "/api/map/edges/review-id",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/map/edges",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/map/nodes/review-id",
+      "method": "PATCH",
+      "status": 401
+    },
+    {
+      "url": "/api/map/nodes/review-id",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/map/nodes",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/map",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/reports/transactions",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/recheck",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id",
+      "method": "PATCH",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/transactions/review-id/resolve",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/transactions/group-resolve",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/transactions",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/undo",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/review-id/undo",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/statements/extract",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/statements",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/statements",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/transfers",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/transfers",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/transfers",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/transfers",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/users",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/users",
+      "method": "PUT",
+      "status": 401
+    },
+    {
+      "url": "/api/users",
+      "method": "DELETE",
+      "status": 401
+    },
+    {
+      "url": "/api/workspace/invite",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "url": "/api/workspace/join",
+      "method": "POST",
+      "status": 410
+    },
+    {
+      "url": "/api/workspace",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "url": "/api/workspace",
+      "method": "PUT",
+      "status": 401
+    }
+  ],
+  "stress": {
+    "requests": 200,
+    "concurrency": 20,
+    "statuses": {
+      "401": 200
+    },
+    "p50": 71.9370170000002,
+    "p95": 145.53100199999994,
+    "max": 188.22407599999997
+  },
+  "headers": {
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY"
+  }
+}

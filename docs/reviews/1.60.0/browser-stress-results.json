@@ -1,0 +1,26 @@
+[
+  {
+    "count": 0,
+    "overviewMs": 377.27747199999976,
+    "spendingMs": 284.3373019999999,
+    "searchIncluding100msSettleMs": 141.22541299999966,
+    "domElements": 254,
+    "errors": []
+  },
+  {
+    "count": 1000,
+    "overviewMs": 447.1459569999997,
+    "spendingMs": 1226.8801890000004,
+    "searchIncluding100msSettleMs": 230.85108200000013,
+    "domElements": 312,
+    "errors": []
+  },
+  {
+    "count": 10000,
+    "overviewMs": 724.3855910000002,
+    "spendingMs": 10488.065472000002,
+    "searchIncluding100msSettleMs": 1041.5329979999988,
+    "domElements": 662,
+    "errors": []
+  }
+]

@@ -1,0 +1,455 @@
+[
+  {
+    "width": 1440,
+    "screen": "login",
+    "overflow": false,
+    "inputs": [
+      {
+        "type": "email",
+        "labels": 0,
+        "ariaLabel": null
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "screen": "Overview",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 6,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Spending",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "screen": "failed-paid-save",
+    "remainsPaidAfter500": 1,
+    "visibleError": 0
+  },
+  {
+    "width": 1440,
+    "screen": "Bills",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Income",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Accounts",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Insights",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Reports",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Flow",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Goals",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Planned",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "Money Map",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "screen": "expense-form",
+    "dialogs": 0,
+    "unlabelledFields": 12,
+    "focusInside": true
+  },
+  {
+    "width": 1440,
+    "screen": "modal-keyboard",
+    "focusEscaped": true
+  },
+  {
+    "width": 768,
+    "screen": "login",
+    "overflow": false,
+    "inputs": [
+      {
+        "type": "email",
+        "labels": 0,
+        "ariaLabel": null
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "screen": "Overview",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 4,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Spending",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Bills",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Income",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Accounts",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Insights",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Reports",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Flow",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Goals",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Planned",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "Money Map",
+    "overflow": false,
+    "scrollWidth": 768,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 768,
+    "screen": "expense-form",
+    "dialogs": 0,
+    "unlabelledFields": 12,
+    "focusInside": true
+  },
+  {
+    "width": 768,
+    "screen": "modal-keyboard",
+    "focusEscaped": true
+  },
+  {
+    "width": 390,
+    "screen": "login",
+    "overflow": false,
+    "inputs": [
+      {
+        "type": "email",
+        "labels": 0,
+        "ariaLabel": null
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "screen": "Overview",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 4,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Spending",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Bills",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Income",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Accounts",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Insights",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Reports",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Flow",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Goals",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Planned",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "Money Map",
+    "overflow": false,
+    "scrollWidth": 390,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "screen": "expense-form",
+    "dialogs": 0,
+    "unlabelledFields": 12,
+    "focusInside": true
+  },
+  {
+    "width": 390,
+    "screen": "modal-keyboard",
+    "focusEscaped": true
+  },
+  {
+    "width": 320,
+    "screen": "login",
+    "overflow": false,
+    "inputs": [
+      {
+        "type": "email",
+        "labels": 0,
+        "ariaLabel": null
+      }
+    ]
+  },
+  {
+    "width": 320,
+    "screen": "Overview",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 4,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Spending",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Bills",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Income",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Accounts",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Insights",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Reports",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Flow",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Goals",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Planned",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "Money Map",
+    "overflow": false,
+    "scrollWidth": 320,
+    "unnamedButtons": 0,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "screen": "expense-form",
+    "dialogs": 0,
+    "unlabelledFields": 12,
+    "focusInside": true
+  },
+  {
+    "width": 320,
+    "screen": "modal-keyboard",
+    "focusEscaped": true
+  }
+]
