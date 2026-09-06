@@ -202,10 +202,26 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* A dedicated navigation rail keeps destinations predictable and prevents
-            the accidental two-row wrapping visible in the previous header. */}
+            the accidental two-row wrapping visible in the previous header. A
+            thin divider visually separates the core sections from the money-
+            journey group below — a grouping cue only, every destination stays
+            a single direct click either side of it. */}
         <nav className="desktop-only ha-navbar-nav" aria-label="Main navigation">
-          {[...PRIMARY_NAV_ITEMS, ...JOURNEY_NAV_ITEMS].map((item) => {
+          {PRIMARY_NAV_ITEMS.map((item) => {
             const isActive = item.id === 'all' ? SPENDING_TABS.includes(activeTab) : activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                className={`ha-nav-link${isActive ? ' active' : ''}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          <span className="ha-navbar-nav-divider" aria-hidden="true" />
+          {JOURNEY_NAV_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
@@ -244,7 +260,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   v{MOBILE_APP_VERSION}
                 </button>
               </div>
-              <button className="ha-icon-btn" onClick={() => setIsDrawerOpen(false)}>
+              <button className="ha-icon-btn" onClick={() => setIsDrawerOpen(false)} title="Close menu" aria-label="Close menu">
                 <X size={20} />
               </button>
             </div>
@@ -273,8 +289,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             <div style={{ padding: '0.75rem 0.5rem', display: 'flex', flexDirection: 'column' }}>
-              {[...PRIMARY_NAV_ITEMS, ...JOURNEY_NAV_ITEMS].map((item) => {
+              {PRIMARY_NAV_ITEMS.map((item) => {
                 const isActive = item.id === 'all' ? SPENDING_TABS.includes(activeTab) : activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNav(item.id)}
+                    className="ha-dropdown-item"
+                    style={{ fontSize: '0.95rem', fontWeight: 600, color: isActive ? 'var(--ha-blue)' : 'var(--ha-ink)' }}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '0.85rem 0.75rem 0.35rem' }}>
+                Money journey
+              </div>
+              {JOURNEY_NAV_ITEMS.map((item) => {
+                const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}

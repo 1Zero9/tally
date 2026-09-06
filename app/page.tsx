@@ -983,20 +983,26 @@ export default function TallyPage() {
           </div>
         )}
 
-        {/* Ask Bar — the "Google box" for this household's spending */}
-        <div className={`ha-ask-wrap${hasData ? '' : ' is-empty'}`} style={{ padding: hasData ? '0.5rem 0 2rem' : '3rem 0 2.5rem' }}>
-          <h2 className="ha-greeting" style={{
-            textAlign: 'center',
-            fontFamily: 'var(--ha-font-display)',
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            color: 'var(--ha-ink)',
-            marginBottom: '1.25rem',
-          }}>
-            {timeGreeting}, {firstName}
-          </h2>
-          <AssistantBox currency={currency} hasData={hasData} />
-        </div>
+        {/* Ask Bar — the "Google box" for this household's spending. Only on
+            Overview: every other tab is a task page that shouldn't have to
+            scroll past a greeting to get to its own content. The desktop
+            nav's "Ask Tally" icon button still opens the same assistant
+            from anywhere. */}
+        {activeTab === 'overview' && (
+          <div className={`ha-ask-wrap${hasData ? '' : ' is-empty'}`} style={{ padding: hasData ? '0.5rem 0 2rem' : '3rem 0 2.5rem' }}>
+            <h2 className="ha-greeting" style={{
+              textAlign: 'center',
+              fontFamily: 'var(--ha-font-display)',
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: 'var(--ha-ink)',
+              marginBottom: '1.25rem',
+            }}>
+              {timeGreeting}, {firstName}
+            </h2>
+            <AssistantBox currency={currency} hasData={hasData} />
+          </div>
+        )}
 
         {/* Always visible on the home page, even with zero data yet — this
             is a primary entry point (statement import), not just a

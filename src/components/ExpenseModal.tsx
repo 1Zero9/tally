@@ -322,7 +322,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           {/* Expense Name & Billing Cycle */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1rem' }}>
+          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Description / Item Name *
@@ -451,7 +451,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           )}
 
           {/* Member Assignment & Renewal Day */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
+          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
             {users.length > 0 && (
               <div>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
@@ -538,7 +538,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           {/* Payment Method & Contract End Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: billingCycle === 'once' ? '1fr' : '1.4fr 1fr', gap: '1rem' }}>
+          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: billingCycle === 'once' ? '1fr' : '1.4fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Payment method
@@ -616,7 +616,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </p>
 
             {reimbursementExpected !== '' && Number(reimbursementExpected) > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
+              <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
                 <div>
                   <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                     Amount received (leave blank until it arrives)
@@ -657,7 +657,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           {/* Vendor name & email (for contract-review outreach) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                 Vendor / provider name (optional)

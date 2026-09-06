@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.61.0';
+export const APP_VERSION = '1.61.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,17 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.61.1',
+    date: '2026-09-06',
+    changes: [
+      'The greeting and "Ask Tally" box now only show on Overview, so Reports and other task pages start right at their own content — the Ask Tally shortcut in the top bar still works from anywhere.',
+      'The navigation now visually separates your core sections from the money-journey group (Flow, Goals, Planned, Money Map).',
+      'The expense form now uses a single column on narrow phone screens instead of cramming two, so field labels and values no longer get clipped.',
+      'Renamed "This month spent" to "This month\'s committed spend" and added a short caption, since the figure is your recurring-bill rate for the month — not a running record of what\'s actually been paid.',
+      'Added a subtle fade to the mobile home-screen stat cards to make it clearer there are more to swipe to.',
+    ],
+  },
   {
     version: '1.61.0',
     date: '2026-09-06',

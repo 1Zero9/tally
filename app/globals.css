@@ -502,8 +502,16 @@ input:checked + .slider:before {
   display: none;
 }
 
-.ha-navbar-nav .ha-nav-link:nth-child(7) {
-  margin-left: auto;
+/* Visually separates the core sections from the money-journey group — a
+   dedicated element instead of the old :nth-child(7) trick, which silently
+   started targeting the wrong item ("Reports") the moment a 7th primary
+   nav item was added, rather than the first journey item as intended. */
+.ha-navbar-nav-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ha-line);
+  margin: 0 0.5rem 0 auto;
+  flex-shrink: 0;
 }
 
 /* Navigation uses a quiet capsule instead of a fragile underline. */
@@ -1317,7 +1325,11 @@ input:checked + .slider:before {
     display: block;
   }
 
-  /* Stat cards become a compact swipeable horizontal row instead of 3 tall stacked full-width cards */
+  /* Stat cards become a compact swipeable horizontal row instead of 3 tall stacked full-width cards.
+     The right-edge fade (mask-image, anchored to the element's own visible
+     edge — not its scrollable content, so it doesn't move as you scroll) is
+     a standard zero-JS "there's more to swipe to" affordance; the existing
+     68%/32% peek already hints at it, but nothing signalled it explicitly. */
   .ha-stat-row {
     display: flex !important;
     overflow-x: auto;
@@ -1325,6 +1337,8 @@ input:checked + .slider:before {
     padding-bottom: 0.25rem;
     margin-bottom: 1rem !important;
     gap: 0.6rem !important;
+    mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
   }
 
   .ha-stat-row > div {
@@ -1392,6 +1406,13 @@ input:checked + .slider:before {
   .mobile-menu-btn .ha-icon-btn:nth-child(1),
   .mobile-menu-btn .ha-icon-btn:nth-child(2) {
     display: none;
+  }
+
+  /* Forms with a fixed 2-column layout (e.g. ExpenseModal's field pairs)
+     collapse to one column at phone widths — the ratio itself stays
+     wherever each call site's own inline style sets it at wider widths. */
+  .ha-form-grid-2 {
+    grid-template-columns: 1fr !important;
   }
 
   .ha-ledger-row {

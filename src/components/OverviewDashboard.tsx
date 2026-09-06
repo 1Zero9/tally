@@ -134,8 +134,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <div className="ha-card" style={{ padding: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <TrendingUp size={16} color="var(--ha-blue)" />
-            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              This month spent
+            <span
+              style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}
+              title="Recurring bills at their steady-state monthly rate, plus anything one-off dated this month — not a record of what's actually been paid yet."
+            >
+              This month&apos;s committed spend
             </span>
           </div>
           <div className="tabular-nums ha-stat-amount" style={{ fontSize: '1.85rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1 }}>
@@ -143,7 +146,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <span style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', fontWeight: 500 }}>/mo</span>
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', marginTop: '0.35rem' }}>
-            {summary.activeCount} active bill{summary.activeCount === 1 ? '' : 's'}
+            {summary.activeCount} active bill{summary.activeCount === 1 ? '' : 's'} · not what&apos;s been paid yet
           </div>
         </div>
 
@@ -333,7 +336,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       <div className="tabular-nums" style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
                         {formatCurrency(item.amount, item.currency)}
                       </div>
-                      <button onClick={() => onEditExpense(item)} className="btn btn-ghost" style={{ padding: '0.3rem 0.4rem' }}>
+                      <button onClick={() => onEditExpense(item)} className="btn btn-ghost" style={{ padding: '0.3rem 0.4rem' }} title="Edit" aria-label="Edit">
                         <Edit2 size={13} />
                       </button>
                     </div>
