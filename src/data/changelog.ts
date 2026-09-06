@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.60.2';
+export const APP_VERSION = '1.60.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.60.3',
+    date: '2026-09-06',
+    changes: [
+      'Closed two small remaining gaps a second re-review of the sign-in fix caught: the guess-limit check now also re-confirms the code hasn\'t expired at the exact moment it\'s accepted or rejected, not just when first looked up; and a used-up code now gets the identical response whether the last guess happened to be right or wrong, so the wording itself can\'t hint which one it was.',
+    ],
+  },
   {
     version: '1.60.2',
     date: '2026-09-06',

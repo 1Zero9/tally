@@ -11,6 +11,18 @@ const INVALID_OR_EXPIRED = {
   message: 'Invalid or expired verification code. Please request a new one.',
 };
 
+// Returned whenever a token is no longer usable for any reason once we've
+// already read it — budget exhausted, expired since the initial read, or
+// already consumed by a concurrent request. Deliberately IDENTICAL whether
+// the guess that triggered it was actually correct or not: a wrong guess
+// that lands after exhaustion and a correct guess that lands after
+// exhaustion must be indistinguishable to the client, or the response text
+// itself becomes an oracle for "was my last guess actually right".
+const TOO_MANY_ATTEMPTS = {
+  status: 'error' as const,
+  message: 'Too many incorrect attempts. Please request a new code.',
+};
+
 // Max wrong-code guesses allowed per issued code before it's invalidated.
 // A 6-digit code has 1,000,000 combinations — without a cap, an attacker
 // could brute-force it within the 15-minute expiry window.
@@ -54,10 +66,11 @@ export async function POST(request: Request) {
     }
 
     // `outstanding` may be stale by the time we act on it (another request
-    // could be concurrently consuming or incrementing this exact row) — so
-    // the code comparison above is only ever used to pick a branch, never
-    // to decide the outcome by itself. Every branch below re-validates
-    // "is this token still within its guess budget" as part of the SAME
+    // could be concurrently consuming or incrementing this exact row, or
+    // it could have expired in the meantime) — so the code comparison
+    // above is only ever used to pick a branch, never to decide the
+    // outcome by itself. Every branch below re-validates "is this token
+    // still within its guess budget AND not expired" as part of the SAME
     // atomic write that accepts or records the guess, using a WHERE clause
     // Postgres evaluates against the row's true current state at the
     // instant the statement runs — not the possibly-stale value we read
@@ -65,44 +78,28 @@ export async function POST(request: Request) {
     // then separately check/delete" approach doesn't: a correct code
     // arriving the instant after the 5th wrong guess is recorded, but
     // before that guess's own cleanup runs, must still be rejected, and
-    // only re-checking the budget at write-time (not at read-time) does that.
+    // only re-checking the budget (and expiry) at write-time does that.
     const isCorrect = outstanding.code === hashCode(email, code);
+    const stillValid = { id: outstanding.id, attempts: { lt: MAX_ATTEMPTS }, expiresAt: { gt: new Date() } };
 
     if (isCorrect) {
-      const consumed = await prisma.verificationToken.deleteMany({
-        where: { id: outstanding.id, attempts: { lt: MAX_ATTEMPTS } },
-      });
+      const consumed = await prisma.verificationToken.deleteMany({ where: stillValid });
       if (consumed.count === 0) {
-        // Either already consumed by a concurrent request, or the guess
-        // budget was already exhausted at the true moment of consumption —
-        // never confirm which, to a client, either way.
-        return NextResponse.json(INVALID_OR_EXPIRED, { status: 400 });
+        // Exhausted, expired, or already consumed by a concurrent request —
+        // respond exactly like an exhausted wrong guess (see TOO_MANY_ATTEMPTS'
+        // own comment): never let the response text reveal that THIS
+        // particular guess actually happened to be correct.
+        return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
       }
     } else {
       const recorded = await prisma.verificationToken.updateMany({
-        where: { id: outstanding.id, attempts: { lt: MAX_ATTEMPTS } },
+        where: stillValid,
         data: { attempts: { increment: 1 } },
       });
       if (recorded.count === 0) {
-        // Already exhausted (or consumed/gone) by a concurrent request —
+        // Already exhausted/expired/consumed by a concurrent request —
         // this guess was never actually counted against the budget.
-        return NextResponse.json(
-          { status: 'error', message: 'Too many incorrect attempts. Please request a new code.' },
-          { status: 429 }
-        );
-      }
-      // Read-after-write purely to word the response — never a decision
-      // point for whether the guess counted; the write above already
-      // enforced that atomically regardless of what this read sees.
-      const fresh = await prisma.verificationToken.findUnique({ where: { id: outstanding.id }, select: { attempts: true } });
-      if (!fresh || fresh.attempts >= MAX_ATTEMPTS) {
-        // Budget just now exhausted — clean up proactively so the row
-        // doesn't linger; deleteMany is a safe no-op if it's already gone.
-        await prisma.verificationToken.deleteMany({ where: { id: outstanding.id } });
-        return NextResponse.json(
-          { status: 'error', message: 'Too many incorrect attempts. Please request a new code.' },
-          { status: 429 }
-        );
+        return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
       }
       return NextResponse.json(
         { status: 'error', message: 'Incorrect verification code.' },
