@@ -22,6 +22,7 @@ import { PlannedExpensesSection } from '@/src/components/PlannedExpensesSection'
 import { UpcomingRenewals } from '@/src/components/UpcomingRenewals';
 import { OptimizationInsights } from '@/src/components/OptimizationInsights';
 import { MoneyFlowInsights } from '@/src/components/MoneyFlowInsights';
+import { ReportsSection } from '@/src/components/ReportsSection';
 import { AdminSection } from '@/src/components/AdminSection';
 import { LoginScreen } from '@/src/components/LoginScreen';
 import { ExpenseModal } from '@/src/components/ExpenseModal';
@@ -1273,6 +1274,14 @@ export default function TallyPage() {
               currency={currency}
             />
           </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <ReportsSection
+            currency={currency}
+            expenses={liveExpenses}
+            customCategories={customCategories}
+          />
         )}
 
         {activeTab === 'accounts' && (

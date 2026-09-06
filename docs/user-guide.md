@@ -30,13 +30,14 @@ Most budgeting apps show you category totals and ask you to trust them. Tally is
 9. [Planned expenses](#9-planned-expenses)
 10. [Money Map](#10-money-map)
 11. [Insights](#11-insights)
-12. [Asking Tally a question](#12-asking-tally-a-question)
-13. [Settings & preferences](#13-settings--preferences)
-14. [Sharing your household workspace](#14-sharing-your-household-workspace)
-15. [Admin & users](#15-admin--users)
-16. [Data export & backup](#16-data-export--backup)
-17. [Privacy & security](#17-privacy--security)
-18. [Frequently asked questions](#18-frequently-asked-questions)
+12. [Reports](#12-reports)
+13. [Asking Tally a question](#13-asking-tally-a-question)
+14. [Settings & preferences](#14-settings--preferences)
+15. [Sharing your household workspace](#15-sharing-your-household-workspace)
+16. [Admin & users](#16-admin--users)
+17. [Data export & backup](#17-data-export--backup)
+18. [Privacy & security](#18-privacy--security)
+19. [Frequently asked questions](#19-frequently-asked-questions)
 
 ---
 
@@ -171,21 +172,34 @@ Two sections, side by side:
 - **Money flow analysis (AI)**: click **Analyze my money flow** for an on-demand AI review of your accounts, transfers, and goals — flagging idle cash sitting in low-interest accounts, direct-debit **timing risk** (bills landing before income arrives), account **consolidation** opportunities, and concrete **savings** suggestions. This is opt-in per click, not automatic, and only ever uses your own household's data.
 - **What could we save?**: a rule-based (non-AI) breakdown of savings opportunities — switching monthly subscriptions to annual billing, rarely-used subscriptions worth cancelling, and a running total of what you're already saving from paused subscriptions. Toggle the horizon between 1 month, 1 year, 3 years, and 5 years.
 
-## 12. Asking Tally a question
+## 12. Reports
+
+A dedicated reporting tab, built from the household's full real transfer ledger — every transfer in or out, including ad-hoc ones not tied to a tracked bill or income, so nothing real is missed. Pick a report and a period (1/3/6/12 months, or all time), then download any table as CSV:
+
+- **Trends**: monthly spending vs. income bars over the selected period.
+- **Category & Vendor**: two ranked tables — spend by category, and spend by vendor/merchant — each with a percentage of the period total. Spend with no linked bill shows up under "Uncategorized" rather than being dropped.
+- **Timeline**: every transaction in the period, in date order, with its label, category, direction, and amount — a plain, exportable view of the Flow ledger.
+- **Insights**: the same money-flow AI analysis and rule-based savings breakdown from the Insights tab, surfaced here alongside the other reports.
+
+A transfer between two of the household's own accounts never counts as spend or income in any report — only real money moving in or out of the household does, the same rule Flow and Spending already use.
+
+To get a clean PDF, use your browser's Print (Save as PDF) from the Reports tab — it prints just the report, without the navigation or buttons.
+
+## 13. Asking Tally a question
 
 Click the search icon in the top bar to ask a plain-English question about your own household data — e.g. *"where can I save"* or *"what's going out this week"*. Tally answers using only your household's expense and income records; it never sees or uses data from any other household.
 
-## 13. Settings & preferences
+## 14. Settings & preferences
 
 Open via the gear icon in the top bar. Set your preferred display currency (EUR, GBP, USD, CAD, AUD, JPY — amounts convert automatically), and manage other household-wide preferences.
 
-## 14. Sharing your household workspace
+## 15. Sharing your household workspace
 
 Click **Share** to send a direct email invite to a partner or family member — enter their email (and optionally a name and role) and Tally adds them to your household right away. If email sending is configured, they'll also get an email with a link to the app; either way, they can sign in with that email as soon as you've added them. There's no shareable link or code — Tally is invite-only, and only an admin can add someone.
 
 Everyone in the same household sees the same shared ledger — accounts, expenses, income, transfers, and goals are all shared, not per-person.
 
-## 15. Admin & users
+## 16. Admin & users
 
 Available to **Admin** and **Backup Admin** roles via the avatar menu. Manage household member accounts, change roles, and remove accounts that no longer belong. A household must always keep at least one Admin — Tally won't let you remove the last one. Admins can also trigger a full database backup export.
 
@@ -196,7 +210,7 @@ Roles:
 - **Member** — day-to-day use: log, categorize, and edit household expenses, income, accounts, transfers, and goals.
 - **Backup Admin** — a disaster-recovery role for emergency failover if the primary Admin is unavailable. Carries identical permissions to Admin today (same access to users, sharing, and backups) — it's a separate role only so it's clear who the "usual" admin is, not a restricted tier.
 
-## 16. Data export & backup
+## 17. Data export & backup
 
 Click **Export** at any time to download your bills as a CSV spreadsheet or a JSON file — a portable copy to keep or move elsewhere.
 
@@ -204,7 +218,7 @@ For a real, restorable backup, admins use **Admin → Database Snapshots**: it c
 
 A snapshot is also taken **automatically every day**, tagged "Automatic" in the list — the most recent 14 are always kept, so there's a real backup even if nobody remembers to click "Create Snapshot." Manual snapshots you create yourself are never automatically deleted.
 
-## 17. Privacy & security
+## 18. Privacy & security
 
 - Passwordless sign-in via one-time 6-digit codes — no passwords stored anywhere.
 - Session tokens live in a secure, httpOnly cookie, valid up to 30 days — but an idle tab automatically signs out after 30 minutes of no activity, independent of that 30-day window.
@@ -214,7 +228,7 @@ A snapshot is also taken **automatically every day**, tagged "Automatic" in the 
 - AI features (the Ask box and Money flow analysis) only ever send your own household's data, and only when you actively trigger them — nothing runs automatically in the background.
 - Full details: see the in-app **Privacy** page (footer link) and the **AI transparency** page.
 
-## 18. Frequently asked questions
+## 19. Frequently asked questions
 
 The same questions are also answerable directly from the **Ask Tally** box (see [§12](#12-asking-tally-a-question)) — click one under "Frequently asked," or type your own.
 

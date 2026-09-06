@@ -1457,3 +1457,24 @@ input:checked + .slider:before {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Print-friendly output — used by the Reports tab's "Print / Save as PDF"
+   path (the browser's native print dialog), but harmless anywhere else:
+   hides navigation chrome and any element opted out via .ha-print-hide,
+   leaving just the content that was on screen. */
+@media print {
+  .ha-navbar,
+  .ha-print-hide {
+    display: none !important;
+  }
+
+  .ha-main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+}

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.57.0';
+export const APP_VERSION = '1.58.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.58.0',
+    date: '2026-09-06',
+    changes: [
+      'Added a new Reports tab: Trends, Category & Vendor, Timeline, and Insights, each over a period you choose (1/3/6/12 months, or all time), with CSV export and browser-print-to-PDF on every report.',
+      'Reports are built from your household\'s complete real transfer history — including ad-hoc transfers not tied to a tracked bill or income — so nothing real is left out of the totals.',
+    ],
+  },
   {
     version: '1.57.0',
     date: '2026-09-06',

@@ -127,6 +127,15 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     ],
   },
   {
+    id: 'reports',
+    title: 'Reports',
+    body: [
+      'The "Reports" tab has four views — Trends, Category & Vendor, Timeline, and Insights — each covering a period you choose (1/3/6/12 months, or all time).',
+      'Every report is built from the household\'s full real transfer ledger, including ad-hoc transfers not tied to a tracked bill or income, so nothing real gets missed. A transfer between two of your own accounts never counts as spend or income, the same rule Flow uses.',
+      'Every table has an "Export CSV" button. For a clean PDF, use your browser\'s Print (Save as PDF) from the Reports tab — it prints just the report, without navigation or buttons.',
+    ],
+  },
+  {
     id: 'renewals',
     title: 'Contract renewals & reminders',
     body: [
