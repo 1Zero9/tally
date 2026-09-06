@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.60.3';
+export const APP_VERSION = '1.61.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.61.0',
+    date: '2026-09-06',
+    changes: [
+      'Database Snapshots now backs up and restores your entire household, not just accounts/goals/bills/income/transfers — statement imports and their matched rows, custom categories, budgets, and your custom Money Map are all included now too.',
+      'Fixed a real data-loss bug: restoring a snapshot used to silently drop a bill\'s reimbursement-claim and original-currency fields, and it could silently wipe your custom Money Map as an unintended side effect of restoring accounts. Both are fixed — restoring now brings everything back exactly as it was.',
+      'Fixed the encryption-key-rotation maintenance script so a real rotation actually re-encrypts everything under the new key (including IBAN/BIC, which it was missing entirely) instead of silently skipping data that looked "already done" but wasn\'t — this only affects the admin key-rotation tooling, not everyday use.',
+    ],
+  },
   {
     version: '1.60.3',
     date: '2026-09-06',

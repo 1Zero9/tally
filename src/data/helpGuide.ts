@@ -186,7 +186,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     title: 'Export & backup',
     body: [
       'Click "Export" to download your bills as a CSV spreadsheet or a JSON file at any time — a portable copy, not a restorable backup.',
-      'For a real, restorable backup, ask an admin to use "Admin → Database Snapshots" — it covers every account, goal, bill, income record and transfer, and can genuinely restore your household back to that point in time.',
+      'For a real, restorable backup, ask an admin to use "Admin → Database Snapshots" — it covers your entire household (accounts, goals, bills, income, transfers, statement imports and their matches, custom categories, budgets and your custom Money Map), and can genuinely restore it all back to that point in time.',
       'A snapshot is also taken automatically every day (the most recent 14 are kept), so a real backup exists even if nobody remembers to make one manually.',
     ],
   },
@@ -197,7 +197,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     body: [
       'As an admin, the "Admin & users" tab lets you manage household member accounts, change roles, and remove accounts that no longer belong.',
       'There must always be at least one Admin in a household — the app won\'t let you remove the last one. "Backup Admin" has identical permissions to "Admin" today — it\'s a separate role only so it\'s clear who the usual admin is, not a lesser one.',
-      '"Database Snapshots" takes a full point-in-time backup of the household\'s accounts, goals, bills, income and transfers, stored in the cloud. "Restore" replaces all of the household\'s current data with what\'s in that snapshot — a real undo, not a preview — so the confirmation shows the snapshot\'s age and record count before you commit to it.',
+      '"Database Snapshots" takes a full point-in-time backup of the entire household — accounts, goals, bills, income, transfers, statement imports and their matches, custom categories, budgets and your custom Money Map — stored in the cloud. "Restore" replaces all of the household\'s current data with what\'s in that snapshot — a real undo, not a preview — so the confirmation shows the snapshot\'s age and record count before you commit to it.',
       'One snapshot happens automatically every day, tagged "Automatic" in the list, with the most recent 14 kept. A manual snapshot is only worth creating right before doing something risky, like a restore.',
       '"Recent activity" is a plain log of deletions, backup restores, member removal, and role changes — who did it and when. It\'s not a full edit history, just the actions worth being able to look back on.',
     ],

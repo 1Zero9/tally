@@ -10,6 +10,7 @@ import {
   encryptField,
   decryptField,
   isCurrentKeyVersion,
+  isEncryptedWithKey,
   encryptOptional,
   decryptOptional,
   maskSecret,
@@ -28,9 +29,9 @@ describe('encryptField / decryptField round trip', () => {
     expect(decryptField(stored, KEY)).toBe(plaintext);
   });
 
-  it('produces output tagged with the current key version', () => {
+  it('produces output tagged with the current format version and this key\'s id', () => {
     const stored = encryptField('some secret', KEY);
-    expect(stored.startsWith('v1:')).toBe(true);
+    expect(stored.startsWith('v2:')).toBe(true);
     expect(isCurrentKeyVersion(stored)).toBe(true);
   });
 
@@ -48,11 +49,27 @@ describe('encryptField / decryptField round trip', () => {
 
   it('detects tampering with the ciphertext', () => {
     const stored = encryptField('sensitive value', KEY);
-    const [version, iv, tag, ciphertext] = stored.split(':');
+    const [version, kid, iv, tag, ciphertext] = stored.split(':');
     const tamperedByte = Buffer.from(ciphertext, 'base64');
     tamperedByte[0] = tamperedByte[0] ^ 0xff;
-    const tampered = [version, iv, tag, tamperedByte.toString('base64')].join(':');
+    const tampered = [version, kid, iv, tag, tamperedByte.toString('base64')].join(':');
     expect(() => decryptField(tampered, KEY)).toThrow();
+  });
+
+  it('decrypts a v1 value (version marker but no embedded key id — the format before this change)', () => {
+    // Manually build the old v1 shape (v1:iv:authTag:ciphertext) to confirm
+    // decryptField's v1 branch still works — real rows written before this
+    // format change have this shape and must stay readable indefinitely.
+    const iv = nodeCrypto.randomBytes(12);
+    const cipher = nodeCrypto.createCipheriv('aes-256-gcm', KEY, iv);
+    const plaintext = 'v1-account-number-000111';
+    const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    const v1Stored = `v1:${iv.toString('base64')}:${authTag.toString('base64')}:${ciphertext.toString('base64')}`;
+
+    expect(isCurrentKeyVersion(v1Stored)).toBe(false);
+    expect(isEncryptedWithKey(v1Stored, KEY)).toBe(false); // v1 has no key id — never claims a match
+    expect(decryptField(v1Stored, KEY)).toBe(plaintext);
   });
 
   it('decrypts a legacy pre-versioning value (no key-version prefix)', () => {
@@ -69,6 +86,31 @@ describe('encryptField / decryptField round trip', () => {
 
     expect(isCurrentKeyVersion(legacyStored)).toBe(false);
     expect(decryptField(legacyStored, KEY)).toBe(plaintext);
+  });
+});
+
+describe('isEncryptedWithKey', () => {
+  it('is true for a value encrypted with exactly this key', () => {
+    const stored = encryptField('some secret', KEY);
+    expect(isEncryptedWithKey(stored, KEY)).toBe(true);
+  });
+
+  it('is false for a value encrypted with a different key', () => {
+    const stored = encryptField('some secret', KEY);
+    expect(isEncryptedWithKey(stored, OTHER_KEY)).toBe(false);
+  });
+
+  // This is the actual bug the rotation script had: isCurrentKeyVersion only
+  // checked the string FORMAT, so once ALL data was in that format (the
+  // normal end state, not an edge case), a real rotation would treat
+  // everything as "already rotated" and skip it entirely.
+  it('distinguishes two values both in the current format but under different keys', () => {
+    const underKey = encryptField('same plaintext', KEY);
+    const underOtherKey = encryptField('same plaintext', OTHER_KEY);
+    expect(isCurrentKeyVersion(underKey)).toBe(true);
+    expect(isCurrentKeyVersion(underOtherKey)).toBe(true);
+    expect(isEncryptedWithKey(underKey, KEY)).toBe(true);
+    expect(isEncryptedWithKey(underOtherKey, KEY)).toBe(false);
   });
 });
 

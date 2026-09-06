@@ -7,12 +7,16 @@ import crypto from 'crypto';
  *
  * Uses AES-256-GCM: a random 12-byte IV per value, with the GCM auth tag
  * appended so we can detect tampering/corruption on decrypt. Output format:
- * `v1:base64(iv):base64(authTag):base64(ciphertext)` — the leading `v1:`
- * is a key-version marker (see KEY_VERSION below), letting a future key
- * rotation tell already-rotated values apart from ones still encrypted
- * with an older key, so rotation can be resumed safely if interrupted.
- * Values encrypted before this marker existed have no prefix (3 parts
- * instead of 4) and are still read correctly — see decryptField.
+ * `v2:<keyId>:base64(iv):base64(authTag):base64(ciphertext)` — `keyId` is
+ * the first 8 hex characters of sha256(key), identifying WHICH key
+ * produced this value, not just that it's in the current string format.
+ * This is what a real key rotation actually needs to know ("does this
+ * value still need rotating, or is it already on the destination key?") —
+ * `v1` (the previous format, `v1:iv:tag:ciphertext`, no key id) and truly
+ * legacy values (no marker at all, 3 parts) still decrypt correctly, since
+ * every value ever written by this app used the single key currently in
+ * CREDENTIALS_ENCRYPTION_KEY until a rotation changes that. See
+ * isEncryptedWithKey() below and scripts/rotate-encryption-key.ts.
  *
  * The key comes from CREDENTIALS_ENCRYPTION_KEY (32 raw bytes, base64
  * encoded — generate with `openssl rand -base64 32`). If it's not set,
@@ -21,7 +25,7 @@ import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
-const KEY_VERSION = 'v1';
+const KEY_VERSION = 'v2';
 
 function parseKey(secret: string, envVarName: string): Buffer {
   const key = Buffer.from(secret, 'base64');
@@ -51,24 +55,52 @@ export function isEncryptionConfigured(): boolean {
   }
 }
 
+/** Short, non-secret fingerprint identifying a key without exposing it. */
+function keyId(key: Buffer): string {
+  return crypto.createHash('sha256').update(key).digest('hex').slice(0, 8);
+}
+
 export function encryptField(plaintext: string, key: Buffer = getKey()): string {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  return `${KEY_VERSION}:${iv.toString('base64')}:${authTag.toString('base64')}:${ciphertext.toString('base64')}`;
+  return `${KEY_VERSION}:${keyId(key)}:${iv.toString('base64')}:${authTag.toString('base64')}:${ciphertext.toString('base64')}`;
 }
 
-/** True if a stored value already carries the current key-version prefix. */
+/** True if a stored value already carries the current format's prefix. */
 export function isCurrentKeyVersion(stored: string): boolean {
   return stored.startsWith(`${KEY_VERSION}:`);
 }
 
+/**
+ * True if `stored` was encrypted with exactly this key — the question a
+ * real rotation needs answered, unlike isCurrentKeyVersion (which only
+ * tells you the *format*, not which key produced it; a v1 value predates
+ * key ids entirely and can never claim a match here, correctly forcing
+ * rotation to treat it as needing rotation rather than skipping it).
+ */
+export function isEncryptedWithKey(stored: string, key: Buffer): boolean {
+  const parts = stored.split(':');
+  if (parts.length === 5 && parts[0] === KEY_VERSION) {
+    return parts[1] === keyId(key);
+  }
+  return false;
+}
+
 export function decryptField(stored: string, key: Buffer = getKey()): string {
   const parts = stored.split(':');
-  // Legacy (pre-versioning) values have no marker: iv:authTag:ciphertext.
-  // Versioned values are marker:iv:authTag:ciphertext.
-  const [ivB64, tagB64, dataB64] = parts.length === 4 ? parts.slice(1) : parts;
+  let ivB64: string | undefined, tagB64: string | undefined, dataB64: string | undefined;
+  if (parts.length === 5 && parts[0] === KEY_VERSION) {
+    // v2: version:keyId:iv:tag:ciphertext
+    [, , ivB64, tagB64, dataB64] = parts;
+  } else if (parts.length === 4) {
+    // v1: version:iv:tag:ciphertext (no key id)
+    [, ivB64, tagB64, dataB64] = parts;
+  } else {
+    // Legacy (pre-versioning): iv:tag:ciphertext
+    [ivB64, tagB64, dataB64] = parts;
+  }
   if (!ivB64 || !tagB64 || !dataB64) {
     throw new Error('Malformed encrypted value.');
   }

@@ -14,43 +14,48 @@
  *   5. Update CREDENTIALS_ENCRYPTION_KEY in your deployment's secret
  *      manager to the new key and redeploy.
  *
- * Safe to re-run: encrypted values carry a key-version marker (see
- * src/lib/crypto.ts), so already-rotated fields are skipped rather than
- * re-encrypted or mistakenly attempted with the old key on a second pass.
+ * Safe to re-run: a field is skipped only once it's confirmed to be
+ * encrypted with the NEW key specifically (isEncryptedWithKey), not merely
+ * "in the current string format" — a value already on some OTHER key
+ * (including a still-un-rotated one from before this script ever
+ * existed) is correctly treated as needing rotation, not skipped.
  * Still, ALWAYS keep a DB backup before running against prod.
  */
-import { PrismaClient } from '@prisma/client';
-import { decryptField, encryptField, isCurrentKeyVersion, loadKeyFromEnv } from '../src/lib/crypto';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { decryptField, encryptField, isEncryptedWithKey, loadKeyFromEnv } from '../src/lib/crypto';
 
 const prisma = new PrismaClient();
 
+// All 8 encrypted Account fields — keep in sync with prisma/schema.prisma's
+// Account model (previously missing ibanEnc/bicEnc, added along with the
+// statement-import account-matching feature).
 const ENCRYPTED_FIELDS = [
   'accountNumberEnc',
   'routingNumberEnc',
+  'ibanEnc',
+  'bicEnc',
   'loginUsernameEnc',
   'loginPasswordEnc',
   'loginUrlEnc',
   'securityNotesEnc',
 ] as const;
 
-async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+function rotateValue(encrypted: string | null, oldKey: Buffer, newKey: Buffer): string | null | undefined {
+  if (!encrypted) return undefined; // nothing to do
+  if (isEncryptedWithKey(encrypted, newKey)) return undefined; // already on the destination key
+  const plaintext = decryptField(encrypted, oldKey); // throws if this isn't actually under oldKey — surfaced to the caller
+  return encryptField(plaintext, newKey);
+}
 
-  const oldKey = loadKeyFromEnv('OLD_CREDENTIALS_ENCRYPTION_KEY');
-  const newKey = loadKeyFromEnv('CREDENTIALS_ENCRYPTION_KEY');
-
-  if (oldKey.equals(newKey)) {
-    throw new Error(
-      'OLD_CREDENTIALS_ENCRYPTION_KEY and CREDENTIALS_ENCRYPTION_KEY are identical — nothing to rotate.'
-    );
-  }
-
+async function rotateAccounts(oldKey: Buffer, newKey: Buffer, dryRun: boolean) {
   const accounts = await prisma.account.findMany({
     select: {
       id: true,
       name: true,
       accountNumberEnc: true,
       routingNumberEnc: true,
+      ibanEnc: true,
+      bicEnc: true,
       loginUsernameEnc: true,
       loginPasswordEnc: true,
       loginUrlEnc: true,
@@ -68,18 +73,12 @@ async function main() {
 
     for (const field of ENCRYPTED_FIELDS) {
       const encrypted = account[field] as string | null;
-      if (!encrypted) continue;
-
-      if (isCurrentKeyVersion(encrypted)) {
-        // Already rotated (versioned) in a previous run — skip rather than
-        // re-encrypting or attempting to decrypt with the "old" key.
-        continue;
-      }
-
       try {
-        const plaintext = decryptField(encrypted, oldKey);
-        updates[field] = encryptField(plaintext, newKey);
-        rotatedFieldCount++;
+        const rotated = rotateValue(encrypted, oldKey, newKey);
+        if (rotated !== undefined) {
+          updates[field] = rotated as string;
+          rotatedFieldCount++;
+        }
       } catch (err) {
         failedCount++;
         console.error(
@@ -99,13 +98,93 @@ async function main() {
     }
   }
 
+  return { rotatedFieldCount, failedCount };
+}
+
+// DatabaseBackup.payloadJson embeds raw Account rows (schemaVersion 1 and 2
+// snapshots both include the *Enc fields as-is) — a snapshot taken before a
+// rotation still holds ciphertext under the OLD key unless we rotate it
+// here too. Otherwise restoring a pre-rotation snapshot after the old key
+// is gone would silently produce permanently-undecryptable data.
+async function rotateBackupPayloads(oldKey: Buffer, newKey: Buffer, dryRun: boolean) {
+  const backups = await prisma.databaseBackup.findMany({
+    select: { id: true, notes: true, payloadJson: true },
+  });
+
+  let rotatedFieldCount = 0;
+  let failedCount = 0;
+  let touchedBackups = 0;
+
+  for (const backup of backups) {
+    if (!backup.payloadJson || typeof backup.payloadJson !== 'object' || Array.isArray(backup.payloadJson)) continue;
+    const payload = backup.payloadJson as Record<string, unknown>;
+    const accounts = payload.accounts;
+    if (!Array.isArray(accounts) || accounts.length === 0) continue;
+
+    let changed = false;
+    for (const account of accounts as Record<string, unknown>[]) {
+      for (const field of ENCRYPTED_FIELDS) {
+        const encrypted = account[field] as string | null;
+        try {
+          const rotated = rotateValue(encrypted, oldKey, newKey);
+          if (rotated !== undefined) {
+            account[field] = rotated;
+            rotatedFieldCount++;
+            changed = true;
+          }
+        } catch (err) {
+          failedCount++;
+          console.error(
+            `  ✗ backup ${backup.id} (${backup.notes || 'no notes'}).accounts[].${field}: failed to decrypt with old key — ${
+              err instanceof Error ? err.message : err
+            }`
+          );
+        }
+      }
+    }
+
+    if (!changed) continue;
+    touchedBackups++;
+    console.log(`  ✓ backup ${backup.id} (${backup.notes || 'no notes'}): rotated embedded account ciphertext`);
+
+    if (!dryRun) {
+      await prisma.databaseBackup.update({
+        where: { id: backup.id },
+        data: { payloadJson: payload as unknown as Prisma.InputJsonValue },
+      });
+    }
+  }
+
+  return { rotatedFieldCount, failedCount, touchedBackups };
+}
+
+async function main() {
+  const dryRun = process.argv.includes('--dry-run');
+
+  const oldKey = loadKeyFromEnv('OLD_CREDENTIALS_ENCRYPTION_KEY');
+  const newKey = loadKeyFromEnv('CREDENTIALS_ENCRYPTION_KEY');
+
+  if (oldKey.equals(newKey)) {
+    throw new Error(
+      'OLD_CREDENTIALS_ENCRYPTION_KEY and CREDENTIALS_ENCRYPTION_KEY are identical — nothing to rotate.'
+    );
+  }
+
+  console.log('--- Rotating live Account fields ---');
+  const accountResult = await rotateAccounts(oldKey, newKey, dryRun);
+
+  console.log('\n--- Rotating embedded ciphertext in DatabaseBackup snapshots ---');
+  const backupResult = await rotateBackupPayloads(oldKey, newKey, dryRun);
+
+  const totalFailed = accountResult.failedCount + backupResult.failedCount;
+
   console.log(
-    `\nDone. ${rotatedFieldCount} field(s) rotated${failedCount ? `, ${failedCount} FAILED` : ''}.${
-      dryRun ? ' (dry run — no changes written)' : ''
-    }`
+    `\nDone. ${accountResult.rotatedFieldCount} account field(s) rotated, ` +
+    `${backupResult.rotatedFieldCount} backup-embedded field(s) rotated across ${backupResult.touchedBackups} snapshot(s)` +
+    `${totalFailed ? `, ${totalFailed} FAILED` : ''}.${dryRun ? ' (dry run — no changes written)' : ''}`
   );
 
-  if (failedCount > 0) {
+  if (totalFailed > 0) {
     process.exitCode = 1;
   }
 }

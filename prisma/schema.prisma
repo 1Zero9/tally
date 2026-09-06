@@ -604,6 +604,13 @@ model DatabaseBackup {
   notes       String?
   createdAt   DateTime @default(now())
 
+  // Shape of payloadJson: 1 = the original 5-table shape (accounts, goals,
+  // expenses, incomes, transfers only); 2 = also includes statementImports,
+  // statementTransactions, merchantAliases, categories, budgets, mapNodes,
+  // mapEdges. Existing rows backfill to 1 (their real shape); restore
+  // branches on this explicitly instead of sniffing the payload's shape.
+  schemaVersion Int @default(1)
+
   // True for snapshots created by the daily cron (see cron/backup route),
   // false for ones an admin triggered manually from Admin > Database
   // Snapshots. Automatic snapshots are pruned to the most recent 14 per
