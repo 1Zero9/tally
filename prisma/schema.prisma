@@ -171,6 +171,14 @@ model Expense {
   exchangeRate     Float?
   rateDate         String?
 
+  // Set when part of this expense's cost is expected to be reimbursed (e.g.
+  // a health-insurance claim). reimbursementReceived is null while the claim
+  // is pending; once set, spend totals count only (amount - reimbursementReceived)
+  // for this expense — see getEffectiveAmount() in src/utils/calculations.ts.
+  reimbursementExpected     Float?
+  reimbursementReceived     Float?
+  reimbursementReceivedDate String?
+
   householdId     String?
   household       Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 

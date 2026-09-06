@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { ExpenseItem, IncomeItem, AccountItem, TransferItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
-import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import { getCategoryMeta } from '../data/categories';
 import { Activity, Landmark, ArrowLeftRight } from 'lucide-react';
@@ -164,7 +164,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
 
     const categoryTotals: Record<string, Record<string, number>> = {};
     activeExpenses.forEach((exp) => {
-      const monthly = getMonthlyEquivalent(convertCurrency(exp.amount, exp.currency, currency), exp.billingCycle);
+      const monthly = getMonthlyEquivalent(convertCurrency(getEffectiveAmount(exp), exp.currency, currency), exp.billingCycle);
       const accId = exp.paymentAccountId || 'unassigned';
       accountMonthlyOut[accId] = (accountMonthlyOut[accId] || 0) + monthly;
       if (!categoryTotals[accId]) categoryTotals[accId] = {};

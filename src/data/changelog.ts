@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.55.0';
+export const APP_VERSION = '1.56.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.56.0',
+    date: '2026-09-06',
+    changes: [
+      'Added reimbursement/claim tracking to expenses — e.g. a health insurance claim on a doctor visit. The full amount counts as spend until you mark what was actually received; after that, only the net cost counts toward Spending, Budgets, and category totals.',
+    ],
+  },
   {
     version: '1.55.0',
     date: '2026-09-06',

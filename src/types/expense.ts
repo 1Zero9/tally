@@ -92,6 +92,9 @@ export interface ExpenseItem {
   originalCurrency?: CurrencyCode | null;
   exchangeRate?: number | null;
   rateDate?: string | null;
+  reimbursementExpected?: number | null;
+  reimbursementReceived?: number | null;
+  reimbursementReceivedDate?: string | null;
   paymentAccountId?: string | null;
   paymentAccount?: AccountSummary | null;
   linkedGoalId?: string | null;

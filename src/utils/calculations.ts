@@ -3,6 +3,23 @@ import { CURRENCIES } from './currencies';
 import { getCategoryMeta } from '../data/categories';
 
 /**
+ * The amount an expense actually counts as, for every spend total/budget/
+ * category breakdown in the app: the full amount until a reimbursement is
+ * actually received (the money is genuinely out of pocket until then), then
+ * just the net cost afterward. Structurally typed (not ExpenseItem-specific)
+ * so it works against raw Prisma Expense rows server-side too, with no cast.
+ * Deliberately not applied to forward-looking "what's due" figures (a claim
+ * hasn't happened yet) or to a single row's own displayed amount (which
+ * always shows what was actually charged, like a bank statement would).
+ */
+export function getEffectiveAmount(item: { amount: number; reimbursementReceived?: number | null }): number {
+  if (item.reimbursementReceived != null && item.reimbursementReceived > 0) {
+    return Math.max(0, item.amount - item.reimbursementReceived);
+  }
+  return item.amount;
+}
+
+/**
  * Normalizes any billing cycle into a monthly cost.
  */
 export function getMonthlyEquivalent(amount: number, cycle: ExpenseItem['billingCycle']): number {
@@ -77,7 +94,7 @@ export function calculateSpendingSummary(
 
   expenses.forEach((item) => {
     // Convert item amount to selected display currency
-    const amountInDisplay = convertCurrency(item.amount, item.currency, displayCurrency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, displayCurrency);
     const monthlyAmount = getMonthlyEquivalent(amountInDisplay, item.billingCycle);
 
     if (item.isActive) {

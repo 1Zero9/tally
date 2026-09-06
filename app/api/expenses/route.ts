@@ -125,6 +125,9 @@ export async function POST(request: Request) {
         originalCurrency: body.originalCurrency || null,
         exchangeRate: body.exchangeRate != null ? Number(body.exchangeRate) : null,
         rateDate: body.rateDate || null,
+        reimbursementExpected: body.reimbursementExpected != null ? Number(body.reimbursementExpected) : null,
+        reimbursementReceived: body.reimbursementReceived != null ? Number(body.reimbursementReceived) : null,
+        reimbursementReceivedDate: body.reimbursementReceivedDate || null,
       },
       include: {
         createdBy: {
@@ -226,6 +229,9 @@ export async function PUT(request: Request) {
         originalCurrency: body.originalCurrency || null,
         exchangeRate: body.exchangeRate != null ? Number(body.exchangeRate) : null,
         rateDate: body.rateDate || null,
+        reimbursementExpected: body.reimbursementExpected != null ? Number(body.reimbursementExpected) : null,
+        reimbursementReceived: body.reimbursementReceived != null ? Number(body.reimbursementReceived) : null,
+        reimbursementReceivedDate: body.reimbursementReceivedDate || null,
       },
       include: {
         createdBy: {

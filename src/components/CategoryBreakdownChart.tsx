@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
 import { CATEGORY_LIST } from '../data/categories';
-import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 
 interface CategoryBreakdownChartProps {
@@ -17,14 +17,14 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
 }) => {
   const activeExpenses = expenses.filter((e) => e.isActive);
   const totalSpend = activeExpenses.reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
     return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
   }, 0);
 
   const categoryData = [...CATEGORY_LIST, ...customCategories].map((cat) => {
     const catItems = activeExpenses.filter((e) => e.category === cat.id);
     const monthlyAmount = catItems.reduce((sum, item) => {
-      const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+      const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
       return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
     }, 0);
     const percentage = totalSpend > 0 ? (monthlyAmount / totalSpend) * 100 : 0;

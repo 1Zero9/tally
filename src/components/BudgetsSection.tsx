@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem, BudgetItem } from '../types/expense';
-import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import { getCategoryMeta } from '../data/categories';
 import { Wallet, Plus, Trash2, Edit2 } from 'lucide-react';
@@ -42,7 +42,7 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
   const activeExpenses = expenses.filter((e) => e.isActive);
   const spendByCategory = new Map<string, number>();
   for (const item of activeExpenses) {
-    const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
     const monthly = getMonthlyEquivalent(amountInDisplay, item.billingCycle);
     spendByCategory.set(item.category, (spendByCategory.get(item.category) || 0) + monthly);
   }

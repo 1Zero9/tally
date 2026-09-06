@@ -79,6 +79,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const [originalCurrency, setOriginalCurrency] = useState<CurrencyCode | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateDate, setRateDate] = useState<string | null>(null);
+  const [reimbursementExpected, setReimbursementExpected] = useState<number | string>('');
+  const [reimbursementReceived, setReimbursementReceived] = useState<number | string>('');
+  const [reimbursementReceivedDate, setReimbursementReceivedDate] = useState('');
 
   useEffect(() => {
     if (editingExpense) {
@@ -105,6 +108,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setOriginalCurrency(editingExpense.originalCurrency ?? null);
       setExchangeRate(editingExpense.exchangeRate ?? null);
       setRateDate(editingExpense.rateDate ?? null);
+      setReimbursementExpected(editingExpense.reimbursementExpected ?? '');
+      setReimbursementReceived(editingExpense.reimbursementReceived ?? '');
+      setReimbursementReceivedDate(editingExpense.reimbursementReceivedDate ?? '');
     } else if (initialPresetId) {
       const preset = PRESETS.find((p) => p.id === initialPresetId);
       if (preset) {
@@ -128,6 +134,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         setOriginalCurrency(null);
         setExchangeRate(null);
         setRateDate(null);
+        setReimbursementExpected('');
+        setReimbursementReceived('');
+        setReimbursementReceivedDate('');
       }
     } else if (draftExpense) {
       setName(draftExpense.name || '');
@@ -153,6 +162,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setOriginalCurrency(draftExpense.originalCurrency ?? null);
       setExchangeRate(draftExpense.exchangeRate ?? null);
       setRateDate(draftExpense.rateDate ?? null);
+      setReimbursementExpected(draftExpense.reimbursementExpected ?? '');
+      setReimbursementReceived(draftExpense.reimbursementReceived ?? '');
+      setReimbursementReceivedDate(draftExpense.reimbursementReceivedDate ?? '');
     } else {
       setName('');
       setVendor('');
@@ -177,6 +189,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setOriginalCurrency(null);
       setExchangeRate(null);
       setRateDate(null);
+      setReimbursementExpected('');
+      setReimbursementReceived('');
+      setReimbursementReceivedDate('');
     }
   }, [editingExpense, initialPresetId, initialCategory, initialIsPending, draftExpense, currentUserId, isOpen]);
 
@@ -221,6 +236,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         originalCurrency,
         exchangeRate,
         rateDate,
+        reimbursementExpected: reimbursementExpected !== '' ? Number(reimbursementExpected) : null,
+        reimbursementReceived: reimbursementReceived !== '' ? Number(reimbursementReceived) : null,
+        reimbursementReceivedDate: reimbursementReceivedDate || null,
       },
       editingExpense?.id
     );
@@ -572,6 +590,71 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               </select>
             </div>
           )}
+
+          {/* Partial reimbursement / insurance claim */}
+          <div>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              Reimbursement / claim expected (optional)
+            </label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', maxWidth: '220px' }}>
+              <span style={{ position: 'absolute', left: '0.85rem', fontSize: '0.9rem', color: 'var(--ha-muted)', pointerEvents: 'none' }}>
+                {currencySymbol}
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={reimbursementExpected}
+                onChange={(e) => setReimbursementExpected(e.target.value)}
+                className="ha-input"
+                style={{ paddingLeft: '1.7rem', fontSize: '0.85rem' }}
+              />
+            </div>
+            <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '0.3rem' }}>
+              e.g. a health insurance claim on a doctor visit — once you mark it received below, only the net cost counts toward Spending and Budgets. Until then, the full amount still counts, since it&apos;s genuinely out of pocket.
+            </p>
+
+            {reimbursementExpected !== '' && Number(reimbursementExpected) > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                    Amount received (leave blank until it arrives)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={reimbursementReceived}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setReimbursementReceived(value);
+                      if (value !== '' && Number(value) > 0 && !reimbursementReceivedDate) {
+                        setReimbursementReceivedDate(new Date().toISOString().split('T')[0]);
+                      }
+                    }}
+                    className="ha-input"
+                    style={{ fontSize: '0.85rem' }}
+                  />
+                </div>
+                {reimbursementReceived !== '' && Number(reimbursementReceived) > 0 && (
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                      Received date
+                    </label>
+                    <input
+                      type="date"
+                      value={reimbursementReceivedDate}
+                      onChange={(e) => setReimbursementReceivedDate(e.target.value)}
+                      className="ha-input tabular-nums"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Vendor name & email (for contract-review outreach) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

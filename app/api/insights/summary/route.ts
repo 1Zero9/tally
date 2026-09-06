@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { getMonthlyEquivalent } from '@/src/utils/calculations';
+import { getMonthlyEquivalent, getEffectiveAmount } from '@/src/utils/calculations';
 import { rolloverIfDue } from '@/src/lib/billing';
 import { getCategoryMeta } from '@/src/data/categories';
 import type { BillingCycle } from '@/src/types/expense';
@@ -51,7 +51,7 @@ export async function GET() {
     });
 
     const monthlyTotal = active.reduce(
-      (sum, e) => sum + getMonthlyEquivalent(e.amount, e.billingCycle as BillingCycle),
+      (sum, e) => sum + getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle),
       0
     );
 
@@ -77,7 +77,7 @@ export async function GET() {
 
     const categoryTotals: Record<string, number> = {};
     active.forEach((e) => {
-      const monthly = getMonthlyEquivalent(e.amount, e.billingCycle as BillingCycle);
+      const monthly = getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle);
       categoryTotals[e.category] = (categoryTotals[e.category] || 0) + monthly;
     });
 
@@ -93,13 +93,16 @@ export async function GET() {
 
     // Savings opportunity: monthly-billed services with an amount worth switching to annual.
     const annualOpportunities = active
-      .filter((e) => e.billingCycle === 'monthly' && e.amount > 8)
-      .map((e) => ({ id: e.id, name: e.name, monthlyAmount: e.amount, estAnnualSavings: Math.round(e.amount * 2 * 100) / 100 }));
+      .filter((e) => e.billingCycle === 'monthly' && getEffectiveAmount(e) > 8)
+      .map((e) => {
+        const effective = getEffectiveAmount(e);
+        return { id: e.id, name: e.name, monthlyAmount: effective, estAnnualSavings: Math.round(effective * 2 * 100) / 100 };
+      });
     const potentialAnnualSavings = annualOpportunities.reduce((sum, o) => sum + o.estAnnualSavings, 0);
 
     const pausedMonthlySavings = liveExpenses
       .filter((e) => !e.isActive)
-      .reduce((sum, e) => sum + getMonthlyEquivalent(e.amount, e.billingCycle as BillingCycle), 0);
+      .reduce((sum, e) => sum + getMonthlyEquivalent(getEffectiveAmount(e), e.billingCycle as BillingCycle), 0);
 
     const activeIncomes = incomes.filter((i) => i.isActive);
     const monthlyIncome = activeIncomes.reduce(

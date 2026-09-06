@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
 import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
-import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle } from '../utils/formatters';
 import { hasTextSelection } from '../utils/dom';
 import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal } from 'lucide-react';
@@ -539,6 +539,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <span>
                         Originally: <strong style={{ color: 'var(--ha-ink)' }}>{formatCurrency(item.originalAmount, item.originalCurrency)}</strong>
                         {item.exchangeRate != null && item.rateDate ? ` (converted at ${item.exchangeRate.toFixed(4)} on ${item.rateDate})` : ''}
+                      </span>
+                    )}
+                    {item.reimbursementExpected != null && item.reimbursementExpected > 0 && (
+                      <span>
+                        Reimbursement: <strong style={{ color: 'var(--ha-ink)' }}>
+                          {item.reimbursementReceived != null && item.reimbursementReceived > 0
+                            ? `${formatCurrency(item.reimbursementReceived, item.currency)} received${item.reimbursementReceivedDate ? ` on ${item.reimbursementReceivedDate}` : ''} — net cost ${formatCurrency(getEffectiveAmount(item), item.currency)}`
+                            : `${formatCurrency(item.reimbursementExpected, item.currency)} expected (claim pending)`}
+                        </strong>
                       </span>
                     )}
                   </div>

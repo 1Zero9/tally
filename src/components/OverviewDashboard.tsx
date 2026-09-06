@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode, SpendingSummary, IncomeSummary, CustomCategoryItem, AccountItem } from '../types/expense';
 import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
-import { convertCurrency, getMonthlyEquivalent, getDaysUntilRenewal } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getDaysUntilRenewal, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
 import { TrendingUp, Clock, PiggyBank, ArrowRight, Edit2, CalendarClock, Landmark } from 'lucide-react';
 import { SensitiveValue } from './SensitiveValue';
@@ -91,7 +91,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const categoryData = [...CATEGORY_LIST, ...customCategories].map((cat) => {
     const catItems = activeExpenses.filter((e) => e.category === cat.id);
     const monthlyAmount = catItems.reduce((sum, item) => {
-      const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+      const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
       return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
     }, 0);
     return { ...cat, monthlyAmount };
@@ -112,11 +112,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   // Bills vs one-off split — recurring bills/contracts vs incidental spending, same monthly-equivalent basis as the category donut above.
   const billsTotal = activeExpenses.filter((e) => e.isBill !== false).reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
     return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
   }, 0);
   const oneOffTotal = activeExpenses.filter((e) => e.isBill === false).reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
     return sum + getMonthlyEquivalent(amountInDisplay, item.billingCycle);
   }, 0);
   const billsVsOneOffTotal = billsTotal + oneOffTotal;

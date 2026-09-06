@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode } from '../types/expense';
-import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
+import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -27,9 +27,9 @@ export const OptimizationInsights: React.FC<OptimizationInsightsProps> = ({
   const pausedItems = expenses.filter((e) => !e.isActive);
 
   // 1. Annual billing conversion — monthly plans worth switching to yearly.
-  const monthlyOnlyServices = activeItems.filter((e) => e.billingCycle === 'monthly' && e.amount > 8);
+  const monthlyOnlyServices = activeItems.filter((e) => e.billingCycle === 'monthly' && getEffectiveAmount(e) > 8);
   const annualSwitchYearly = monthlyOnlyServices.reduce((sum, item) => {
-    const amountInDisplay = convertCurrency(item.amount, item.currency, currency);
+    const amountInDisplay = convertCurrency(getEffectiveAmount(item), item.currency, currency);
     return sum + amountInDisplay * 2; // ~2 months free equivalent
   }, 0);
   const annualSwitchMonthly = annualSwitchYearly / 12;
@@ -37,12 +37,12 @@ export const OptimizationInsights: React.FC<OptimizationInsightsProps> = ({
   // 2. Rarely used — active subscriptions marked low usage, prime cancellation candidates.
   const rarelyUsedItems = activeItems.filter((e) => e.usageRating === 'low');
   const rarelyUsedMonthly = rarelyUsedItems.reduce((sum, item) => {
-    return sum + getMonthlyEquivalent(convertCurrency(item.amount, item.currency, currency), item.billingCycle);
+    return sum + getMonthlyEquivalent(convertCurrency(getEffectiveAmount(item), item.currency, currency), item.billingCycle);
   }, 0);
 
   // 3. Already saving — subscriptions already paused.
   const alreadySavingMonthly = pausedItems.reduce((sum, item) => {
-    return sum + getMonthlyEquivalent(convertCurrency(item.amount, item.currency, currency), item.billingCycle);
+    return sum + getMonthlyEquivalent(convertCurrency(getEffectiveAmount(item), item.currency, currency), item.billingCycle);
   }, 0);
 
   const potentialMonthly = annualSwitchMonthly + rarelyUsedMonthly;
