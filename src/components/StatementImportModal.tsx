@@ -994,6 +994,37 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
           {step === 'map' && (
             <>
+              {matchedWinner && (
+                <p style={{
+                  fontSize: '0.8rem', color: 'var(--ha-blue)', backgroundColor: 'var(--ha-blue-light)',
+                  borderRadius: 'var(--ha-radius-md)', padding: '0.6rem 0.75rem', margin: '0 0 1rem', lineHeight: 1.45,
+                }}>
+                  <CheckCircle2 size={14} style={{ verticalAlign: '-2px', marginRight: '0.35rem' }} />
+                  Matched to <strong>{matchedWinner.accountName}</strong> — {joinFieldLabels(matchedWinner.matchedFields)} match{matchedWinner.matchedFields.length === 1 ? 'es' : ''}. Not right? Pick a different account below.
+                </p>
+              )}
+              {matchCandidates.length > 1 && !accountId && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', margin: '0 0 0.4rem' }}>
+                    Could be one of these saved accounts:
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {matchCandidates.map((c) => (
+                      <button
+                        key={c.accountId}
+                        type="button"
+                        onClick={() => setAccountId(c.accountId)}
+                        className="ha-chip"
+                        style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+                        title={`${joinFieldLabels(c.matchedFields)} match`}
+                      >
+                        {c.accountName}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.3rem' }}>
@@ -1006,33 +1037,6 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.3rem' }}>
                     Which account is this?
                   </label>
-                  {matchedWinner && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--ha-blue)', margin: '0 0 0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <CheckCircle2 size={13} />
-                      Matched to <strong>{matchedWinner.accountName}</strong> — {joinFieldLabels(matchedWinner.matchedFields)} match{matchedWinner.matchedFields.length === 1 ? 'es' : ''}. Not right? Pick a different account below.
-                    </p>
-                  )}
-                  {matchCandidates.length > 1 && !accountId && (
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', margin: '0 0 0.35rem' }}>
-                        Could be one of these saved accounts:
-                      </p>
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        {matchCandidates.map((c) => (
-                          <button
-                            key={c.accountId}
-                            type="button"
-                            onClick={() => setAccountId(c.accountId)}
-                            className="ha-chip"
-                            style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
-                            title={`${joinFieldLabels(c.matchedFields)} match`}
-                          >
-                            {c.accountName}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                   {(accounts.length > 0 || pendingNewAccount) ? (
                     <select className="ha-input" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
                       <option value="">Not sure / mixed</option>
