@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.54.0';
+export const APP_VERSION = '1.55.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.55.0',
+    date: '2026-09-06',
+    changes: [
+      'The "import a statement" prompt is now always on the home page — even before you\'ve added anything else — and opens the import screen directly in one click, instead of only appearing after 30+ days and requiring a trip to Flow first.',
+    ],
+  },
   {
     version: '1.54.0',
     date: '2026-09-05',

@@ -53,7 +53,7 @@ Tally uses **passwordless sign-in**: enter your email address and you'll receive
 
 The landing dashboard once you sign in. It shows your household's current-period totals at a glance: money in, money out, and how your budget is tracking. Use this as your starting point before drilling into a specific area.
 
-- If it's been 30+ days since your last statement import (or you've never done one), a dismissible reminder appears here nudging you to import the latest one — dismissing it snoozes the reminder for two weeks rather than turning it off for good.
+- A **statement import** banner shows here whenever you've never imported one, or it's been 30+ days since your last one — even before you've added anything else, so importing a statement is a one-click primary action, not something buried in Flow. Dismissing it snoozes it for two weeks rather than turning it off for good; it naturally stops showing once you've imported something recently.
 - A **Net worth** figure appears once at least one [Account](#6-accounts) has a balance set — assets (checking, savings, PayPal, investments, etc.) minus credit cards and loans. It's blurred the same way as "Left after bills" until you click to reveal it.
 
 ## 3. Spending
@@ -98,7 +98,7 @@ Supported account types: **Checking, Savings, Credit Union, Credit Card, Debit C
 **Flow** is where you log every real movement of money — the household's transfer ledger. Each entry has a **From** and a **To**:
 
 - **Income landing**: From = *External (income source)*, To = one of your accounts.
-- **Moving money between accounts**: From = one account, To = another account (e.g. sweeping savings into current).
+- **Moving money between accounts**: From = one account, To = another account (e.g. sweeping savings into current, or topping up a card like Revolut from your main account). This never counts as spending anywhere in Tally — only a transfer whose "To" is External represents money actually leaving the household.
 - **Payments and one-off spending**: From = the account paying, To = *External (payment / one-off spend)*. This covers recurring direct debits **and** one-off costs like a car repair, a doctor's visit, or a heating repair — just pick which account paid for it and add a note (e.g. "Car repair", "Netflix DD", "Doctor visit").
 
 You can optionally link a transfer to an existing recurring Expense or Income record, or just use a free-text label for anything ad hoc. Every transfer is dated, so Flow becomes a real, searchable history of where your money actually went — not just a projection.
@@ -108,6 +108,8 @@ You can optionally link a transfer to an existing recurring Expense or Income re
 ### Statement imports
 
 Under Flow, **Statement imports** lets you cross-check a real bank or credit-card statement against what you've already logged.
+
+**Money that passes through more than one of your own accounts** (e.g. you top up Revolut from BOI, then spend from Revolut) should be logged as a transfer on both ends, never as an expense — an internal transfer is never counted as spend. If you import both statements, add both accounts under [Accounts](#6-accounts) first, then: resolve the outgoing row on the source account (BOI) as **Log as transfer** (From: BOI, To: Revolut); when you later import the destination account's statement, the matching incoming row should come up as a **suggested match** against that same transfer — confirm it rather than creating a second entry. Only the money that actually leaves Revolut for something real (a shop, a bill, cash sent to someone outside the household) should be logged as an expense — the top-up itself never should be, so it can't double-count against the account it came from.
 
 **Uploading**
 - Upload a CSV, PDF, or photo/screenshot — CSV works best, but Tally reads PDFs and photos with AI, so there's no need to convert a bank PDF to CSV first.

@@ -5,7 +5,6 @@ import { convertCurrency, getMonthlyEquivalent, getDaysUntilRenewal } from '../u
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
 import { TrendingUp, Clock, PiggyBank, ArrowRight, Edit2, CalendarClock, Landmark } from 'lucide-react';
 import { SensitiveValue } from './SensitiveValue';
-import { StatementReminderBanner } from './StatementReminderBanner';
 
 // Net worth is a simplification, not a full asset/liability taxonomy —
 // credit cards and loans are treated as money owed (subtracted), every
@@ -28,7 +27,6 @@ interface OverviewDashboardProps {
   customCategories?: CustomCategoryItem[];
   isSensitiveRevealed: (id: string) => boolean;
   onRevealSensitive: (id: string) => void;
-  onOpenStatements: () => void;
   onViewAccounts: () => void;
 }
 
@@ -50,7 +48,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   customCategories = [],
   isSensitiveRevealed,
   onRevealSensitive,
-  onOpenStatements,
   onViewAccounts,
 }) => {
   const [mobilePanel, setMobilePanel] = React.useState<MobilePanel>('recent');
@@ -130,8 +127,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   return (
     <div>
-      <StatementReminderBanner onOpenStatements={onOpenStatements} />
-
       {/* Stat Cards */}
       <div className="ha-stat-row" style={{
         display: 'grid',

@@ -43,6 +43,8 @@ import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
+import { StatementImportModal } from '@/src/components/StatementImportModal';
+import { StatementReminderBanner } from '@/src/components/StatementReminderBanner';
 import { GoalsSection } from '@/src/components/GoalsSection';
 import { GoalModal } from '@/src/components/GoalModal';
 import { PrivacyBlurOverlay } from '@/src/components/PrivacyBlurOverlay';
@@ -108,6 +110,7 @@ export default function TallyPage() {
   const [editingTransfer, setEditingTransfer] = useState<TransferItem | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalItem | null>(null);
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
   const { isBlurred: isPrivacyBlurred, reveal: revealPrivacyBlur, toggle: togglePrivacyBlur, blurNow: hidePrivacyNow } = usePrivacyBlur();
   const { isRevealed: isSensitiveRevealed, reveal: revealSensitive } = useSensitiveReveal();
@@ -970,6 +973,13 @@ export default function TallyPage() {
           <AssistantBox currency={currency} hasData={hasData} />
         </div>
 
+        {/* Always visible on the home page, even with zero data yet — this
+            is a primary entry point (statement import), not just a
+            once-a-month nag once there's already an established ledger. */}
+        {activeTab === 'overview' && (
+          <StatementReminderBanner onOpenStatements={() => setIsStatementModalOpen(true)} />
+        )}
+
         {/* Overview Dashboard */}
         {activeTab === 'overview' && hasData && (
           <OverviewDashboard
@@ -1009,7 +1019,6 @@ export default function TallyPage() {
             onViewPlanned={() => setActiveTab('planned')}
             isSensitiveRevealed={isSensitiveRevealed}
             onRevealSensitive={revealSensitive}
-            onOpenStatements={() => setActiveTab('flow')}
             onViewAccounts={() => setActiveTab('accounts')}
           />
         )}
@@ -1554,6 +1563,21 @@ export default function TallyPage() {
         onSave={handleSaveGoal}
         editingGoal={editingGoal}
         accounts={accounts}
+      />
+
+      {/* Import a statement — the home-page entry point (StatementReminderBanner
+          above); the Flow tab's own "Import statement" button uses its own
+          separate instance inside StatementsSection. */}
+      <StatementImportModal
+        isOpen={isStatementModalOpen}
+        onClose={() => setIsStatementModalOpen(false)}
+        expenses={liveExpenses}
+        accounts={accounts}
+        householdCurrency={currency}
+        onImported={fetchDatabaseData}
+        onExpensesChanged={fetchDatabaseData}
+        customCategories={customCategories}
+        onCategoryCreated={handleCategoryCreated}
       />
 
       {/* Popular Presets Modal */}

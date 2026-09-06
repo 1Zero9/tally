@@ -85,7 +85,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'A suggested match is just a guess — the "Yes, that\'s right" and "No, link a different bill" buttons are equally easy to click, so don\'t worry about picking the wrong one. Correcting a match also improves future suggestions for that merchant.',
       'Rename an imported statement any time from the pencil icon next to its name in the Statements list, or from inside the review screen.',
       'Clicking outside the import dialog never discards anything — only the visible buttons (Back, Import, Done, the X) can close or navigate it.',
-      'If it\'s been 30+ days since your last import (or you\'ve never done one), Overview shows a dismissible reminder nudging you to upload the latest statement — dismissing it snoozes for two weeks.',
+      'A statement-import banner shows right at the top of the home page whenever you\'ve never imported one, or it\'s been 30+ days since your last one — click it to open the import dialog directly, no need to go via Flow first. Dismissing it snoozes for two weeks.',
     ],
   },
   {
@@ -94,6 +94,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     body: [
       'Use "Flow" to log real transfers: income landing in an account, money moving between accounts, or payments going out.',
       'One-off spending (a car repair, a doctor\'s visit) works here too — set "From" to the account that paid, leave "To" as External, and add a note.',
+      'Money moving between your own accounts (e.g. topping up Revolut from BOI) is never counted as spend, however you log it — only a transfer whose "To" is External represents money actually leaving the household. If you import both accounts\' statements, log the outgoing side as a transfer, and confirm the matching suggestion on the incoming side rather than creating a second entry — only the real spend that eventually leaves the destination account should become an expense.',
       'Logging a one-off transfer or expense that looks like something already on record (same account, same amount, within a couple of days) shows a dismissible heads-up — it never blocks the entry. Recurring bills and their "marked paid" transfers are never checked this way, since they\'re expected to repeat the same amount every cycle.',
     ],
   },
