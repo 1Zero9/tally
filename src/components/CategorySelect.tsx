@@ -14,6 +14,7 @@ interface CategorySelectProps {
   style?: React.CSSProperties;
   placeholderOption?: string;
   disabled?: boolean;
+  id?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   style,
   placeholderOption,
   disabled,
+  id,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -78,6 +80,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     return (
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
+          id={id}
           autoFocus
           className={className}
           style={style}
@@ -113,6 +116,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
 
   return (
     <select
+      id={id}
       className={className}
       style={style}
       value={value}

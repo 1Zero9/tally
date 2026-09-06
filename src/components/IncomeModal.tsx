@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { IncomeItem, IncomeCategory, BillingCycle, CurrencyCode, UserProfile, AccountItem } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { X, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const INCOME_CATEGORIES: { id: IncomeCategory; label: string }[] = [
   { id: 'salary', label: 'Salary / wages' },
@@ -65,6 +66,8 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
     }
   }, [editingIncome, currentUserId, isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +99,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

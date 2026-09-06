@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.62.0';
+export const APP_VERSION = '1.63.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.63.0',
+    date: '2026-09-06',
+    changes: [
+      'Every dialog (Add/Edit forms, Settings, Help guide, Statement import, and more) now behaves like a proper dialog for keyboard and screen-reader use: opening one moves focus inside it, Tab stays contained within it instead of leaking out to the page behind, Escape closes it, and focus returns to whatever you clicked to open it.',
+      'Fixed several unlabelled form fields on the sign-in screen and the expense form so screen readers announce them correctly and clicking a field\'s label focuses it.',
+    ],
+  },
   {
     version: '1.62.0',
     date: '2026-09-06',

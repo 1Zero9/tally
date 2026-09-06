@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { TransferItem, AccountItem, ExpenseItem, IncomeItem, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { X, ArrowRight, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const EXTERNAL_VALUE = '__external__';
 
@@ -59,6 +60,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
     }
   }, [editingTransfer, isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const fromIsExternal = fromAccountId === EXTERNAL_VALUE;
@@ -93,7 +96,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

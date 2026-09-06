@@ -6,6 +6,7 @@ import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
 import { X, ArrowRightLeft, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const PAYMENT_METHODS = [
   'SEPA Direct Debit',
@@ -196,6 +197,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     }
   }, [editingExpense, initialPresetId, initialCategory, initialIsPending, draftExpense, currentUserId, isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -252,7 +255,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{
           display: 'flex',
@@ -286,7 +289,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         <form onSubmit={handleSubmit} style={{ padding: '1.1rem 1.5rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Amount first & largest input with visible currency prefix */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.3rem' }}>
+            <label htmlFor="expense-amount" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.3rem' }}>
               Amount *
             </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -301,6 +304,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 {currencySymbol}
               </span>
               <input
+                id="expense-amount"
                 type="number"
                 step="0.01"
                 min="0"
@@ -327,10 +331,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Expense Name & Billing Cycle */}
           <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-name" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Description / Item Name *
               </label>
               <input
+                id="expense-name"
                 type="text"
                 required
                 placeholder="e.g. College Tuition, Netflix, Electricity, GAA Club"
@@ -341,10 +346,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </div>
 
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-billing-cycle" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Billing cycle
               </label>
               <select
+                id="expense-billing-cycle"
                 value={billingCycle}
                 onChange={(e) => {
                   const cycle = e.target.value as BillingCycle;
@@ -365,10 +371,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {/* Category selection */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+            <label htmlFor="expense-category" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
               Category
             </label>
             <CategorySelect
+              id="expense-category"
               value={category}
               onChange={(id) => setCategory(id as ExpenseCategory)}
               customCategories={customCategories}
@@ -432,10 +439,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {goals.length > 0 && (
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-linked-goal" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Link to a savings goal (optional)
               </label>
               <select
+                id="expense-linked-goal"
                 value={linkedGoalId}
                 onChange={(e) => setLinkedGoalId(e.target.value)}
                 className="ha-input"
@@ -457,10 +465,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
             {users.length > 0 && (
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+                <label htmlFor="expense-assigned-user" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                   Assigned Household Member
                 </label>
                 <select
+                  id="expense-assigned-user"
                   value={assignedUserId}
                   onChange={(e) => setAssignedUserId(e.target.value)}
                   className="ha-input"
@@ -476,10 +485,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             )}
 
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-next-renewal-date" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 {billingCycle === 'once' ? 'Payment date' : 'Next due date'}
               </label>
               <input
+                id="expense-next-renewal-date"
                 type="date"
                 required
                 value={nextRenewalDate}
@@ -543,10 +553,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Payment Method & Contract End Date */}
           <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: billingCycle === 'once' ? '1fr' : '1.4fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-payment-method" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Payment method
               </label>
               <select
+                id="expense-payment-method"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="ha-input"
@@ -562,10 +573,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
             {billingCycle !== 'once' && (
               <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                <label htmlFor="expense-contract-end-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                   Contract end date (optional)
                 </label>
                 <input
+                  id="expense-contract-end-date"
                   type="date"
                   value={contractEndDate}
                   onChange={(e) => setContractEndDate(e.target.value)}
@@ -578,10 +590,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {accounts.length > 0 && (
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-payment-account" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Paid from account (optional)
               </label>
               <select
+                id="expense-payment-account"
                 value={paymentAccountId}
                 onChange={(e) => setPaymentAccountId(e.target.value)}
                 className="ha-input"
@@ -596,7 +609,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {/* Partial reimbursement / insurance claim */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+            <label htmlFor="expense-reimbursement-expected" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
               Reimbursement / claim expected (optional)
             </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', maxWidth: '220px' }}>
@@ -604,6 +617,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 {currencySymbol}
               </span>
               <input
+                id="expense-reimbursement-expected"
                 type="number"
                 step="0.01"
                 min="0"
@@ -621,10 +635,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             {reimbursementExpected !== '' && Number(reimbursementExpected) > 0 && (
               <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.6rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                  <label htmlFor="expense-reimbursement-received" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                     Amount received (leave blank until it arrives)
                   </label>
                   <input
+                    id="expense-reimbursement-received"
                     type="number"
                     step="0.01"
                     min="0"
@@ -643,10 +658,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 </div>
                 {reimbursementReceived !== '' && Number(reimbursementReceived) > 0 && (
                   <div>
-                    <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+                    <label htmlFor="expense-reimbursement-received-date" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                       Received date
                     </label>
                     <input
+                      id="expense-reimbursement-received-date"
                       type="date"
                       value={reimbursementReceivedDate}
                       onChange={(e) => setReimbursementReceivedDate(e.target.value)}
@@ -662,10 +678,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Vendor name & email (for contract-review outreach) */}
           <div className="ha-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-vendor" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                 Vendor / provider name (optional)
               </label>
               <input
+                id="expense-vendor"
                 type="text"
                 placeholder="e.g. Vodafone, Allianz — if different from the item name"
                 value={vendor}
@@ -675,10 +692,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               />
             </div>
             <div>
-              <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="expense-vendor-email" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
                 Vendor / provider email (optional)
               </label>
               <input
+                id="expense-vendor-email"
                 type="email"
                 placeholder="e.g. support@provider.com"
                 value={vendorEmail}
@@ -691,10 +709,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {/* Optional Notes */}
           <div>
-            <label style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
+            <label htmlFor="expense-notes" style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', display: 'block', marginBottom: '0.35rem' }}>
               Notes (optional)
             </label>
             <input
+              id="expense-notes"
               type="text"
               placeholder="e.g. Semester 1 fee, Year 2 college student contribution, Friday coaching"
               value={notes}

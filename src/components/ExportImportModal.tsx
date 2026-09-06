@@ -3,6 +3,7 @@ import type { ExpenseItem, CustomCategoryItem } from '../types/expense';
 import { exportExpensesCSV, exportExpensesJSON } from '../services/storage';
 import { X, FileSpreadsheet, FileCode } from 'lucide-react';
 import { useOverlayClose } from '../hooks/useOverlayClose';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface ExportImportModalProps {
   isOpen: boolean;
@@ -18,12 +19,13 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
   customCategories = [],
 }) => {
   const overlayHandlers = useOverlayClose(onClose);
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" {...overlayHandlers}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
         {/* Header */}
         <div style={{
           display: 'flex',

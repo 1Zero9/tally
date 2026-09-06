@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { BugReportItem, BugSeverity } from '../types/expense';
 import { X, Bug, Plus, Download, Trash2, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const SEVERITY_OPTIONS: { id: BugSeverity; label: string }[] = [
   { id: 'LOW', label: 'Low' },
@@ -127,6 +128,8 @@ export const BugLogModal: React.FC<BugLogModalProps> = ({
     if (isOpen) fetchBugs();
   }, [isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const resetForm = () => {
@@ -187,7 +190,7 @@ export const BugLogModal: React.FC<BugLogModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

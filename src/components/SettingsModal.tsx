@@ -3,6 +3,7 @@ import type { CurrencyCode } from '../types/expense';
 import { CURRENCY_LIST } from '../utils/currencies';
 import { X, Coins, LayoutGrid, UserPlus, Download, ChevronRight, ShieldOff } from 'lucide-react';
 import { useOverlayClose } from '../hooks/useOverlayClose';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSignOutEverywhere,
 }) => {
   const overlayHandlers = useOverlayClose(onClose);
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
   if (!isOpen) return null;
 
   const openThenClose = (action: () => void) => {
@@ -35,7 +37,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="modal-overlay" {...overlayHandlers}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

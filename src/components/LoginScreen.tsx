@@ -160,12 +160,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, notice
         {step === 'form' ? (
           <form onSubmit={handleSendCode} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="login-email" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Email address *
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <Mail size={16} color="var(--ha-muted)" style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none' }} />
                 <input
+                  id="login-email"
                   type="email"
                   required
                   placeholder="name@example.com"
@@ -202,12 +203,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, notice
           /* STEP 2: Enter 6-Digit Code */
           <form onSubmit={handleVerifyCode} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
+              <label htmlFor="login-code" style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'block', marginBottom: '0.35rem' }}>
                 Enter verification code
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <KeyRound size={16} color="var(--ha-muted)" style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none' }} />
                 <input
+                  id="login-code"
                   type="text"
                   required
                   placeholder="6-digit code"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { AccountItem, AccountType, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { X, Lock, ShieldAlert, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const ACCOUNT_TYPES: { id: AccountType; label: string }[] = [
   { id: 'CHECKING', label: 'Current' },
@@ -102,6 +103,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     setSecurityNotes(emptyField());
   }, [editingAccount, isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,7 +167,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

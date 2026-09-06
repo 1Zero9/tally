@@ -4,6 +4,7 @@ import { CURRENCY_LIST } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
 import { getErrorMessage } from '../lib/errors';
 import { Plus, Link2, X, Trash2, MousePointer2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface CustomMoneyMapProps {
   accounts: AccountItem[];
@@ -64,6 +65,7 @@ const NodeFormModal: React.FC<NodeFormModalProps> = ({ mode, accounts, initial, 
   const [color, setColor] = useState(initial?.color || DEFAULT_NODE_COLOR);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const { dialogRef, dialogProps } = useModalA11y(true, onClose);
 
   const handleAccountSelect = (id: string) => {
     setAccountId(id);
@@ -88,7 +90,7 @@ const NodeFormModal: React.FC<NodeFormModalProps> = ({ mode, accounts, initial, 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--ha-line)',
@@ -194,6 +196,7 @@ const EdgeFormModal: React.FC<EdgeFormModalProps> = ({ edge, fromLabel, toLabel,
   const [amount, setAmount] = useState<number | string>(edge.amount ?? '');
   const [edgeCurrency, setEdgeCurrency] = useState<CurrencyCode>(edge.currency || defaultCurrency);
   const [isSaving, setIsSaving] = useState(false);
+  const { dialogRef, dialogProps } = useModalA11y(true, onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +214,7 @@ const EdgeFormModal: React.FC<EdgeFormModalProps> = ({ edge, fromLabel, toLabel,
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--ha-line)',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { UserProfile, UserRole } from '../types/expense';
 import { getErrorMessage } from '../lib/errors';
 import { X, UserPlus, Users, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface WorkspaceInfo {
   id: string;
@@ -51,6 +52,8 @@ export const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = ({
     }
   }, [isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleInviteUser = async (e: React.FormEvent) => {
@@ -93,7 +96,7 @@ export const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
         {/* Header */}
         <div style={{
           display: 'flex',

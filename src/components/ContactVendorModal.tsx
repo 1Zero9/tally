@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ExpenseItem } from '../types/expense';
 import { X, Sparkles, Send } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 type Intent = 'negotiate' | 'cancel' | 'ask';
 
@@ -27,6 +28,8 @@ export const ContactVendorModal: React.FC<ContactVendorModalProps> = ({ expense,
       setIntent('negotiate');
     }
   }, [expense]);
+
+  const { dialogRef, dialogProps } = useModalA11y(!!expense, onClose);
 
   if (!expense) return null;
 
@@ -79,7 +82,7 @@ export const ContactVendorModal: React.FC<ContactVendorModalProps> = ({ expense,
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

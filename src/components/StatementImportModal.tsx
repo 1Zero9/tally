@@ -26,6 +26,7 @@ import { formatCurrency } from '../utils/formatters';
 import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
 import type { StatementAccountInfo } from '../lib/ai';
 import { CategorySelect } from './CategorySelect';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 type FieldMatch = 'match' | 'mismatch' | 'not_set' | 'no_data';
 
@@ -286,6 +287,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     }
     handleClose();
   };
+
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, requestClose);
 
   // Sets the loaded rows and, for a large statement (several repeat
   // merchants), starts those groups collapsed rather than dumping
@@ -873,7 +876,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: step === 'review' ? '760px' : '540px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: step === 'review' ? '760px' : '540px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

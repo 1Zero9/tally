@@ -5,6 +5,7 @@ import type { ExpenseItem, PresetItem } from '../types/expense';
 import { formatCurrency, formatBillingCycle } from '../utils/formatters';
 import { X, Search, Plus, Check } from 'lucide-react';
 import { useOverlayClose } from '../hooks/useOverlayClose';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface PresetsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const PresetsModal: React.FC<PresetsModalProps> = ({
   const overlayHandlers = useOverlayClose(onClose);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -44,7 +46,7 @@ export const PresetsModal: React.FC<PresetsModalProps> = ({
 
   return (
     <div className="modal-overlay" {...overlayHandlers}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px' }}>
         {/* Header */}
         <div style={{
           display: 'flex',

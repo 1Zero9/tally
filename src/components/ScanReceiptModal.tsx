@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { X, ScanLine, Upload, CheckCircle2, Sparkles, ArrowRightLeft, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 import type { ExpenseItem, ExpenseCategory, BillingCycle, CurrencyCode } from '../types/expense';
 import { getCategoryMeta } from '../data/categories';
 import { formatCurrency } from '../utils/formatters';
@@ -72,6 +73,8 @@ export const ScanReceiptModal: React.FC<ScanReceiptModalProps> = ({
     reset();
     onClose();
   };
+
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, handleClose);
 
   const scanImage = useCallback(async (img: { dataUrl: string; base64: string; mimeType: string }) => {
     setIsScanning(true);
@@ -219,7 +222,7 @@ export const ScanReceiptModal: React.FC<ScanReceiptModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

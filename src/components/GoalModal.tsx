@@ -3,6 +3,7 @@ import type { GoalItem, AccountItem, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
 import { X, Divide, Loader2 } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const SPLIT_PRESETS = [2, 4, 12, 20];
 
@@ -53,6 +54,8 @@ export const GoalModal: React.FC<GoalModalProps> = ({
     }
   }, [editingGoal, isOpen]);
 
+  const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +88,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
