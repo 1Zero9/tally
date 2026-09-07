@@ -373,12 +373,14 @@ export interface PresetItem {
 
 export type BugSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type BugStatus = 'OPEN' | 'FIXED';
+export type FeedbackType = 'IDEA' | 'FEATURE' | 'BUG';
 
 export interface BugReportItem {
   id: string;
   title: string;
   description?: string | null;
   area?: string | null;
+  type: FeedbackType;
   severity: BugSeverity;
   status: BugStatus;
   createdById?: string | null;

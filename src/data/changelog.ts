@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.69.0';
+export const APP_VERSION = '1.70.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.70.0',
+    date: '2026-09-07',
+    changes: [
+      '"Bug log" is now "Feedback" (avatar menu) — the same in-app log now also captures ideas and feature requests, not just bugs. Each entry has a type (Idea / Feature / Bug), filter tabs to browse by type, and the Markdown export groups by type.',
+    ],
+  },
   {
     version: '1.69.0',
     date: '2026-09-07',

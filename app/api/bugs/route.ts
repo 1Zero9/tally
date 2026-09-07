@@ -5,6 +5,7 @@ import { requireHouseholdUser } from '@/src/lib/auth';
 
 const VALID_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 const VALID_STATUSES = ['OPEN', 'FIXED'];
+const VALID_TYPES = ['IDEA', 'FEATURE', 'BUG'];
 
 export async function GET() {
   const auth = await requireHouseholdUser();
@@ -41,12 +42,14 @@ export async function POST(request: Request) {
     }
 
     const severity = VALID_SEVERITIES.includes(body.severity) ? body.severity : 'MEDIUM';
+    const type = VALID_TYPES.includes(body.type) ? body.type : 'BUG';
 
     const newBug = await prisma.bugReport.create({
       data: {
         title: body.title.trim(),
         description: body.description?.trim() || null,
         area: body.area?.trim() || null,
+        type,
         severity,
         status: 'OPEN',
         createdById: auth.user.id,
@@ -88,6 +91,9 @@ export async function PUT(request: Request) {
     const status = body.status !== undefined
       ? (VALID_STATUSES.includes(body.status) ? body.status : existing.status)
       : existing.status;
+    const type = body.type !== undefined
+      ? (VALID_TYPES.includes(body.type) ? body.type : existing.type)
+      : existing.type;
 
     const updated = await prisma.bugReport.update({
       where: { id: body.id },
@@ -95,6 +101,7 @@ export async function PUT(request: Request) {
         title: body.title !== undefined ? body.title.trim() || existing.title : existing.title,
         description: body.description !== undefined ? body.description?.trim() || null : existing.description,
         area: body.area !== undefined ? body.area?.trim() || null : existing.area,
+        type,
         severity,
         status,
       },

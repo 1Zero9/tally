@@ -54,6 +54,12 @@ enum BugStatus {
   FIXED
 }
 
+enum FeedbackType {
+  IDEA
+  FEATURE
+  BUG
+}
+
 model Household {
   id         String   @id @default(cuid())
   name       String   @default("Our Household")
@@ -681,16 +687,20 @@ model MapEdge {
   @@index([toNodeId])
 }
 
-/// A user-logged bug/issue report, kept in-app so problems can be recorded
-/// in the moment and later exported to Markdown for handing to an AI coding
-/// tool or tracking in an external issue tracker.
+/// A user-logged piece of feedback — an idea, a feature request, or a bug —
+/// kept in-app so it can be recorded in the moment and later exported to
+/// Markdown for handing to an AI coding tool or tracking in an external
+/// issue tracker. Model/table name kept as BugReport (this started as
+/// bug-only) to avoid an unnecessary rename; `type` is what distinguishes
+/// the three kinds of entry now.
 model BugReport {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   description String?
   area        String?
-  severity    BugSeverity @default(MEDIUM)
-  status      BugStatus   @default(OPEN)
+  type        FeedbackType @default(BUG)
+  severity    BugSeverity  @default(MEDIUM)
+  status      BugStatus    @default(OPEN)
 
   householdId String?
   household   Household?  @relation(fields: [householdId], references: [id], onDelete: Cascade)
