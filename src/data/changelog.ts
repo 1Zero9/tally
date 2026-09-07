@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.79.0';
+export const APP_VERSION = '1.80.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.80.0',
+    date: '2026-09-07',
+    changes: [
+      'Fixed "Some data failed to load…" when resolving a whole merchant group at once (e.g. "Log all as transfer" / "Add all as expense" on a big Revolut group). Each row was triggering a full reload of every section in parallel, so a large group fired dozens of simultaneous requests and overwhelmed the database connection. Group actions now resolve their rows a few at a time and refresh the app once, at the end.',
+    ],
+  },
   {
     version: '1.79.0',
     date: '2026-09-07',

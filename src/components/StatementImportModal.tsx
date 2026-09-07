@@ -698,8 +698,13 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     }
   };
 
-  const resolveTx = async (txId: string, action: string, extra?: Record<string, unknown>) => {
-    if (!importId) return;
+  const resolveTx = async (
+    txId: string,
+    action: string,
+    extra?: Record<string, unknown>,
+    opts?: { silent?: boolean },
+  ) => {
+    if (!importId) return false;
     setBusyTxId(txId);
     try {
       const res = await fetch(`/api/statements/${importId}/transactions/${txId}/resolve`, {
@@ -717,12 +722,17 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setAddingIncomeTxId(null);
         setAddingBillTxId(null);
         setRenamingTxId(null);
-        if (['categorize', 'confirm', 'link_expense', 'link_income', 'add_income', 'add_bill', 'log_transfer', 'reset'].includes(action)) {
-          // 'reset' can delete an import-created bill/transfer (and un-mark a
-          // linked income), so the rest of the app needs a refresh too.
+        // 'reset' can delete an import-created bill/transfer (and un-mark a
+        // linked income), so the rest of the app needs a refresh too. When
+        // resolving a whole group, the caller refreshes once at the end
+        // instead — otherwise N rows fire N full app reloads in parallel and
+        // can exhaust the DB connection pool.
+        if (!opts?.silent && ['categorize', 'confirm', 'link_expense', 'link_income', 'add_income', 'add_bill', 'log_transfer', 'reset'].includes(action)) {
           onExpensesChanged?.();
         }
+        return true;
       }
+      return false;
     } finally {
       setBusyTxId(null);
     }
@@ -765,14 +775,20 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
-      await Promise.all(
-        unmatched.map((tx) =>
-          resolveTx(tx.id, action, action === 'log_transfer'
-            ? { vendorName: tx.vendorName || tx.rawDescription, counterpartyAccountId: counterpartyAccountId || undefined }
-            : undefined)
-        )
-      );
+      // Run in small batches, not all at once — a big Revolut group is
+      // dozens of rows, and each resolve hits the DB. Refresh the app once,
+      // after, rather than once per row.
+      for (let i = 0; i < unmatched.length; i += 4) {
+        await Promise.all(
+          unmatched.slice(i, i + 4).map((tx) =>
+            resolveTx(tx.id, action, action === 'log_transfer'
+              ? { vendorName: tx.vendorName || tx.rawDescription, counterpartyAccountId: counterpartyAccountId || undefined }
+              : undefined, { silent: true })
+          )
+        );
+      }
       setLoggingTransferGroupKey(null);
+      if (action === 'log_transfer') onExpensesChanged?.();
     } finally {
       setBusyGroupKey(null);
     }
@@ -782,12 +798,15 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
-      await Promise.all(
-        unmatched.map((tx) =>
-          resolveTx(tx.id, 'categorize', { category, vendorName: tx.vendorName || tx.rawDescription })
-        )
-      );
+      for (let i = 0; i < unmatched.length; i += 4) {
+        await Promise.all(
+          unmatched.slice(i, i + 4).map((tx) =>
+            resolveTx(tx.id, 'categorize', { category, vendorName: tx.vendorName || tx.rawDescription }, { silent: true })
+          )
+        );
+      }
       setCategorizingGroupKey(null);
+      onExpensesChanged?.();
     } finally {
       setBusyGroupKey(null);
     }
