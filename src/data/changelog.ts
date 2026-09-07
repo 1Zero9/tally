@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.77.0';
+export const APP_VERSION = '1.78.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.78.0',
+    date: '2026-09-07',
+    changes: [
+      'The Flow transfers list can now be filtered and sorted: a search box (account, payee or note), an account picker, quick chips for Money in / Money out / Between accounts / Card & loan payments, and a sort by date or amount. The header count shows "N of M" while a filter is on.',
+    ],
+  },
   {
     version: '1.77.0',
     date: '2026-09-07',
