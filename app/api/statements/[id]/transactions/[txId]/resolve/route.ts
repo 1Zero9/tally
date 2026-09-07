@@ -8,7 +8,15 @@ import type { ExpenseCategory } from '@/src/types/expense';
 
 const TX_INCLUDE = {
   matchedExpense: { select: { id: true, name: true, vendor: true, category: true } },
-  matchedTransfer: { select: { id: true, externalLabel: true, linkedIncome: { select: { id: true, name: true } } } },
+  matchedTransfer: {
+    select: {
+      id: true,
+      externalLabel: true,
+      fromAccount: { select: { name: true } },
+      toAccount: { select: { name: true } },
+      linkedIncome: { select: { id: true, name: true } },
+    },
+  },
 } as const;
 
 export async function POST(
@@ -38,6 +46,30 @@ export async function POST(
     }
 
     if (action === 'reset') {
+      // If this row created its own Expense/Transfer at resolve time (stamped
+      // with this import's id), undoing the row should remove that record too
+      // — otherwise "Undo" leaves an orphan bill/transfer behind. A row that
+      // was merely *linked* to a pre-existing record (no statementImportId
+      // stamp) just gets unlinked.
+      if (tx.matchedTransferId) {
+        const linked = await prisma.transfer.findFirst({
+          where: { id: tx.matchedTransferId, householdId: auth.user.householdId, statementImportId: id },
+        });
+        if (linked) {
+          await prisma.transfer.delete({ where: { id: linked.id } });
+          // A "Link to income" row also flipped its Income to received —
+          // put that back so the estimate is used again for the month.
+          if (linked.linkedIncomeId) {
+            await prisma.income.updateMany({
+              where: { id: linked.linkedIncomeId, householdId: auth.user.householdId },
+              data: { isReceivedThisCycle: false, lastReceivedAt: null },
+            });
+          }
+        }
+      }
+      if (tx.matchedExpenseId) {
+        await prisma.expense.deleteMany({ where: { id: tx.matchedExpenseId, householdId: auth.user.householdId, statementImportId: id } });
+      }
       const updated = await prisma.statementTransaction.update({
         where: { id: txId },
         data: { status: 'UNMATCHED', matchedExpenseId: null, matchedTransferId: null, matchConfidence: null },
@@ -141,13 +173,36 @@ export async function POST(
       const vendorName = typeof body.vendorName === 'string' && body.vendorName.trim() ? sanitizeImportedText(body.vendorName, 120) : tx.vendorName || tx.rawDescription;
       const customNote = typeof body.notes === 'string' ? sanitizeImportedText(body.notes, 500) : '';
 
+      // The statement's own account sits on the side the row's direction
+      // implies (money out of it for a DEBIT, into it for a CREDIT); the
+      // caller picks the account on the *other* side, or leaves it external.
+      const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
+      const statementAccountId = statementImport?.accountId ?? null;
+
+      const pickedRaw = typeof body.counterpartyAccountId === 'string' ? body.counterpartyAccountId.trim() : '';
+      let counterpartyAccountId: string | null = null;
+      if (pickedRaw) {
+        const owned = await prisma.account.findFirst({ where: { id: pickedRaw, householdId: auth.user.householdId } });
+        if (!owned) {
+          return NextResponse.json({ status: 'error', message: 'That account does not exist' }, { status: 400 });
+        }
+        counterpartyAccountId = owned.id;
+      }
+
+      const fromAccountId = tx.direction === 'CREDIT' ? counterpartyAccountId : statementAccountId;
+      const toAccountId = tx.direction === 'CREDIT' ? statementAccountId : counterpartyAccountId;
+
       const transfer = await prisma.transfer.create({
         data: {
           amount: tx.amount,
           currency: tx.currency,
           date: tx.date,
           note: customNote ? `${customNote} (logged from statement import)` : 'Logged from statement import',
-          externalLabel: vendorName,
+          // Only meaningful when a side is external (no account) — mirrors
+          // the manual Flow transfer form.
+          externalLabel: (!fromAccountId || !toAccountId) ? vendorName : null,
+          fromAccountId,
+          toAccountId,
           createdById: auth.user.id,
           householdId: auth.user.householdId,
           statementImportId: id,

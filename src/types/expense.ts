@@ -291,7 +291,13 @@ export interface StatementTransactionItem {
   matchedExpense?: { id: string; name: string; vendor?: string | null; category: ExpenseCategory } | null;
 
   matchedTransferId?: string | null;
-  matchedTransfer?: { id: string; externalLabel?: string | null; linkedIncome?: { id: string; name: string } | null } | null;
+  matchedTransfer?: {
+    id: string;
+    externalLabel?: string | null;
+    fromAccount?: { name: string } | null;
+    toAccount?: { name: string } | null;
+    linkedIncome?: { id: string; name: string } | null;
+  } | null;
 
   createdAt?: string;
   updatedAt?: string;

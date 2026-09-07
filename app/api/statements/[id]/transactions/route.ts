@@ -22,7 +22,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       orderBy: { date: 'desc' },
       include: {
         matchedExpense: { select: { id: true, name: true, vendor: true, category: true } },
-        matchedTransfer: { select: { id: true, externalLabel: true } },
+        matchedTransfer: {
+          select: {
+            id: true,
+            externalLabel: true,
+            fromAccount: { select: { name: true } },
+            toAccount: { select: { name: true } },
+          },
+        },
       },
     });
 

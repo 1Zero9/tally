@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.72.0';
+export const APP_VERSION = '1.73.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.73.0',
+    date: '2026-09-07',
+    changes: [
+      'Statement import — "Log as transfer" now lets you say which of your other accounts the money went to (for a payment out) or came from (for a credit), e.g. a BOI payment landing in your PTSB or Credit Union account. Picking one of your own accounts on both sides records it as an internal transfer, so it no longer counts as spend in Reports. Leave it on "External" for money genuinely leaving/entering the household, as before.',
+      'A matched/logged transfer row now shows the account route (e.g. "BOI → PTSB") instead of just a label.',
+      '"Undo" on a matched or ignored statement row now fully reverses it: any bill or transfer that row created when you resolved it is removed too (and a linked income is un-marked as received), instead of being left behind as an orphan.',
+      'When you\'ve resolved every row, the review list now spells out that matched / logged / ignored rows aren\'t gone — they\'re under the tabs above, each with an Undo — rather than just saying "Nothing here."',
+    ],
+  },
   {
     version: '1.72.0',
     date: '2026-09-07',

@@ -65,6 +65,17 @@ interface TxGroup {
   detectedCycle: DetectedBillingCycle | null;
 }
 
+/** Human label for a logged transfer — the account route when we have it,
+ *  otherwise the free-text external label. */
+function describeMatchedTransfer(mt: NonNullable<StatementTransactionItem['matchedTransfer']>): string {
+  const from = mt.fromAccount?.name;
+  const to = mt.toAccount?.name;
+  if (from && to) return `${from} → ${to}`;
+  if (to) return `→ ${to}`;
+  if (from) return `${from} → external`;
+  return mt.externalLabel || 'one-off payment';
+}
+
 const FILTERS: { id: ReviewFilter; label: string }[] = [
   { id: 'needs_review', label: 'Needs review' },
   { id: 'matched', label: 'Matched' },
@@ -187,6 +198,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<Record<string, ExpenseCategory | ''>>({});
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
   const [loggingTransferTxId, setLoggingTransferTxId] = useState<string | null>(null);
+  // The account on the *other* side of a "Log as transfer" — '' means an
+  // external payee (money genuinely leaving / entering the household).
+  const [transferCounterpartyId, setTransferCounterpartyId] = useState<Record<string, string>>({});
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
   const [categorizingGroupKey, setCategorizingGroupKey] = useState<string | null>(null);
@@ -678,7 +692,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setCategorizingTxId(null);
         setLoggingTransferTxId(null);
         setRenamingTxId(null);
-        if (['categorize', 'confirm', 'link_expense', 'link_income', 'log_transfer'].includes(action)) {
+        if (['categorize', 'confirm', 'link_expense', 'link_income', 'log_transfer', 'reset'].includes(action)) {
+          // 'reset' can delete an import-created bill/transfer (and un-mark a
+          // linked income), so the rest of the app needs a refresh too.
           onExpensesChanged?.();
         }
       }
@@ -1546,7 +1562,15 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '440px', overflowY: 'auto' }}>
                     {filteredTransactions.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
-                        Nothing here.
+                        {reviewFilter === 'needs_review' && (matchedCount + ignoredCount + duplicateCount) > 0 ? (
+                          <>
+                            Nothing left to review. Rows you matched, logged or ignored aren&apos;t gone —
+                            they&apos;re under the <strong>Matched</strong>, <strong>Ignored</strong> and{' '}
+                            <strong>Duplicates</strong> tabs above, each with an <strong>Undo</strong>.
+                          </>
+                        ) : (
+                          'Nothing here.'
+                        )}
                       </div>
                     )}
 
@@ -1760,7 +1784,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginTop: '0.5rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--ha-blue)', fontWeight: 600 }}>
                                 <CheckCircle2 size={13} />
-                                {tx.matchedExpense ? `Matched: ${tx.matchedExpense.name}` : tx.matchedTransfer ? `Logged: ${tx.matchedTransfer.externalLabel || 'one-off payment'}` : 'Matched'}
+                                {tx.matchedExpense ? `Matched: ${tx.matchedExpense.name}` : tx.matchedTransfer ? `Logged: ${describeMatchedTransfer(tx.matchedTransfer)}` : 'Matched'}
                               </div>
                               <button
                                 disabled={isBusy}
@@ -1822,7 +1846,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                               )}
                               {!tx.matchedExpense && tx.matchedTransfer && (
                                 <div style={{ fontSize: '0.78rem', color: 'var(--ha-ink)', marginBottom: '0.3rem' }}>
-                                  Possible match: transfer <strong>{tx.matchedTransfer.externalLabel || 'logged payment'}</strong>
+                                  Possible match: transfer <strong>{describeMatchedTransfer(tx.matchedTransfer)}</strong>
                                   {typeof tx.matchConfidence === 'number' && <span style={{ color: 'var(--ha-muted)' }}> ({Math.round(tx.matchConfidence * 100)}% confident)</span>}
                                 </div>
                               )}
@@ -1917,6 +1941,24 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                 </div>
                               ) : loggingTransferTxId === tx.id ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ha-muted)' }}>
+                                    {tx.direction === 'CREDIT'
+                                      ? `Money into ${importAccount?.name || 'this account'} — where from?`
+                                      : `Money out of ${importAccount?.name || 'this account'} — where to?`}
+                                  </label>
+                                  <select
+                                    value={transferCounterpartyId[tx.id] ?? ''}
+                                    onChange={(e) => setTransferCounterpartyId((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                    className="ha-input"
+                                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    <option value="">External — a payee outside the household</option>
+                                    {accounts.filter((a) => a.id !== accountId).map((a) => (
+                                      <option key={a.id} value={a.id}>
+                                        {tx.direction === 'CREDIT' ? 'From ' : 'To '}{a.name}{a.institution ? ` — ${a.institution}` : ''}
+                                      </option>
+                                    ))}
+                                  </select>
                                   <input
                                     type="text"
                                     placeholder="Add a note (optional)"
@@ -1931,13 +1973,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                       onClick={() => resolveTx(tx.id, 'log_transfer', {
                                         vendorName: tx.vendorName || tx.rawDescription,
                                         notes: noteInput[tx.id]?.trim() || undefined,
+                                        counterpartyAccountId: transferCounterpartyId[tx.id] || undefined,
                                       })}
                                       className="btn btn-primary"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
                                     >
                                       {isBusy ? <Loader2 size={12} className="spin" /> : <PlusCircle size={12} />} Log as transfer
                                     </button>
-                                    <button onClick={() => setLoggingTransferTxId(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                    <button onClick={() => { setLoggingTransferTxId(null); setTransferCounterpartyId((prev) => ({ ...prev, [tx.id]: '' })); }} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
                                       Cancel
                                     </button>
                                   </div>
