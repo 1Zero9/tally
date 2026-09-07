@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { LegalPageLayout } from '@/src/components/LegalPageLayout';
 import { APP_VERSION } from '@/src/data/changelog';
 
@@ -11,7 +12,7 @@ export default function TechnicalOverviewPage() {
       <p>
         A complete technical reference for the Tally codebase: architecture, data model, API
         surface, security model, and the full feature set. For the end-user walkthrough, see the{' '}
-        <a href="/guide">User Guide</a>.
+        <Link href="/guide">User Guide</Link>.
       </p>
 
       <h2>1. Architecture</h2>
@@ -242,7 +243,7 @@ export default function TechnicalOverviewPage() {
       </ul>
 
       <h2>8. Feature reference</h2>
-      <p>A structured inventory of user-facing functionality (see the <a href="/guide">User Guide</a> for the narrative walkthrough):</p>
+      <p>A structured inventory of user-facing functionality (see the <Link href="/guide">User Guide</Link> for the narrative walkthrough):</p>
       <ul>
         <li><strong>Passwordless authentication</strong> — 6-digit email codes, 30-day sliding-expiration sessions, 30-minute idle auto-sign-out.</li>
         <li><strong>Household workspaces</strong> — shared ledger per household; invite-only via a specific email (no self-service join/shareable link — see the Household model note in §2); Admin / Member / Backup Admin roles (Backup Admin carries identical permissions to Admin today — see the User model note in §2); a household can never be left without at least one Admin.</li>

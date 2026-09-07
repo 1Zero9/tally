@@ -119,6 +119,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, notice
           <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', marginTop: '4px' }}>
             Your household, in balance.
           </p>
+          <a href="/about" style={{ fontSize: '0.78rem', color: 'var(--ha-blue)', marginTop: '0.5rem' }}>
+            What is Tally?
+          </a>
         </div>
 
         {notice && !errorMessage && (

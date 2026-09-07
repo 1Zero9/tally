@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.68.0';
+export const APP_VERSION = '1.69.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.69.0',
+    date: '2026-09-07',
+    changes: [
+      'The User Guide is now a real multi-page site (/guide/topic-name) instead of one long scroll — a sidebar with search stays on screen no matter how far down the page you are, so you never lose your place or the navigation. Each topic page has Previous/Next links to read straight through.',
+      'Added a new About page introducing Tally — a quick pitch with screenshots for anyone you\'d like to invite, linked from the sign-in screen and the guide.',
+    ],
+  },
   {
     version: '1.68.0',
     date: '2026-09-07',
