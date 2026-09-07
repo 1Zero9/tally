@@ -3,6 +3,7 @@ import type { TransferItem } from '../types/expense';
 import { formatCurrency } from '../utils/formatters';
 import { Edit2, Trash2, Plus, ArrowRight, ArrowLeftRight } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
+import { transferKindLabel } from '../utils/transfers';
 
 interface TransfersSectionProps {
   transfers: TransferItem[];
@@ -75,6 +76,7 @@ export const TransfersSection: React.FC<TransfersSectionProps> = ({
             {transfers.map((item) => {
               const fromLabel = sideLabel(item.fromAccount, item.externalLabel, item.linkedIncome?.name || 'External');
               const toLabel = sideLabel(item.toAccount, item.externalLabel, item.linkedExpense?.name || 'External');
+              const kindLabel = transferKindLabel(item);
 
               return (
                 <div key={item.id} className="ha-ledger-row">
@@ -85,6 +87,11 @@ export const TransfersSection: React.FC<TransfersSectionProps> = ({
                         <span>{fromLabel}</span>
                         <ArrowRight size={13} color="var(--ha-muted)" />
                         <span>{toLabel}</span>
+                        {kindLabel && (
+                          <span className="ha-badge" style={{ backgroundColor: '#fdf2e3', color: '#B45309', fontSize: '0.68rem', fontWeight: 700 }}>
+                            {kindLabel}
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
                         <span>{item.date}</span>

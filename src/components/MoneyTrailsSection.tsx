@@ -3,6 +3,7 @@ import type { MoneyTrailItem, TransferItem, CurrencyCode } from '../types/expens
 import { formatCurrency } from '../utils/formatters';
 import { CollapsibleSection } from './CollapsibleSection';
 import { Route, Plus, Trash2, X, Check, Loader2, ArrowRight, Clock } from 'lucide-react';
+import { transferKindLabel } from '../utils/transfers';
 
 interface MoneyTrailsSectionProps {
   trails: MoneyTrailItem[];
@@ -169,6 +170,7 @@ const MoneyTrailCard: React.FC<{
               <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', padding: '0.3rem 0.4rem', borderRadius: 'var(--ha-radius-sm)', background: 'var(--ha-bg-subtle, #fafafa)' }}>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   {h.date} · {endpointLabel(h, 'from')} <ArrowRight size={11} style={{ verticalAlign: 'middle' }} /> {endpointLabel(h, 'to')} · <span className="tabular-nums">{formatCurrency(h.amount, h.currency)}</span>
+                  {transferKindLabel(h) && <span style={{ color: '#B45309', fontWeight: 700 }}> · {transferKindLabel(h)}</span>}
                 </span>
                 <button
                   onClick={() => api('PATCH', { removeTransferIds: [h.id] })}

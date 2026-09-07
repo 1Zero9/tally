@@ -25,6 +25,13 @@ interface FlowNode {
 
 interface AccountFlowNode extends FlowNode {
   isLoan: boolean;
+  debtKind?: 'card' | 'loan' | null;
+}
+
+function debtKindOf(type: AccountItem['type']): 'card' | 'loan' | null {
+  if (type === 'LOAN') return 'loan';
+  if (type === 'CREDIT_CARD') return 'card';
+  return null;
 }
 
 interface FlowEdge {
@@ -123,6 +130,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
         sublabel: a.institution || undefined,
         total: (accountIn[a.id] || 0) - (accountOut[a.id] || 0),
         isLoan: a.type === 'LOAN',
+        debtKind: debtKindOf(a.type),
       }));
 
     const externalInList = Object.entries(externalInTotals).map(([id, total]) => ({
@@ -185,6 +193,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
         sublabel: a.institution || undefined,
         total: (accountMonthlyIn[a.id] || 0) - (accountMonthlyOut[a.id] || 0),
         isLoan: a.type === 'LOAN',
+        debtKind: debtKindOf(a.type),
       }));
 
     if (usedAccountIds.has('unassigned')) {
@@ -195,6 +204,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
         sublabel: 'No account set',
         total: (accountMonthlyIn['unassigned'] || 0) - (accountMonthlyOut['unassigned'] || 0),
         isLoan: false,
+        debtKind: null,
       });
     }
 
@@ -361,6 +371,10 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
                   : `M ${from.x + NODE_R} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x - NODE_R} ${to.y}`;
                 const labelX = isInternal ? from.x + 95 : midX;
                 const labelY = isInternal ? (from.y + to.y) / 2 : (from.y + to.y) / 2 - 8;
+                const toDebtKind = (to as AccountFlowNode).debtKind;
+                const kindSuffix = isInternal && toDebtKind
+                  ? ` · ${toDebtKind === 'loan' ? 'Loan payment' : 'Card payment'}`
+                  : '';
 
                 return (
                   <g key={edgeKey}>
@@ -377,7 +391,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
                     />
                     {isHovered && (
                       <text x={labelX} y={labelY} textAnchor="middle" fontSize="11" fontWeight={700} fill={color}>
-                        {formatCurrency(edge.amount, currency)}{suffix}
+                        {formatCurrency(edge.amount, currency)}{suffix}{kindSuffix}
                       </text>
                     )}
                   </g>

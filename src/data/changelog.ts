@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.76.0';
+export const APP_VERSION = '1.77.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.77.0',
+    date: '2026-09-07',
+    changes: [
+      'A transfer from an ordinary account into a credit-card or loan account is now labelled "Card payment" / "Loan payment" — in the Flow ledger, in a money trail\'s hop list, and on the Money Map (hover the internal edge). It\'s still an ordinary transfer under the hood; the label just makes clear it\'s paying down a balance, not moving spare cash around. (Reminder: pay the card by logging a transfer From your current account → To the credit-card account — never as an expense, or the spend counts twice.)',
+    ],
+  },
   {
     version: '1.76.0',
     date: '2026-09-07',
