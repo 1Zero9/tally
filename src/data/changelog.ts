@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.65.0';
+export const APP_VERSION = '1.66.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.66.0',
+    date: '2026-09-07',
+    changes: [
+      'Fixed a serious performance problem in the bills ledger: a household with a few thousand imported statement transactions could make the Spending tab take minutes to load, or never finish. It now shows the first 150 records instantly with a "Show more" button for the rest — search and filters still work across everything, not just what\'s currently shown.',
+    ],
+  },
   {
     version: '1.65.0',
     date: '2026-09-07',

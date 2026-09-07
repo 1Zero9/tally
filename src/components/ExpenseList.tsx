@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
 import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
@@ -70,6 +70,20 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
   const allCategories = [...CATEGORY_LIST, ...customCategories];
 
+  // A household ledger realistically holds tens to a few hundred records —
+  // but importing years of statements can push it into the thousands, and
+  // rendering every row unconditionally becomes unusably slow well before
+  // that (measured: 10,000 rows never finished rendering within 2 minutes).
+  // Cap what's actually mounted, with an explicit way to see the rest.
+  const INITIAL_VISIBLE = 150;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+
+  // Any change to what's being searched/filtered for should start back at
+  // the top of a fresh capped view, not stay expanded into a stale count.
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE);
+  }, [searchQuery, selectedCategory, statusFilter, sortBy]);
+
   // Filter items
   const filteredItems = expenses.filter((item) => {
     if (searchQuery.trim()) {
@@ -107,6 +121,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     if (sortBy === 'name') return a.name.localeCompare(b.name);
     return 0;
   });
+
+  const visibleItems = sortedItems.slice(0, visibleCount);
+  const hiddenCount = sortedItems.length - visibleItems.length;
 
   const overdueCount = expenses.filter((e) => e.isActive && !e.isPaidThisCycle && isOverdue(e.nextRenewalDate)).length;
   const unpaidCount = expenses.filter((e) => !e.isPaidThisCycle).length;
@@ -288,7 +305,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         </div>
       ) : (
         <div>
-          {sortedItems.map((item) => {
+          {visibleItems.map((item) => {
             const cat = getCategoryMeta(item.category, customCategories);
             const monthlyAmount = getMonthlyEquivalent(convertCurrency(item.amount, item.currency, currency), item.billingCycle);
             const overdue = item.isActive && !item.isPaidThisCycle && isOverdue(item.nextRenewalDate);
@@ -594,6 +611,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               </div>
             );
           })}
+          {hiddenCount > 0 && (
+            <div style={{ padding: '1rem', textAlign: 'center' }}>
+              <button
+                onClick={() => setVisibleCount((c) => c + 500)}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.82rem' }}
+              >
+                Show {Math.min(hiddenCount, 500)} more ({hiddenCount} not shown)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
