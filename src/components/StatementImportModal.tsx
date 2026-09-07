@@ -206,6 +206,10 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [incomeNameInput, setIncomeNameInput] = useState<Record<string, string>>({});
   const [incomeFreqInput, setIncomeFreqInput] = useState<Record<string, string>>({});
   const [incomeAmountInput, setIncomeAmountInput] = useState<Record<string, string>>({});
+  // "Add as bill" — create a new recurring Expense straight from a debit row.
+  const [addingBillTxId, setAddingBillTxId] = useState<string | null>(null);
+  const [billCycleInput, setBillCycleInput] = useState<Record<string, string>>({});
+  const [billAmountInput, setBillAmountInput] = useState<Record<string, string>>({});
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
   const [categorizingGroupKey, setCategorizingGroupKey] = useState<string | null>(null);
@@ -279,6 +283,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setIncomeNameInput({});
     setIncomeFreqInput({});
     setIncomeAmountInput({});
+    setAddingBillTxId(null);
+    setBillCycleInput({});
+    setBillAmountInput({});
     setRenamingTxId(null);
     setNicknameInput({});
     setCategorizingGroupKey(null);
@@ -708,8 +715,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setCategorizingTxId(null);
         setLoggingTransferTxId(null);
         setAddingIncomeTxId(null);
+        setAddingBillTxId(null);
         setRenamingTxId(null);
-        if (['categorize', 'confirm', 'link_expense', 'link_income', 'add_income', 'log_transfer', 'reset'].includes(action)) {
+        if (['categorize', 'confirm', 'link_expense', 'link_income', 'add_income', 'add_bill', 'log_transfer', 'reset'].includes(action)) {
           // 'reset' can delete an import-created bill/transfer (and un-mark a
           // linked income), so the rest of the app needs a refresh too.
           onExpensesChanged?.();
@@ -2051,6 +2059,62 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     </button>
                                   </div>
                                 </div>
+                              ) : addingBillTxId === tx.id ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>
+                                    Creates a recurring bill and marks this charge as its latest payment.
+                                  </span>
+                                  <CategorySelect
+                                    className="ha-input"
+                                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                                    value={selectedCategory[tx.id] ?? tx.suggestedCategory ?? ''}
+                                    onChange={(id) => setSelectedCategory((prev) => ({ ...prev, [tx.id]: id as ExpenseCategory }))}
+                                    customCategories={customCategories}
+                                    onCategoryCreated={(cat) => onCategoryCreated?.(cat)}
+                                    placeholderOption="— Choose a category —"
+                                  />
+                                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                    <select
+                                      value={billCycleInput[tx.id] ?? 'monthly'}
+                                      onChange={(e) => setBillCycleInput((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                      className="ha-input"
+                                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem', flex: 1 }}
+                                    >
+                                      <option value="monthly">Monthly</option>
+                                      <option value="weekly">Weekly</option>
+                                      <option value="quarterly">Quarterly</option>
+                                      <option value="annual">Annual</option>
+                                    </select>
+                                    <input
+                                      type="number"
+                                      inputMode="decimal"
+                                      step="0.01"
+                                      placeholder="Typical amount"
+                                      value={billAmountInput[tx.id] ?? String(tx.amount)}
+                                      onChange={(e) => setBillAmountInput((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                      className="ha-input"
+                                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem', width: '7rem' }}
+                                    />
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                    <button
+                                      disabled={!(selectedCategory[tx.id] || tx.suggestedCategory) || isBusy}
+                                      onClick={() => resolveTx(tx.id, 'add_bill', {
+                                        category: selectedCategory[tx.id] || tx.suggestedCategory,
+                                        billingCycle: billCycleInput[tx.id] ?? 'monthly',
+                                        amount: billAmountInput[tx.id] ?? String(tx.amount),
+                                        vendorName: tx.vendorName || tx.rawDescription,
+                                      })}
+                                      className="btn btn-primary"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                    >
+                                      {isBusy ? <Loader2 size={12} className="spin" /> : <Tag size={12} />} Add as bill
+                                    </button>
+                                    <button onClick={() => setAddingBillTxId(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
                               ) : loggingTransferTxId === tx.id ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                   <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ha-muted)' }}>
@@ -2176,6 +2240,15 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
                                   >
                                     <Tag size={12} /> Add as expense
+                                  </button>
+                                  <button
+                                    disabled={isBusy}
+                                    onClick={() => setAddingBillTxId(tx.id)}
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                    title="Create a recurring bill from this charge"
+                                  >
+                                    <RefreshCw size={12} /> Add as bill
                                   </button>
                                   <button
                                     disabled={isBusy}

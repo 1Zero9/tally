@@ -4,7 +4,8 @@ import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
 import { buildAliasPattern, sanitizeImportedText } from '@/src/lib/statementMatching';
 import { getCategoryMeta, isBuiltinCategory } from '@/src/data/categories';
-import type { ExpenseCategory } from '@/src/types/expense';
+import { advanceByCycle } from '@/src/lib/billing';
+import type { BillingCycle, ExpenseCategory } from '@/src/types/expense';
 
 const TX_INCLUDE = {
   matchedExpense: { select: { id: true, name: true, vendor: true, category: true } },
@@ -399,6 +400,82 @@ export async function POST(
             where: { householdId_pattern: { householdId: auth.user.householdId, pattern } },
             create: { householdId: auth.user.householdId, pattern, vendorName, category, matchCount: 1 },
             update: { vendorName, category, matchCount: { increment: 1 } },
+          });
+        }
+      }
+
+      return NextResponse.json({ status: 'ok', transaction: updated, expense });
+    }
+
+    // Create a NEW recurring bill from this money-out row and link it — the
+    // subscription equivalent of "Add as expense" (which only ever makes a
+    // one-off). The row's charge counts as this cycle's payment; the bill's
+    // next renewal is advanced one cycle on.
+    if (action === 'add_bill') {
+      if (tx.direction !== 'DEBIT') {
+        return NextResponse.json({ status: 'error', message: 'Only a money-out row can be added as a bill' }, { status: 400 });
+      }
+
+      const category = typeof body.category === 'string' ? (body.category as ExpenseCategory) : null;
+      const customCategoryMatch = category && !isBuiltinCategory(category)
+        ? await prisma.category.findFirst({ where: { id: category, householdId: auth.user.householdId } })
+        : null;
+      if (!category || (!isBuiltinCategory(category) && !customCategoryMatch)) {
+        return NextResponse.json({ status: 'error', message: 'A valid category must be selected' }, { status: 400 });
+      }
+
+      const ALLOWED_CYCLES: BillingCycle[] = ['weekly', 'monthly', 'quarterly', 'annual'];
+      const billingCycle: BillingCycle = ALLOWED_CYCLES.includes(body.billingCycle as BillingCycle)
+        ? (body.billingCycle as BillingCycle)
+        : 'monthly';
+
+      const parsedAmount = Number(body.amount);
+      const amount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : tx.amount;
+
+      const vendorName = typeof body.vendorName === 'string' && body.vendorName.trim()
+        ? sanitizeImportedText(body.vendorName, 120)
+        : tx.vendorName || tx.rawDescription;
+      const meta = getCategoryMeta(category, customCategoryMatch ? [customCategoryMatch] : undefined);
+      const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
+      const dayOfMonth = new Date(tx.date).getDate();
+
+      const expense = await prisma.expense.create({
+        data: {
+          name: vendorName,
+          vendor: vendorName,
+          amount,
+          currency: tx.currency,
+          billingCycle,
+          category,
+          icon: meta.icon,
+          color: meta.color,
+          renewalDay: Number.isFinite(dayOfMonth) && dayOfMonth > 0 ? dayOfMonth : 1,
+          nextRenewalDate: advanceByCycle(tx.date, billingCycle),
+          isActive: true,
+          isBill: true,
+          isPaidThisCycle: true,
+          lastPaidAt: new Date(tx.date),
+          paymentAccountId: statementImport?.accountId ?? null,
+          notes: 'Created from statement import',
+          createdById: auth.user.id,
+          householdId: auth.user.householdId,
+          statementImportId: id,
+        },
+      });
+
+      const updated = await prisma.statementTransaction.update({
+        where: { id: txId },
+        data: { status: 'MATCHED', matchedExpenseId: expense.id, matchedTransferId: null, matchConfidence: 1 },
+        include: TX_INCLUDE,
+      });
+
+      if (body.learnAlias !== false && auth.user.householdId) {
+        const pattern = buildAliasPattern(tx.normalizedDescription);
+        if (pattern) {
+          await prisma.merchantAlias.upsert({
+            where: { householdId_pattern: { householdId: auth.user.householdId, pattern } },
+            create: { householdId: auth.user.householdId, pattern, vendorName, category, expenseId: expense.id, matchCount: 1 },
+            update: { vendorName, category, expenseId: expense.id, matchCount: { increment: 1 } },
           });
         }
       }

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.78.0';
+export const APP_VERSION = '1.79.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.79.0',
+    date: '2026-09-07',
+    changes: [
+      'Statement import — a money-out row now has "Add as bill" alongside "Add as expense". It creates a proper recurring bill from the charge (pick a category, a cycle — monthly/weekly/quarterly/annual — and confirm the typical amount), marks this charge as its latest payment, and sets the next renewal date one cycle on. Use it for subscriptions (ChatGPT, Netflix, …) instead of "Add as expense", which only ever makes a one-off. The merchant is also learned, so next month\'s statement auto-matches it.',
+    ],
+  },
   {
     version: '1.78.0',
     date: '2026-09-07',
