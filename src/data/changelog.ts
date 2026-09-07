@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.73.0';
+export const APP_VERSION = '1.74.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.74.0',
+    date: '2026-09-07',
+    changes: [
+      'Statement import — a money-in row now has "Add as income", which creates a brand-new income record straight from the row (name, frequency and typical amount, with the deposit account set) and links it, the same way "Add as expense" works for a payment out. Previously you could only link a credit to an income that already existed, so the very first import was a dead end if you hadn\'t set your income up yet. "Link to income" now only shows when you already have at least one.',
+      '"Undo" on such a row — and "Undo this import" as a whole — removes an income it created, like it already does for bills and transfers.',
+    ],
+  },
   {
     version: '1.73.0',
     date: '2026-09-07',

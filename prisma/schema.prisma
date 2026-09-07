@@ -243,6 +243,12 @@ model Income {
   depositAccountId String?
   depositAccount    Account? @relation("IncomeDepositAccount", fields: [depositAccountId], references: [id], onDelete: SetNull)
 
+  // Same purpose as Expense.statementImportId — set when this Income was
+  // created straight from a statement-import credit row ("Add as income"),
+  // so "Undo" (per-row or whole-import) can remove it again.
+  statementImportId String?
+  statementImport   StatementImport? @relation("StatementImportIncomes", fields: [statementImportId], references: [id], onDelete: SetNull)
+
   transfers Transfer[]
 
   createdAt    DateTime @default(now())
@@ -250,6 +256,7 @@ model Income {
 
   @@index([householdId])
   @@index([depositAccountId])
+  @@index([statementImportId])
 }
 
 /// A financial account or payment method (bank, credit union, PayPal, credit
@@ -416,6 +423,7 @@ model StatementImport {
 
   expensesCreated  Expense[]  @relation("StatementImportExpenses")
   transfersCreated Transfer[] @relation("StatementImportTransfers")
+  incomesCreated   Income[]   @relation("StatementImportIncomes")
 
   // Extracted from PDF/photo statements only (analyzeStatementDocument) —
   // CSV imports leave these null, since a CSV export has no such header.

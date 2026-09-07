@@ -6,8 +6,8 @@ import { logAudit } from '@/src/lib/audit';
 
 /**
  * "Undo this import" — reverses a statement import as a unit: deletes
- * every Expense/Transfer it created (stamped via statementImportId, see
- * the schema note on those models), then the import itself (which
+ * every Expense/Transfer/Income it created (stamped via statementImportId,
+ * see the schema note on those models), then the import itself (which
  * cascades its StatementTransaction rows). Deliberately separate from the
  * plain "delete import" action (DELETE /api/statements/[id]), which keeps
  * already-logged records on purpose — this one removes everything.
@@ -19,13 +19,14 @@ async function loadImportAndCounts(id: string, householdId: string | null) {
   const statementImport = await prisma.statementImport.findUnique({ where: { id } });
   if (!statementImport || statementImport.householdId !== householdId) return null;
 
-  const [expenseCount, transferCount, transactionCount] = await Promise.all([
+  const [expenseCount, transferCount, incomeCount, transactionCount] = await Promise.all([
     prisma.expense.count({ where: { statementImportId: id } }),
     prisma.transfer.count({ where: { statementImportId: id } }),
+    prisma.income.count({ where: { statementImportId: id } }),
     prisma.statementTransaction.count({ where: { importId: id } }),
   ]);
 
-  return { statementImport, expenseCount, transferCount, transactionCount };
+  return { statementImport, expenseCount, transferCount, incomeCount, transactionCount };
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +45,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       label: result.statementImport.label,
       expenseCount: result.expenseCount,
       transferCount: result.transferCount,
+      incomeCount: result.incomeCount,
       transactionCount: result.transactionCount,
     });
   } catch (error: unknown) {
@@ -69,6 +71,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     await prisma.$transaction([
       prisma.expense.deleteMany({ where: { statementImportId: id } }),
       prisma.transfer.deleteMany({ where: { statementImportId: id } }),
+      prisma.income.deleteMany({ where: { statementImportId: id } }),
       prisma.statementImport.delete({ where: { id } }),
     ]);
 
@@ -78,13 +81,14 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       actorName: auth.user.name,
       action: 'STATEMENT_IMPORT_UNDO',
       entityType: 'StatementImport',
-      entityLabel: `${result.statementImport.label} — ${result.expenseCount} expense(s), ${result.transferCount} transfer(s) removed`,
+      entityLabel: `${result.statementImport.label} — ${result.expenseCount} expense(s), ${result.transferCount} transfer(s), ${result.incomeCount} income(s) removed`,
     });
 
     return NextResponse.json({
       status: 'ok',
       expenseCount: result.expenseCount,
       transferCount: result.transferCount,
+      incomeCount: result.incomeCount,
       transactionCount: result.transactionCount,
     });
   } catch (error: unknown) {

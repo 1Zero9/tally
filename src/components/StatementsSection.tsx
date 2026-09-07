@@ -72,9 +72,14 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
     const preview = await fetch(`/api/statements/${id}/undo`).then((r) => r.json());
     if (preview.status !== 'ok') return;
 
+    const createdBits = [
+      `${preview.expenseCount} expense(s)`,
+      `${preview.transferCount} transfer(s)`,
+      ...(preview.incomeCount ? [`${preview.incomeCount} income(s)`] : []),
+    ].join(', ');
     const warning =
       `Undo "${preview.label}"?\n\n` +
-      `This will permanently delete ${preview.expenseCount} expense(s) and ${preview.transferCount} transfer(s) it created, ` +
+      `This will permanently delete ${createdBits} it created, ` +
       `plus all ${preview.transactionCount} row(s) from the import itself. This can't be undone.`;
 
     if (!confirm(warning)) return;

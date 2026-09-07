@@ -201,6 +201,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   // The account on the *other* side of a "Log as transfer" — '' means an
   // external payee (money genuinely leaving / entering the household).
   const [transferCounterpartyId, setTransferCounterpartyId] = useState<Record<string, string>>({});
+  // "Add as income" — create a new Income straight from a credit row.
+  const [addingIncomeTxId, setAddingIncomeTxId] = useState<string | null>(null);
+  const [incomeNameInput, setIncomeNameInput] = useState<Record<string, string>>({});
+  const [incomeFreqInput, setIncomeFreqInput] = useState<Record<string, string>>({});
+  const [incomeAmountInput, setIncomeAmountInput] = useState<Record<string, string>>({});
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
   const [categorizingGroupKey, setCategorizingGroupKey] = useState<string | null>(null);
@@ -265,6 +270,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setSelectedCategory({});
     setNoteInput({});
     setLoggingTransferTxId(null);
+    setTransferCounterpartyId({});
+    setAddingIncomeTxId(null);
+    setIncomeNameInput({});
+    setIncomeFreqInput({});
+    setIncomeAmountInput({});
     setRenamingTxId(null);
     setNicknameInput({});
     setCategorizingGroupKey(null);
@@ -691,8 +701,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setLinkingIncomeTxId(null);
         setCategorizingTxId(null);
         setLoggingTransferTxId(null);
+        setAddingIncomeTxId(null);
         setRenamingTxId(null);
-        if (['categorize', 'confirm', 'link_expense', 'link_income', 'log_transfer', 'reset'].includes(action)) {
+        if (['categorize', 'confirm', 'link_expense', 'link_income', 'add_income', 'log_transfer', 'reset'].includes(action)) {
           // 'reset' can delete an import-created bill/transfer (and un-mark a
           // linked income), so the rest of the app needs a refresh too.
           onExpensesChanged?.();
@@ -1902,6 +1913,58 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     Cancel
                                   </button>
                                 </div>
+                              ) : addingIncomeTxId === tx.id ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                  <input
+                                    type="text"
+                                    placeholder="Income name — e.g. Salary, Child Benefit"
+                                    value={incomeNameInput[tx.id] ?? (tx.vendorName || tx.rawDescription)}
+                                    onChange={(e) => setIncomeNameInput((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                    className="ha-input"
+                                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                                  />
+                                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                    <select
+                                      value={incomeFreqInput[tx.id] ?? 'monthly'}
+                                      onChange={(e) => setIncomeFreqInput((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                      className="ha-input"
+                                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem', flex: 1 }}
+                                    >
+                                      <option value="monthly">Monthly</option>
+                                      <option value="weekly">Weekly</option>
+                                      <option value="quarterly">Quarterly</option>
+                                      <option value="annual">Annual</option>
+                                      <option value="once">One-off</option>
+                                    </select>
+                                    <input
+                                      type="number"
+                                      inputMode="decimal"
+                                      step="0.01"
+                                      placeholder="Typical amount"
+                                      value={incomeAmountInput[tx.id] ?? String(tx.amount)}
+                                      onChange={(e) => setIncomeAmountInput((prev) => ({ ...prev, [tx.id]: e.target.value }))}
+                                      className="ha-input"
+                                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem', width: '7rem' }}
+                                    />
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                    <button
+                                      disabled={isBusy || !((incomeNameInput[tx.id] ?? (tx.vendorName || tx.rawDescription)) || '').trim()}
+                                      onClick={() => resolveTx(tx.id, 'add_income', {
+                                        name: (incomeNameInput[tx.id] ?? (tx.vendorName || tx.rawDescription)).trim(),
+                                        frequency: incomeFreqInput[tx.id] ?? 'monthly',
+                                        amount: incomeAmountInput[tx.id] ?? String(tx.amount),
+                                      })}
+                                      className="btn btn-primary"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                    >
+                                      {isBusy ? <Loader2 size={12} className="spin" /> : <PlusCircle size={12} />} Add as income
+                                    </button>
+                                    <button onClick={() => setAddingIncomeTxId(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
                               ) : categorizingTxId === tx.id ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                   <CategorySelect
@@ -2002,13 +2065,23 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                       {isBusy ? <Loader2 size={12} className="spin" /> : <CheckCircle2 size={12} />} Yes, that&apos;s right
                                     </button>
                                   )}
+                                  {incomes.length > 0 && (
+                                    <button
+                                      disabled={isBusy}
+                                      onClick={() => setLinkingIncomeTxId(tx.id)}
+                                      className="btn btn-secondary"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                    >
+                                      <Link2 size={12} /> {(tx.matchedExpense || tx.matchedTransfer) ? 'No, link a different income' : 'Link to income'}
+                                    </button>
+                                  )}
                                   <button
                                     disabled={isBusy}
-                                    onClick={() => setLinkingIncomeTxId(tx.id)}
+                                    onClick={() => setAddingIncomeTxId(tx.id)}
                                     className="btn btn-secondary"
                                     style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
                                   >
-                                    <Link2 size={12} /> {(tx.matchedExpense || tx.matchedTransfer) ? 'No, link a different income' : 'Link to income'}
+                                    <PlusCircle size={12} /> Add as income
                                   </button>
                                   <button
                                     disabled={isBusy}

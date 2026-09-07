@@ -57,13 +57,19 @@ export async function POST(
         });
         if (linked) {
           await prisma.transfer.delete({ where: { id: linked.id } });
-          // A "Link to income" row also flipped its Income to received —
-          // put that back so the estimate is used again for the month.
           if (linked.linkedIncomeId) {
-            await prisma.income.updateMany({
-              where: { id: linked.linkedIncomeId, householdId: auth.user.householdId },
-              data: { isReceivedThisCycle: false, lastReceivedAt: null },
+            // If the Income was itself created by this import ("Add as
+            // income"), remove it entirely; otherwise it's a pre-existing
+            // record that was only marked received — just flip that back.
+            const removed = await prisma.income.deleteMany({
+              where: { id: linked.linkedIncomeId, householdId: auth.user.householdId, statementImportId: id },
             });
+            if (removed.count === 0) {
+              await prisma.income.updateMany({
+                where: { id: linked.linkedIncomeId, householdId: auth.user.householdId },
+                data: { isReceivedThisCycle: false, lastReceivedAt: null },
+              });
+            }
           }
         }
       }
@@ -275,6 +281,71 @@ export async function POST(
       });
 
       return NextResponse.json({ status: 'ok', transaction: updated, transfer });
+    }
+
+    // Create a brand-new Income record straight from this credit row, then
+    // link it — the money-in equivalent of "Add as expense". Lets the first
+    // statement import stand up an income the household hadn't entered yet.
+    if (action === 'add_income') {
+      if (tx.direction !== 'CREDIT') {
+        return NextResponse.json({ status: 'error', message: 'Only a money-in row can be added as income' }, { status: 400 });
+      }
+
+      const name = typeof body.name === 'string' && body.name.trim()
+        ? sanitizeImportedText(body.name, 120)
+        : (tx.vendorName || tx.rawDescription || 'Income');
+
+      const ALLOWED_FREQ = ['weekly', 'monthly', 'quarterly', 'annual', 'once'];
+      const frequency = typeof body.frequency === 'string' && ALLOWED_FREQ.includes(body.frequency)
+        ? body.frequency
+        : 'monthly';
+
+      const parsedAmount = Number(body.amount);
+      const amount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : tx.amount;
+
+      const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
+
+      const income = await prisma.income.create({
+        data: {
+          name,
+          amount,
+          currency: tx.currency,
+          frequency,
+          nextPayDate: tx.date,
+          category: 'salary',
+          isActive: true,
+          isReceivedThisCycle: true,
+          lastReceivedAt: new Date(tx.date),
+          depositAccountId: statementImport?.accountId ?? null,
+          notes: 'Created from statement import',
+          statementImportId: id,
+          createdById: auth.user.id,
+          householdId: auth.user.householdId,
+        },
+      });
+
+      const transfer = await prisma.transfer.create({
+        data: {
+          amount: tx.amount,
+          currency: tx.currency,
+          date: tx.date,
+          note: 'Logged from statement import',
+          externalLabel: income.name,
+          toAccountId: statementImport?.accountId ?? null,
+          linkedIncomeId: income.id,
+          createdById: auth.user.id,
+          householdId: auth.user.householdId,
+          statementImportId: id,
+        },
+      });
+
+      const updated = await prisma.statementTransaction.update({
+        where: { id: txId },
+        data: { status: 'MATCHED', matchedTransferId: transfer.id, matchedExpenseId: null, matchConfidence: 1 },
+        include: TX_INCLUDE,
+      });
+
+      return NextResponse.json({ status: 'ok', transaction: updated, transfer, income });
     }
 
     if (action === 'categorize') {
