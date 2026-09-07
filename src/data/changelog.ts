@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.71.0';
+export const APP_VERSION = '1.72.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.72.0',
+    date: '2026-09-07',
+    changes: [
+      'New Category Manager (Settings → Categories). Add your own categories with a proper colour and icon picker instead of the name-only inline "+ Create" in the dropdown, and — new — edit existing ones: rename, recolour, change icon.',
+      'Deleting a custom category that bills are still using now makes you pick another category to move those bills to first, so nothing is left showing a broken/blank category.',
+      'You can also recolour and re-icon the built-in categories (their names stay fixed); a "Reset" button puts any built-in back to its default look. Overrides are per household.',
+    ],
+  },
   {
     version: '1.71.0',
     date: '2026-09-07',

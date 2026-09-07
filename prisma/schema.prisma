@@ -507,6 +507,12 @@ model MerchantAlias {
 /// A household-defined spending category, in addition to the fixed built-in
 /// set (Streaming, Utilities, etc — see src/data/categories.ts). Created
 /// on the fly ("+ Create category") when nothing built-in fits (e.g. "Tolls").
+/// A row with `builtinKey` set is NOT a standalone custom category — it's a
+/// per-household appearance override for the built-in of that key (its
+/// colour/icon replace the defaults from src/data/categories.ts). Such rows
+/// carry the built-in's canonical name and never appear in the "custom
+/// categories" pickers; only getCategoryMeta() and the Category Manager
+/// read them. Delete an override row to reset that built-in to default.
 /// Cached daily reference rate (against EUR) for one non-EUR currency Tally
 /// supports. Global, not household-scoped — an exchange rate isn't private
 /// household data. Refreshed lazily by GET /api/exchange-rate-cache when a
@@ -526,6 +532,10 @@ model Category {
   bgColor     String   @default("#f1f2f4")
   borderColor String   @default("#e7e8ea")
 
+  /// When set, this row is an appearance override for the built-in category
+  /// of this key (e.g. "utilities"), not a standalone custom category.
+  builtinKey  String?
+
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
@@ -535,6 +545,7 @@ model Category {
   createdAt DateTime @default(now())
 
   @@unique([householdId, name])
+  @@unique([householdId, builtinKey])
   @@index([householdId])
 }
 

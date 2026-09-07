@@ -28,6 +28,7 @@ import { LoginScreen } from '@/src/components/LoginScreen';
 import { ExpenseModal } from '@/src/components/ExpenseModal';
 import { PresetsModal } from '@/src/components/PresetsModal';
 import { ExportImportModal } from '@/src/components/ExportImportModal';
+import { CategoryManagerModal } from '@/src/components/CategoryManagerModal';
 import { ShareWorkspaceModal } from '@/src/components/ShareWorkspaceModal';
 import { ContactVendorModal } from '@/src/components/ContactVendorModal';
 import { HelpGuideModal } from '@/src/components/HelpGuideModal';
@@ -96,6 +97,7 @@ export default function TallyPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isPresetsModalOpen, setIsPresetsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -1639,7 +1641,17 @@ export default function TallyPage() {
         onOpenPresetsModal={() => setIsPresetsModalOpen(true)}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenShareModal={() => setIsShareModalOpen(true)}
+        onOpenCategoryManager={() => setIsCategoryManagerOpen(true)}
         onSignOutEverywhere={handleSignOutEverywhere}
+      />
+
+      {/* Category Manager Modal */}
+      <CategoryManagerModal
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+        categoryRows={customCategories}
+        expenses={expenses}
+        onChanged={fetchDatabaseData}
       />
     </div>
   );

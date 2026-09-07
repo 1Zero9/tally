@@ -1,7 +1,7 @@
 import React from 'react';
 import type { CurrencyCode } from '../types/expense';
 import { CURRENCY_LIST } from '../utils/currencies';
-import { X, Coins, LayoutGrid, UserPlus, Download, ChevronRight, ShieldOff } from 'lucide-react';
+import { X, Coins, LayoutGrid, UserPlus, Download, ChevronRight, ShieldOff, Shapes } from 'lucide-react';
 import { useOverlayClose } from '../hooks/useOverlayClose';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -13,6 +13,7 @@ interface SettingsModalProps {
   onOpenPresetsModal: () => void;
   onOpenExportModal: () => void;
   onOpenShareModal: () => void;
+  onOpenCategoryManager: () => void;
   onSignOutEverywhere: () => void;
 }
 
@@ -24,6 +25,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenPresetsModal,
   onOpenExportModal,
   onOpenShareModal,
+  onOpenCategoryManager,
   onSignOutEverywhere,
 }) => {
   const overlayHandlers = useOverlayClose(onClose);
@@ -92,6 +94,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>Catalog</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--ha-muted)' }}>Add common household bills in one click</div>
+                </div>
+              </div>
+              <ChevronRight size={16} color="var(--ha-muted)" />
+            </button>
+
+            <button
+              onClick={() => openThenClose(onOpenCategoryManager)}
+              className="ha-card-interactive"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', marginBottom: '0.6rem' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: 'var(--ha-radius-sm)', backgroundColor: 'var(--ha-blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Shapes size={15} color="var(--ha-blue)" />
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>Categories</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--ha-muted)' }}>Add your own or recolour the built-in ones</div>
                 </div>
               </div>
               <ChevronRight size={16} color="var(--ha-muted)" />

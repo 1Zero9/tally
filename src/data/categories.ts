@@ -106,6 +106,26 @@ export function pickCustomCategoryColors(existingCustomCount: number) {
   return CUSTOM_CATEGORY_PALETTE[existingCustomCount % CUSTOM_CATEGORY_PALETTE.length];
 }
 
+/**
+ * The full set of colour triples (marker / tint background / border) offered
+ * in the Category Manager's colour picker — a superset of the auto-assign
+ * palette above, covering the hues the built-in categories also use.
+ */
+export const CATEGORY_COLOR_PRESETS: { name: string; color: string; bgColor: string; borderColor: string }[] = [
+  { name: 'Ultramarine', color: '#3155D9', bgColor: '#eef2fc', borderColor: '#d0daf7' },
+  { name: 'Deep Blue', color: '#1a3299', bgColor: '#e8ecfa', borderColor: '#c6d3f7' },
+  { name: 'Teal', color: '#0E7490', bgColor: '#e7f5f8', borderColor: '#bfe3ea' },
+  { name: 'Green', color: '#15803D', bgColor: '#e9f6ee', borderColor: '#c3e6d1' },
+  { name: 'Lime', color: '#4D7C0F', bgColor: '#f0f6e6', borderColor: '#d8e8bd' },
+  { name: 'Amber', color: '#B45309', bgColor: '#fdf2e3', borderColor: '#f6dfb8' },
+  { name: 'Tomato', color: '#F04E3E', bgColor: '#fef2f1', borderColor: '#fcd3cf' },
+  { name: 'Rose', color: '#BE185D', bgColor: '#fdeef4', borderColor: '#f7cbdd' },
+  { name: 'Violet', color: '#8A5CF6', bgColor: '#f4effe', borderColor: '#ded0fb' },
+  { name: 'Indigo', color: '#4338CA', bgColor: '#ecebfa', borderColor: '#cfccf2' },
+  { name: 'Graphite', color: '#202124', bgColor: '#f4f5f6', borderColor: '#e7e8ea' },
+  { name: 'Grey', color: '#676B73', bgColor: '#f1f2f4', borderColor: '#e7e8ea' },
+];
+
 const FALLBACK_META: CategoryInfo = {
   id: 'utilities',
   name: 'Other',
@@ -117,17 +137,48 @@ const FALLBACK_META: CategoryInfo = {
 };
 
 /**
+ * The rows from GET /api/categories that are genuine standalone custom
+ * categories — i.e. not per-household appearance overrides for a built-in.
+ * Every "custom categories" picker/list should render this, not the raw rows.
+ */
+export function getCustomCategories(rows: CustomCategoryItem[] | undefined | null): CustomCategoryItem[] {
+  return (rows ?? []).filter((c) => !c.builtinKey);
+}
+
+/** The appearance-override row for a given built-in key, if the household has set one. */
+export function getBuiltinOverride(
+  rows: CustomCategoryItem[] | undefined | null,
+  builtinKey: string
+): CustomCategoryItem | undefined {
+  return (rows ?? []).find((c) => c.builtinKey === builtinKey);
+}
+
+/**
  * Resolves display metadata (name/icon/color) for any category id — built-in
  * or household-defined custom — falling back gracefully if the id isn't
  * recognized (e.g. a custom category was since deleted).
+ *
+ * `categoryRows` is the full GET /api/categories payload: both standalone
+ * custom categories and any per-household appearance overrides for built-ins.
  */
 export function getCategoryMeta(
   id: string | null | undefined,
-  customCategories?: CustomCategoryItem[]
+  categoryRows?: CustomCategoryItem[]
 ): CategoryInfo {
   if (!id) return FALLBACK_META;
-  if (isBuiltinCategory(id)) return CATEGORIES[id];
-  const custom = customCategories?.find((c) => c.id === id);
+  if (isBuiltinCategory(id)) {
+    const base = CATEGORIES[id];
+    const override = getBuiltinOverride(categoryRows, id);
+    if (!override) return base;
+    return {
+      ...base,
+      color: override.color || base.color,
+      bgColor: override.bgColor || base.bgColor,
+      borderColor: override.borderColor || base.borderColor,
+      icon: override.icon || base.icon,
+    };
+  }
+  const custom = categoryRows?.find((c) => c.id === id && !c.builtinKey);
   if (custom) {
     return {
       id: custom.id,

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode, SpendingSummary, IncomeSummary, CustomCategoryItem, AccountItem } from '../types/expense';
-import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
+import { CATEGORY_LIST, getCategoryMeta, getCustomCategories } from '../data/categories';
 import { convertCurrency, getDaysUntilRenewal, getMonthlyContribution } from '../utils/calculations';
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
 import { TrendingUp, Clock, PiggyBank, ArrowRight, Edit2, CalendarClock, Landmark } from 'lucide-react';
@@ -88,12 +88,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       return { ...item, daysLeft };
     });
 
-  const categoryData = [...CATEGORY_LIST, ...customCategories].map((cat) => {
+  const categoryData = [...CATEGORY_LIST, ...getCustomCategories(customCategories)].map((cat) => {
     const catItems = activeExpenses.filter((e) => e.category === cat.id);
     const monthlyAmount = catItems.reduce((sum, item) => {
       return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
     }, 0);
-    return { ...cat, monthlyAmount };
+    return { ...cat, color: getCategoryMeta(cat.id, customCategories).color, monthlyAmount };
   }).filter((c) => c.monthlyAmount > 0).sort((a, b) => b.monthlyAmount - a.monthlyAmount);
 
   const totalMonthly = categoryData.reduce((sum, c) => sum + c.monthlyAmount, 0);

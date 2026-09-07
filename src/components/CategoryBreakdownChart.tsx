@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
-import { CATEGORY_LIST } from '../data/categories';
+import { CATEGORY_LIST, getCustomCategories, getCategoryMeta } from '../data/categories';
 import { convertCurrency, getMonthlyContribution } from '../utils/calculations';
 import { formatCurrency } from '../utils/formatters';
 
@@ -20,7 +20,7 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
     return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
   }, 0);
 
-  const categoryData = [...CATEGORY_LIST, ...customCategories].map((cat) => {
+  const categoryData = [...CATEGORY_LIST, ...getCustomCategories(customCategories)].map((cat) => {
     const catItems = activeExpenses.filter((e) => e.category === cat.id);
     const monthlyAmount = catItems.reduce((sum, item) => {
       return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
@@ -28,6 +28,7 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
     const percentage = totalSpend > 0 ? (monthlyAmount / totalSpend) * 100 : 0;
     return {
       ...cat,
+      color: getCategoryMeta(cat.id, customCategories).color,
       itemCount: catItems.length,
       monthlyAmount,
       percentage: Math.round(percentage * 10) / 10,

@@ -21,6 +21,9 @@ export interface CustomCategoryItem {
   color: string;
   bgColor: string;
   borderColor: string;
+  /** When set, this row is an appearance override for the built-in of this
+   *  key (e.g. "utilities"), not a standalone custom category. */
+  builtinKey?: string | null;
   createdById?: string | null;
   createdAt?: string | Date;
 }

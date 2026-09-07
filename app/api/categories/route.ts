@@ -2,7 +2,14 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { pickCustomCategoryColors } from '@/src/data/categories';
+import { pickCustomCategoryColors, isBuiltinCategory, CATEGORIES } from '@/src/data/categories';
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+/** Returns a clean #rrggbb string, or null if the input isn't a valid hex colour. */
+function cleanHex(raw: unknown): string | null {
+  return typeof raw === 'string' && HEX.test(raw.trim()) ? raw.trim().toLowerCase() : null;
+}
 
 export async function GET() {
   const auth = await requireHouseholdUser();
@@ -30,30 +37,66 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const householdId = auth.user.householdId;
 
+    const icon = typeof body.icon === 'string' && body.icon.trim() ? body.icon.trim().slice(0, 40) : null;
+    const color = cleanHex(body.color);
+    const bgColor = cleanHex(body.bgColor);
+    const borderColor = cleanHex(body.borderColor);
+
+    // --- Appearance override for a built-in category ------------------------
+    const builtinKey = typeof body.builtinKey === 'string' ? body.builtinKey.trim() : '';
+    if (builtinKey) {
+      if (!isBuiltinCategory(builtinKey)) {
+        return NextResponse.json({ status: 'error', message: 'Unknown built-in category' }, { status: 400 });
+      }
+      const base = CATEGORIES[builtinKey];
+      const override = await prisma.category.upsert({
+        where: { householdId_builtinKey: { householdId: householdId!, builtinKey } },
+        create: {
+          householdId,
+          builtinKey,
+          name: base.name,
+          icon: icon ?? base.icon,
+          color: color ?? base.color,
+          bgColor: bgColor ?? base.bgColor,
+          borderColor: borderColor ?? base.borderColor,
+          createdById: auth.user.id,
+        },
+        update: {
+          ...(icon ? { icon } : {}),
+          ...(color ? { color } : {}),
+          ...(bgColor ? { bgColor } : {}),
+          ...(borderColor ? { borderColor } : {}),
+        },
+      });
+      return NextResponse.json({ status: 'ok', category: override });
+    }
+
+    // --- Standalone custom category ---------------------------------------
+    const name = typeof body.name === 'string' ? body.name.trim().slice(0, 60) : '';
     if (!name) {
       return NextResponse.json({ status: 'error', message: 'Category name is required' }, { status: 400 });
     }
 
     const existing = await prisma.category.findFirst({
-      where: { householdId: auth.user.householdId, name: { equals: name, mode: 'insensitive' } },
+      where: { householdId, builtinKey: null, name: { equals: name, mode: 'insensitive' } },
     });
     if (existing) {
       return NextResponse.json({ status: 'ok', category: existing });
     }
 
-    const existingCount = await prisma.category.count({ where: { householdId: auth.user.householdId } });
-    const colors = pickCustomCategoryColors(existingCount);
+    const existingCount = await prisma.category.count({ where: { householdId, builtinKey: null } });
+    const autoColors = pickCustomCategoryColors(existingCount);
 
     const category = await prisma.category.create({
       data: {
         name,
-        icon: typeof body.icon === 'string' && body.icon ? body.icon : 'Tag',
-        color: colors.color,
-        bgColor: colors.bgColor,
-        borderColor: colors.borderColor,
-        householdId: auth.user.householdId,
+        icon: icon ?? 'Tag',
+        color: color ?? autoColors.color,
+        bgColor: bgColor ?? autoColors.bgColor,
+        borderColor: borderColor ?? autoColors.borderColor,
+        householdId,
         createdById: auth.user.id,
       },
     });
