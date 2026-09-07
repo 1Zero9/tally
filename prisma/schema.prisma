@@ -88,13 +88,15 @@ model Household {
   budgets Budget[]
 
   auditLogs AuditLog[]
+
+  moneyTrails MoneyTrail[]
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String  @id @default(cuid())
+  email     String  @unique
   name      String
-  role      Role     @default(MEMBER)
+  role      Role    @default(MEMBER)
   avatarUrl String?
 
   householdId String?
@@ -103,10 +105,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  expenses Expense[]
-  incomes  Income[]
-  sessions Session[]
-  accountsCreated Account[]
+  expenses         Expense[]
+  incomes          Income[]
+  sessions         Session[]
+  accountsCreated  Account[]
   transfersCreated Transfer[]
   goalsCreated     Goal[]
 
@@ -118,6 +120,8 @@ model User {
   bugReportsCreated BugReport[]
 
   budgetsCreated Budget[]
+
+  moneyTrailsCreated MoneyTrail[]
 }
 
 model Session {
@@ -139,32 +143,32 @@ model VerificationToken {
 }
 
 model Expense {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   name            String
   vendor          String?
   amount          Float
-  currency        String   @default("EUR")
-  billingCycle    String   @default("monthly")
-  category        String   @default("utilities")
-  icon            String   @default("Zap")
-  color           String   @default("#3155D9")
-  renewalDay      Int      @default(1)
+  currency        String    @default("EUR")
+  billingCycle    String    @default("monthly")
+  category        String    @default("utilities")
+  icon            String    @default("Zap")
+  color           String    @default("#3155D9")
+  renewalDay      Int       @default(1)
   nextRenewalDate String
-  isPaidThisCycle Boolean  @default(false)
+  isPaidThisCycle Boolean   @default(false)
   lastPaidAt      DateTime?
-  paymentMethod   String   @default("SEPA Direct Debit")
-  isActive        Boolean  @default(true)
-  isPending       Boolean  @default(false)
+  paymentMethod   String    @default("SEPA Direct Debit")
+  isActive        Boolean   @default(true)
+  isPending       Boolean   @default(false)
   notes           String?
   contractEndDate String?
   vendorEmail     String?
-  usageRating     String?  @default("high")
-  isVariable      Boolean  @default(false)
+  usageRating     String?   @default("high")
+  isVariable      Boolean   @default(false)
   // Whether this counts as a recurring bill/contract (shows in the Bills
   // tab) vs one-off/incidental spending (e.g. a coffee) that should only
   // show in the Spending ledger. Defaults true for backward compatibility
   // with existing recurring records.
-  isBill          Boolean  @default(true)
+  isBill          Boolean   @default(true)
 
   // Set only when this expense was created (or later edited) from a
   // receipt/bill scan where a live ECB rate was applied to convert a
@@ -185,14 +189,14 @@ model Expense {
   reimbursementReceived     Float?
   reimbursementReceivedDate String?
 
-  householdId     String?
-  household       Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
-  createdById     String?
-  createdBy       User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   paymentAccountId String?
-  paymentAccount    Account? @relation("ExpensePaymentAccount", fields: [paymentAccountId], references: [id], onDelete: SetNull)
+  paymentAccount   Account? @relation("ExpensePaymentAccount", fields: [paymentAccountId], references: [id], onDelete: SetNull)
 
   linkedGoalId String?
   linkedGoal   Goal?   @relation("ExpenseLinkedGoal", fields: [linkedGoalId], references: [id], onDelete: SetNull)
@@ -210,8 +214,8 @@ model Expense {
   statementTransactions StatementTransaction[]
   merchantAliases       MerchantAlias[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([householdId])
   @@index([paymentAccountId])
@@ -219,29 +223,29 @@ model Expense {
 }
 
 model Income {
-  id           String   @id @default(cuid())
-  name         String
-  amount       Float
-  currency     String   @default("EUR")
-  frequency    String   @default("monthly")
-  nextPayDate  String?
-  category     String   @default("salary")
-  isActive     Boolean  @default(true)
-  notes        String?
+  id                  String    @id @default(cuid())
+  name                String
+  amount              Float
+  currency            String    @default("EUR")
+  frequency           String    @default("monthly")
+  nextPayDate         String?
+  category            String    @default("salary")
+  isActive            Boolean   @default(true)
+  notes               String?
   // Mirrors Expense.isPaidThisCycle/lastPaidAt — lets a household mark
   // "money actually landed" for this cycle, which logs a dated Transfer
   // so real income history accumulates over time.
   isReceivedThisCycle Boolean   @default(false)
   lastReceivedAt      DateTime?
 
-  householdId  String?
-  household    Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
-  createdById  String?
-  createdBy    User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   depositAccountId String?
-  depositAccount    Account? @relation("IncomeDepositAccount", fields: [depositAccountId], references: [id], onDelete: SetNull)
+  depositAccount   Account? @relation("IncomeDepositAccount", fields: [depositAccountId], references: [id], onDelete: SetNull)
 
   // Same purpose as Expense.statementImportId — set when this Income was
   // created straight from a statement-import credit row ("Add as income"),
@@ -251,8 +255,8 @@ model Income {
 
   transfers Transfer[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([householdId])
   @@index([depositAccountId])
@@ -325,9 +329,9 @@ model Account {
 /// record it corresponds to, so the recurring definition and the actual
 /// dated movement stay connected.
 model Transfer {
-  id       String   @id @default(cuid())
+  id       String  @id @default(cuid())
   amount   Float
-  currency String   @default("EUR")
+  currency String  @default("EUR")
   date     String
   note     String?
 
@@ -345,7 +349,7 @@ model Transfer {
   linkedExpense   Expense? @relation(fields: [linkedExpenseId], references: [id], onDelete: SetNull)
 
   linkedIncomeId String?
-  linkedIncome   Income?  @relation(fields: [linkedIncomeId], references: [id], onDelete: SetNull)
+  linkedIncome   Income? @relation(fields: [linkedIncomeId], references: [id], onDelete: SetNull)
 
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
@@ -361,6 +365,12 @@ model Transfer {
   statementImportId String?
   statementImport   StatementImport? @relation("StatementImportTransfers", fields: [statementImportId], references: [id], onDelete: SetNull)
 
+  // Optional membership in a MoneyTrail — a named chain of hops the same
+  // money took across accounts (income landing → sweep to savings → back →
+  // pay the card). Deleting the trail just un-groups its transfers.
+  trailId String?
+  trail   MoneyTrail? @relation(fields: [trailId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -369,19 +379,44 @@ model Transfer {
   @@index([toAccountId])
   @@index([date])
   @@index([statementImportId])
+  @@index([trailId])
+}
+
+/// A named chain of Transfers that follow the same money across several
+/// hops — e.g. salary into BOI, swept to PTSB, moved back, then used to
+/// pay the credit card. Purely a lens for "where did the money sit and
+/// when"; it doesn't change any totals (the member transfers still stand
+/// on their own).
+model MoneyTrail {
+  id    String  @id @default(cuid())
+  name  String
+  notes String?
+
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  transfers Transfer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([householdId])
 }
 
 /// A savings/financial goal — optionally tied to an Account (e.g. a savings
 /// pot), with a manually-tracked current amount and an optional target date.
 model Goal {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
   targetAmount  Float
-  currentAmount Float    @default(0)
-  currency      String   @default("EUR")
+  currentAmount Float   @default(0)
+  currency      String  @default("EUR")
   targetDate    String?
   notes         String?
-  isActive      Boolean  @default(true)
+  isActive      Boolean @default(true)
 
   linkedAccountId String?
   linkedAccount   Account? @relation("GoalAccount", fields: [linkedAccountId], references: [id], onDelete: SetNull)
@@ -445,14 +480,14 @@ model StatementImport {
 /// attempt to automatically match it against existing Expenses/Transfers or
 /// a learned MerchantAlias.
 model StatementTransaction {
-  id                    String                @id @default(cuid())
+  id                    String               @id @default(cuid())
   date                  String
   rawDescription        String
   normalizedDescription String
   amount                Float
-  currency              String                @default("EUR")
-  direction             StatementTxDirection  @default(DEBIT)
-  status                StatementTxStatus     @default(UNMATCHED)
+  currency              String               @default("EUR")
+  direction             StatementTxDirection @default(DEBIT)
+  status                StatementTxStatus    @default(UNMATCHED)
   matchConfidence       Float?
   notes                 String?
 
@@ -460,12 +495,12 @@ model StatementTransaction {
   // this description pattern, if any — used to pre-fill the category picker
   // when the household categorizes this row as a new one-off expense, so
   // repeat merchants get faster (and more consistent) categorization over time.
-  suggestedCategory     String?
+  suggestedCategory String?
 
   // A friendly nickname for this merchant (e.g. "Smyths Toy Shop" for a raw
   // description of "IEPROS"), either learned from a previously-confirmed
   // MerchantAlias or set directly by the household via "Rename merchant".
-  vendorName            String?
+  vendorName String?
 
   importId String
   import   StatementImport @relation(fields: [importId], references: [id], onDelete: Cascade)
@@ -493,11 +528,11 @@ model StatementTransaction {
 /// and a real vendor/expense, built up as the household confirms matches —
 /// so cryptic statement references get recognized automatically next time.
 model MerchantAlias {
-  id         String   @id @default(cuid())
+  id         String  @id @default(cuid())
   pattern    String
   vendorName String
   category   String?
-  matchCount Int      @default(1)
+  matchCount Int     @default(1)
 
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
@@ -533,16 +568,16 @@ model ExchangeRate {
 }
 
 model Category {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   name        String
-  icon        String   @default("Tag")
-  color       String   @default("#676B73")
-  bgColor     String   @default("#f1f2f4")
-  borderColor String   @default("#e7e8ea")
+  icon        String @default("Tag")
+  color       String @default("#676B73")
+  bgColor     String @default("#f1f2f4")
+  borderColor String @default("#e7e8ea")
 
   /// When set, this row is an appearance override for the built-in category
   /// of this key (e.g. "utilities"), not a standalone custom category.
-  builtinKey  String?
+  builtinKey String?
 
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
@@ -591,9 +626,9 @@ model Budget {
 /// time of the action (e.g. an expense's name right before it's deleted),
 /// not a full before/after record.
 model AuditLog {
-  id         String   @id @default(cuid())
-  action     String
-  entityType String
+  id          String  @id @default(cuid())
+  action      String
+  entityType  String
   entityLabel String?
 
   householdId String
@@ -611,11 +646,11 @@ model AuditLog {
 /// days-out threshold, so a duplicate/overlapping cron invocation (retries,
 /// manual re-trigger, etc.) can't send the same reminder twice.
 model SentReminder {
-  id         String   @id @default(cuid())
-  expenseId  String
-  threshold  Int
-  sentOn     String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  expenseId String
+  threshold Int
+  sentOn    String
+  createdAt DateTime @default(now())
 
   @@unique([expenseId, threshold, sentOn])
   @@index([expenseId])
@@ -656,12 +691,12 @@ model DatabaseBackup {
 /// custom label (e.g. "Car Loan — Credit Union") for things not yet tracked
 /// as a full Account. Position (x, y) is user-dragged and persisted as-is.
 model MapNode {
-  id          String  @id @default(cuid())
-  label       String
-  kind        String  @default("CUSTOM") // 'ACCOUNT' | 'CUSTOM'
-  color       String?
-  x           Float   @default(0)
-  y           Float   @default(0)
+  id    String  @id @default(cuid())
+  label String
+  kind  String  @default("CUSTOM") // 'ACCOUNT' | 'CUSTOM'
+  color String?
+  x     Float   @default(0)
+  y     Float   @default(0)
 
   accountId String?
   account   Account? @relation("MapNodeAccount", fields: [accountId], references: [id], onDelete: Cascade)
@@ -685,9 +720,9 @@ model MapNode {
 /// A directional connection drawn by the user between two MapNodes on the
 /// custom map canvas — from -> to gives the arrow direction.
 model MapEdge {
-  id     String  @id @default(cuid())
-  label  String?
-  amount Float?
+  id       String  @id @default(cuid())
+  label    String?
+  amount   Float?
   currency String?
 
   fromNodeId String
@@ -722,10 +757,10 @@ model BugReport {
   status      BugStatus    @default(OPEN)
 
   householdId String?
-  household   Household?  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
   createdById String?
-  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

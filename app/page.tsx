@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { EyeOff } from 'lucide-react';
-import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, AccountItem, TransferItem, GoalItem, CustomCategoryItem, BudgetItem } from '@/src/types/expense';
+import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, AccountItem, TransferItem, GoalItem, CustomCategoryItem, BudgetItem, MoneyTrailItem } from '@/src/types/expense';
 import { loadCurrency, saveCurrency } from '@/src/services/storage';
 import { updateLiveRates } from '@/src/utils/currencies';
 import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/calculations';
@@ -43,6 +43,7 @@ import { AccountModal } from '@/src/components/AccountModal';
 import { MoneyMap } from '@/src/components/MoneyMap';
 import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
+import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
 import { StatementImportModal } from '@/src/components/StatementImportModal';
@@ -68,6 +69,7 @@ export default function TallyPage() {
   const [encryptionConfigured, setEncryptionConfigured] = useState(false);
   const [transfers, setTransfers] = useState<TransferItem[]>([]);
   const [goals, setGoals] = useState<GoalItem[]>([]);
+  const [trails, setTrails] = useState<MoneyTrailItem[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategoryItem[]>([]);
   const [budgets, setBudgets] = useState<BudgetItem[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>('EUR');
@@ -195,6 +197,9 @@ export default function TallyPage() {
       }),
       loadResource('goals', '/api/goals', (data) => {
         if (Array.isArray(data.goals)) setGoals(data.goals as GoalItem[]);
+      }),
+      loadResource('trails', '/api/trails', (data) => {
+        if (Array.isArray(data.trails)) setTrails(data.trails as MoneyTrailItem[]);
       }),
       loadResource('categories', '/api/categories', (data) => {
         if (Array.isArray(data.categories)) setCustomCategories(data.categories as CustomCategoryItem[]);
@@ -1314,6 +1319,12 @@ export default function TallyPage() {
                 setEditingTransfer(null);
                 setIsTransferModalOpen(true);
               }}
+            />
+            <MoneyTrailsSection
+              trails={trails}
+              transfers={transfers}
+              currency={currency}
+              onChanged={fetchDatabaseData}
             />
           </div>
         )}

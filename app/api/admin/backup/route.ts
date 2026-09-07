@@ -179,6 +179,7 @@ export async function PUT(request: Request) {
       await tx.budget.deleteMany({ where: { householdId } });
       await tx.category.deleteMany({ where: { householdId } });
       await tx.transfer.deleteMany({ where: { householdId } });
+      await tx.moneyTrail.deleteMany({ where: { householdId } });
       await tx.goal.deleteMany({ where: { householdId } });
       await tx.expense.deleteMany({ where: { householdId } });
       await tx.income.deleteMany({ where: { householdId } });
@@ -337,6 +338,20 @@ export async function PUT(request: Request) {
         if (typeof item.id === 'string') incomeIdMap.set(item.id, created.id);
       }
 
+      // Trails before transfers, so a transfer's trailId can be remapped.
+      const trailIdMap = new Map<string, string>();
+      for (const item of payload.moneyTrails || []) {
+        const created = await tx.moneyTrail.create({
+          data: {
+            name: str(item.name, 'Trail') as string,
+            notes: str(item.notes),
+            householdId,
+            createdById,
+          },
+        });
+        if (typeof item.id === 'string') trailIdMap.set(item.id, created.id);
+      }
+
       const transferIdMap = new Map<string, string>();
       for (const item of payload.transfers || []) {
         const oldFrom = typeof item.fromAccountId === 'string' ? item.fromAccountId : null;
@@ -344,6 +359,7 @@ export async function PUT(request: Request) {
         const oldExpense = typeof item.linkedExpenseId === 'string' ? item.linkedExpenseId : null;
         const oldIncome = typeof item.linkedIncomeId === 'string' ? item.linkedIncomeId : null;
         const oldStatementImportId = typeof item.statementImportId === 'string' ? item.statementImportId : null;
+        const oldTrailId = typeof item.trailId === 'string' ? item.trailId : null;
         const created = await tx.transfer.create({
           data: {
             amount: num(item.amount, 0),
@@ -356,6 +372,7 @@ export async function PUT(request: Request) {
             linkedExpenseId: oldExpense ? expenseIdMap.get(oldExpense) || null : null,
             linkedIncomeId: oldIncome ? incomeIdMap.get(oldIncome) || null : null,
             statementImportId: oldStatementImportId ? statementImportIdMap.get(oldStatementImportId) || null : null,
+            trailId: oldTrailId ? trailIdMap.get(oldTrailId) || null : null,
             householdId,
             createdById,
           },
@@ -471,6 +488,7 @@ export async function PUT(request: Request) {
         expenses: expenseIdMap.size,
         incomes: incomeIdMap.size,
         transfers: transferIdMap.size,
+        moneyTrails: trailIdMap.size,
         categories: categoryIdMap.size,
         budgets: budgetIdMap.size,
         mapNodes: mapNodeIdMap.size,

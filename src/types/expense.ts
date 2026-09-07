@@ -236,12 +236,25 @@ export interface TransferItem {
   linkedIncomeId?: string | null;
   linkedIncome?: { id: string; name: string } | null;
 
+  trailId?: string | null;
+
   createdById?: string | null;
   createdBy?: {
     id: string;
     name: string;
     role: UserRole;
   } | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** A named chain of transfers following the same money across hops. */
+export interface MoneyTrailItem {
+  id: string;
+  name: string;
+  notes?: string | null;
+  transfers: TransferItem[];
+  createdById?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.75.0';
+export const APP_VERSION = '1.76.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.76.0',
+    date: '2026-09-07',
+    changes: [
+      'New: Money trails (Flow tab). Chain a set of transfers into one named path — e.g. salary into BOI, swept to PTSB, moved back, then used to pay the credit card — and see it drawn as a route with a "€X sat in PTSB for 5 days" breakdown at each stop. Create a trail, then add the transfers that make it up (or remove them); deleting a trail just un-groups the transfers, it never deletes them. Trails are a lens only — they don\'t change any totals.',
+      'Money trails are included in household backups (snapshot schema v3) and restored with their membership intact.',
+    ],
+  },
   {
     version: '1.75.0',
     date: '2026-09-07',
