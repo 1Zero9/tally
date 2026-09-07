@@ -85,8 +85,8 @@ export default function TechnicalOverviewPage() {
         passwords anywhere.
       </p>
       <ul>
-        <li><code>POST /api/auth/send-code</code> — issues a VerificationToken (6-digit code from <code>crypto.randomInt</code>, 15-minute expiry, stored only as a keyed digest — never in plain text, never logged) for the given email and emails it via Resend; fails loudly rather than falling back to logging the code if email isn&apos;t configured.</li>
-        <li><code>POST /api/auth/verify-code</code> — every accept/reject decision (recording a wrong guess, consuming a correct one) is a single conditional <code>updateMany</code>/<code>deleteMany</code> whose WHERE clause re-checks the 5-attempt cap and expiry against the row&apos;s true current state at that exact statement, not a value read earlier — this closes a race where a correct code arriving the instant after the cap is reached, but before cleanup runs, would otherwise still succeed. Also atomically single-use, and exhausted/expired/already-consumed always returns the identical response regardless of whether the triggering guess was actually correct, so the response text itself can&apos;t leak that. Creates a Session row, and sets an httpOnly <code>tally_session</code> cookie. Both routes apply a per-IP throttle.</li>
+        <li><code>POST /api/auth/send-code</code> — issues a VerificationToken (6-digit code from <code>crypto.randomInt</code>, short expiry, stored only as a keyed digest — never in plain text, never logged) for the given email and emails it via Resend; fails loudly rather than falling back to logging the code if email isn&apos;t configured.</li>
+        <li><code>POST /api/auth/verify-code</code> — every accept/reject decision (recording a wrong guess, consuming a correct one) is a single conditional <code>updateMany</code>/<code>deleteMany</code> whose WHERE clause re-checks the attempt cap and expiry against the row&apos;s true current state at that exact statement, not a value read earlier — this closes a race where a correct code arriving the instant after the cap is reached, but before cleanup runs, would otherwise still succeed. Also atomically single-use, and exhausted/expired/already-consumed always returns the identical response regardless of whether the triggering guess was actually correct, so the response text itself can&apos;t leak that. Creates a Session row, and sets an httpOnly <code>tally_session</code> cookie. Both routes apply a low, per-IP rate limit.</li>
         <li><code>getSessionUser()</code> (<code>src/lib/auth.ts</code>) is the single source of truth for &quot;who is making this request&quot; on every API route — request bodies are never trusted for identity, user ID, household ID, or role.</li>
       </ul>
       <p>
@@ -285,14 +285,14 @@ export default function TechnicalOverviewPage() {
 
       <h2>10. Local development &amp; deployment</h2>
       <pre><code>{`npm install
-npm run db:push && npx prisma generate   # first-time setup against a fresh database only
+npx prisma migrate deploy && npx prisma generate   # apply committed migrations to your database
 npm run db:seed        # seeds an initial workspace + admin account
 npm run dev -- -p 5174`}</code></pre>
       <pre><code>{`npm run build           # prisma migrate deploy && prisma generate && next build
 npm start                # production server
 npm run lint             # eslint
 npm run test             # vitest — unit coverage on billing.ts, statementMatching.ts, crypto.ts`}</code></pre>
-      <p><strong>Schema changes</strong> go through Prisma Migrate, tracked under <code>prisma/migrations/</code> (committed to git): run <code>npm run db:migrate</code> (<code>prisma migrate dev --name &lt;description&gt;</code>) to generate and apply a new migration locally, then commit the generated file alongside the schema change. <code>npm run build</code>&apos;s <code>prisma migrate deploy</code> step applies any pending migrations automatically on every deploy. <code>db:push</code> (schema-diff against the live database, no history, can drop columns silently) is reserved for first-time setup against a fresh database only — not for changes to an existing one.</p>
+      <p><strong>Schema changes</strong> go through Prisma Migrate, tracked under <code>prisma/migrations/</code> (committed to git): run <code>npm run db:migrate</code> (<code>prisma migrate dev --name &lt;description&gt;</code>) to generate and apply a new migration locally, then commit the generated file alongside the schema change. <code>npm run build</code>&apos;s <code>prisma migrate deploy</code> step applies any pending migrations automatically on every deploy. <code>db:push</code> (schema-diff against the live database, no history, can drop columns silently) is reserved for genuine one-off exploratory schema experiments — never the normal path for a schema change you&apos;re keeping.</p>
       <p>Deployable to Vercel, Netlify, or any Node.js/Docker host.</p>
     </LegalPageLayout>
   );

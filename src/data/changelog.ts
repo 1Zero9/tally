@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.70.0';
+export const APP_VERSION = '1.71.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.71.0',
+    date: '2026-09-07',
+    changes: [
+      'Tightened the wording of the public Technical Overview (and the matching docs/technical-overview.md): the passwordless sign-in section no longer publishes the exact code-expiry window and wrong-guess limit — those brute-force parameters are now described qualitatively ("short expiry", "low per-IP rate limit") while the actual protections are unchanged. Also corrected the local-setup instructions to use Prisma Migrate rather than db:push.',
+    ],
+  },
   {
     version: '1.70.0',
     date: '2026-09-07',
