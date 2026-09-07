@@ -23,6 +23,16 @@ interface RunMutationOptions<T> {
   /** Called with the parsed response body on success, before returning —
    * for handlers that need the server's data (e.g. a newly created id). */
   onSuccess?: (data: T) => void;
+  /** Identifies which entity this mutation is about (typically the row's
+   * id) — e.g. two rapid clicks on the same toggle fire two overlapping
+   * calls with the same key. When set, only the most recently *started*
+   * call for that key is allowed to apply its outcome (rollback, success,
+   * toast) once it resolves; an earlier call that resolves later (a slow
+   * failure racing a fast success) is treated as superseded and silently
+   * ignored, so it can never stomp a newer, already-correct state. Omit
+   * for mutations with no stable identity to race against (creates,
+   * whole-entity saves) — they keep today's un-guarded behavior. */
+  key?: string;
 }
 
 const SUCCESS_AUTO_DISMISS_MS = 3000;
@@ -39,6 +49,10 @@ const SUCCESS_AUTO_DISMISS_MS = 3000;
 export function useActionFeedback() {
   const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Latest "generation" number started per key, so a stale call's outcome
+  // (rollback/success/toast) can be dropped once a newer call for the same
+  // key has started — see the `key` option below.
+  const generations = useRef<Map<string, number>>(new Map());
 
   const showFeedback = useCallback((next: ActionFeedback) => {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
@@ -55,28 +69,44 @@ export function useActionFeedback() {
 
   const runMutation = useCallback(
     async <T = unknown>(request: () => Promise<Response>, opts: RunMutationOptions<T>): Promise<{ ok: boolean; data?: T }> => {
+      const { key } = opts;
+      let myGeneration = 0;
+      if (key !== undefined) {
+        myGeneration = (generations.current.get(key) || 0) + 1;
+        generations.current.set(key, myGeneration);
+      }
+      // True once a later call for the same key has started — this call's
+      // resolution no longer gets to touch state, no matter how it settles.
+      const isStale = () => key !== undefined && generations.current.get(key) !== myGeneration;
+
       opts.optimistic?.();
       try {
         const res = await request();
         const data = (await res.json().catch(() => null)) as (T & { status?: string; message?: string }) | null;
         if (!res.ok || !data || data.status !== 'ok') {
-          opts.rollback?.();
-          showFeedback({ type: 'error', message: data?.message || opts.errorMessage });
+          if (!isStale()) {
+            opts.rollback?.();
+            showFeedback({ type: 'error', message: data?.message || opts.errorMessage });
+          }
           return { ok: false };
         }
-        if (opts.successMessage) {
-          showFeedback({ type: 'success', message: opts.successMessage });
+        if (!isStale()) {
+          if (opts.successMessage) {
+            showFeedback({ type: 'success', message: opts.successMessage });
+          }
+          opts.onSuccess?.(data as T);
         }
-        opts.onSuccess?.(data as T);
         return { ok: true, data: data as T };
       } catch {
-        opts.rollback?.();
-        showFeedback({ type: 'error', message: opts.errorMessage });
+        if (!isStale()) {
+          opts.rollback?.();
+          showFeedback({ type: 'error', message: opts.errorMessage });
+        }
         return { ok: false };
       }
     },
     [showFeedback]
   );
 
-  return { feedback, dismissFeedback, runMutation };
+  return { feedback, dismissFeedback, runMutation, showFeedback };
 }

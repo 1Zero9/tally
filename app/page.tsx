@@ -73,7 +73,11 @@ export default function TallyPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [moneyMapView, setMoneyMapView] = useState<'auto' | 'custom'>('auto');
-  const { feedback, dismissFeedback, runMutation } = useActionFeedback();
+  const { feedback, dismissFeedback, runMutation, showFeedback } = useActionFeedback();
+  // True only until the very first fetchDatabaseData() completes — not on
+  // every later mutation-triggered refetch — so ExpenseList can show a
+  // real loading state on initial load without flashing on every save.
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const SPENDING_CHIPS: { id: TabId; label: string }[] = [
     { id: 'all', label: 'All spending' },
@@ -121,8 +125,11 @@ export default function TallyPage() {
 
   // Fetch users & expenses from Prisma PostgreSQL API
   const fetchDatabaseData = useCallback(async () => {
+    // 1. Fetch Users + confirm auth — this one stays blocking (a stale or
+    // dead session means nothing else below can succeed either), but is
+    // itself wrapped so a bare network hiccup here doesn't abandon the
+    // rest of the load, matching every other resource below.
     try {
-      // 1. Fetch Users
       const userRes = await fetch('/api/users');
       if (userRes.status === 401) {
         // The Edge middleware can't validate sessions (no Prisma access
@@ -143,68 +150,76 @@ export default function TallyPage() {
       if (userData.status === 'ok' && Array.isArray(userData.users)) {
         setUsers(userData.users);
       }
-
-      // 2. Fetch Expenses from PostgreSQL
-      const expRes = await fetch('/api/expenses');
-      const expData = await expRes.json();
-      if (expData.status === 'ok' && Array.isArray(expData.expenses)) {
-        setExpenses(expData.expenses);
-      }
-
-      // 3. Fetch Income from PostgreSQL
-      const incRes = await fetch('/api/income');
-      const incData = await incRes.json();
-      if (incData.status === 'ok' && Array.isArray(incData.incomes)) {
-        setIncomes(incData.incomes);
-      }
-
-      // 4. Fetch Accounts from PostgreSQL
-      const accRes = await fetch('/api/accounts');
-      const accData = await accRes.json();
-      if (accData.status === 'ok' && Array.isArray(accData.accounts)) {
-        setAccounts(accData.accounts);
-        setEncryptionConfigured(!!accData.encryptionConfigured);
-      }
-
-      // 5. Fetch Transfers from PostgreSQL
-      const transRes = await fetch('/api/transfers');
-      const transData = await transRes.json();
-      if (transData.status === 'ok' && Array.isArray(transData.transfers)) {
-        setTransfers(transData.transfers);
-      }
-
-      // 6. Fetch Goals from PostgreSQL
-      const goalRes = await fetch('/api/goals');
-      const goalData = await goalRes.json();
-      if (goalData.status === 'ok' && Array.isArray(goalData.goals)) {
-        setGoals(goalData.goals);
-      }
-
-      // 7. Fetch household-defined custom Categories
-      const catRes = await fetch('/api/categories');
-      const catData = await catRes.json();
-      if (catData.status === 'ok' && Array.isArray(catData.categories)) {
-        setCustomCategories(catData.categories);
-      }
-
-      // 8. Fetch per-category budgets
-      const budgetRes = await fetch('/api/budgets');
-      const budgetData = await budgetRes.json();
-      if (budgetData.status === 'ok' && Array.isArray(budgetData.budgets)) {
-        setBudgets(budgetData.budgets);
-      }
-
-      // 9. Refresh live currency rates (self-healing cache, falls back to
-      // the hardcoded defaults in currencies.ts on any failure below).
-      const rateRes = await fetch('/api/exchange-rate-cache');
-      const rateData = await rateRes.json();
-      if (rateData.status === 'ok' && rateData.rates) {
-        updateLiveRates(rateData.rates);
-      }
     } catch (err) {
-      console.error('Failed to load from database:', err);
+      console.error('Failed to load users:', err);
     }
-  }, []);
+
+    // 2-9. Every other resource loads independently — one endpoint failing
+    // (network error, bad JSON, a non-ok API response) must not prevent
+    // the rest from loading, so each gets its own try/catch rather than
+    // one shared block that aborts on the first thrown error.
+    const failed: string[] = [];
+
+    const loadResource = async (label: string, url: string, onData: (data: Record<string, unknown>) => void) => {
+      try {
+        const res = await fetch(url);
+        const data = (await res.json()) as Record<string, unknown>;
+        if (data.status === 'ok') {
+          onData(data);
+        } else {
+          failed.push(label);
+        }
+      } catch (err) {
+        console.error(`Failed to load ${label}:`, err);
+        failed.push(label);
+      }
+    };
+
+    await Promise.all([
+      loadResource('expenses', '/api/expenses', (data) => {
+        if (Array.isArray(data.expenses)) setExpenses(data.expenses as ExpenseItem[]);
+      }),
+      loadResource('income', '/api/income', (data) => {
+        if (Array.isArray(data.incomes)) setIncomes(data.incomes as IncomeItem[]);
+      }),
+      loadResource('accounts', '/api/accounts', (data) => {
+        if (Array.isArray(data.accounts)) {
+          setAccounts(data.accounts as AccountItem[]);
+          setEncryptionConfigured(!!data.encryptionConfigured);
+        }
+      }),
+      loadResource('transfers', '/api/transfers', (data) => {
+        if (Array.isArray(data.transfers)) setTransfers(data.transfers as TransferItem[]);
+      }),
+      loadResource('goals', '/api/goals', (data) => {
+        if (Array.isArray(data.goals)) setGoals(data.goals as GoalItem[]);
+      }),
+      loadResource('categories', '/api/categories', (data) => {
+        if (Array.isArray(data.categories)) setCustomCategories(data.categories as CustomCategoryItem[]);
+      }),
+      loadResource('budgets', '/api/budgets', (data) => {
+        if (Array.isArray(data.budgets)) setBudgets(data.budgets as BudgetItem[]);
+      }),
+      // Self-healing exchange-rate cache — falls back to the hardcoded
+      // defaults in currencies.ts, so its own failure doesn't need to be
+      // surfaced in the "some data failed to load" banner below.
+      loadResource('exchange rates', '/api/exchange-rate-cache', (data) => {
+        if (data.rates) updateLiveRates(data.rates as Partial<Record<CurrencyCode, number>>);
+      }),
+    ]);
+
+    if (failed.length > 0) {
+      const visibleFailures = failed.filter((label) => label !== 'exchange rates');
+      if (visibleFailures.length > 0) {
+        showFeedback({
+          type: 'error',
+          message: `Some data failed to load: ${visibleFailures.join(', ')} — try refreshing.`,
+        });
+      }
+    }
+
+    setIsInitialLoading(false);
+  }, [showFeedback]);
 
   // Check auth on load
   useEffect(() => {
@@ -379,6 +394,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isActive: updatedActive }) }),
       {
+        key: id,
         optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isActive: updatedActive } : e))),
         rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
         errorMessage: 'Failed to update status — please try again.',
@@ -393,6 +409,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isPending: false, isActive: true }) }),
       {
+        key: id,
         optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isPending: false, isActive: true } : e))),
         rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
         errorMessage: 'Failed to activate planned expense — please try again.',
@@ -408,6 +425,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isPaidThisCycle: updatedPaid }) }),
       {
+        key: id,
         optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, isPaidThisCycle: updatedPaid } : e))),
         rollback: () => setExpenses((prev) => prev.map((e) => (e.id === id ? item : e))),
         errorMessage: 'Failed to update paid status — please try again.',
@@ -480,6 +498,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/expenses?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setExpenses((prev) => prev.filter((e) => e.id !== id)),
         rollback: () => setExpenses((prev) => [item, ...prev]),
         errorMessage: 'Failed to delete expense — please try again.',
@@ -512,6 +531,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/budgets?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setBudgets((prev) => prev.filter((b) => b.id !== id)),
         rollback: () => { if (item) setBudgets((prev) => [...prev, item]); },
         errorMessage: 'Failed to delete budget — please try again.',
@@ -553,6 +573,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/expenses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...expense, amount: newAmount }) }),
       {
+        key: expense.id,
         optimistic: () => setExpenses((prev) => prev.map((e) => (e.id === expense.id ? { ...e, amount: newAmount } : e))),
         rollback: () => setExpenses((prev) => prev.map((e) => (e.id === expense.id ? expense : e))),
         errorMessage: 'Failed to update amount — please try again.',
@@ -568,6 +589,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isActive: updatedActive }) }),
       {
+        key: id,
         optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isActive: updatedActive } : i))),
         rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
         errorMessage: 'Failed to update income status — please try again.',
@@ -582,6 +604,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isReceivedThisCycle: updatedReceived }) }),
       {
+        key: id,
         optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: updatedReceived } : i))),
         rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
         errorMessage: 'Failed to update income received status — please try again.',
@@ -600,6 +623,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch('/api/income', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, isReceivedThisCycle: true, receivedAmount: actualAmount, receivedDate }) }),
       {
+        key: id,
         optimistic: () => setIncomes((prev) => prev.map((i) => (i.id === id ? { ...i, isReceivedThisCycle: true } : i))),
         rollback: () => setIncomes((prev) => prev.map((i) => (i.id === id ? item : i))),
         errorMessage: 'Failed to mark income received — please try again.',
@@ -655,6 +679,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/income?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setIncomes((prev) => prev.filter((i) => i.id !== id)),
         rollback: () => setIncomes((prev) => [item, ...prev]),
         errorMessage: 'Failed to delete income — please try again.',
@@ -686,6 +711,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/accounts?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setAccounts((prev) => prev.filter((a) => a.id !== id)),
         rollback: () => setAccounts((prev) => [...prev, item]),
         errorMessage: 'Failed to delete account — please try again.',
@@ -721,6 +747,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/transfers?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setTransfers((prev) => prev.filter((t) => t.id !== id)),
         rollback: () => { if (item) setTransfers((prev) => [item, ...prev]); },
         errorMessage: 'Failed to delete transfer — please try again.',
@@ -752,6 +779,7 @@ export default function TallyPage() {
     await runMutation(
       () => fetch(`/api/goals?id=${id}`, { method: 'DELETE' }),
       {
+        key: id,
         optimistic: () => setGoals((prev) => prev.filter((g) => g.id !== id)),
         rollback: () => setGoals((prev) => [...prev, item]),
         errorMessage: 'Failed to delete goal — please try again.',
@@ -979,6 +1007,7 @@ export default function TallyPage() {
             {/* Complete Household Ledger */}
             <ExpenseList
               expenses={liveExpenses}
+              isLoading={isInitialLoading}
               currency={currency}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}

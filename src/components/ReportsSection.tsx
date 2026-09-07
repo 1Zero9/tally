@@ -54,24 +54,36 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
   const [period, setPeriod] = useState<HistoryPeriod>('6');
   const [transactions, setTransactions] = useState<ReportTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setLoadError(false);
     fetch(`/api/reports/transactions?period=${period}`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        if (data.status === 'ok') setTransactions(data.transactions || []);
+        if (data.status === 'ok') {
+          setTransactions(data.transactions || []);
+        } else {
+          setLoadError(true);
+        }
       })
-      .catch((err) => console.error('Failed to load report transactions:', err))
+      .catch((err) => {
+        console.error('Failed to load report transactions:', err);
+        if (!cancelled) setLoadError(true);
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [period]);
+  }, [period, reloadKey]);
+
+  const retry = () => setReloadKey((k) => k + 1);
 
   const months = bucketTransactionsByMonth(transactions, currency);
   const categoryRows = groupSpendByCategory(transactions, currency, customCategories);
@@ -123,6 +135,16 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
       {loading ? (
         <div className="ha-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.82rem' }}>
           Loading report…
+        </div>
+      ) : loadError ? (
+        <div className="ha-card" style={{
+          padding: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--ha-red)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
+        }}>
+          <span>Couldn&apos;t load report data.</span>
+          <button onClick={retry} className="btn btn-secondary" style={{ fontSize: '0.78rem' }}>
+            Retry
+          </button>
         </div>
       ) : reportType === 'trends' ? (
         <TrendsReport months={months} maxMonthValue={maxMonthValue} currency={currency} />

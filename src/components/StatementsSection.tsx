@@ -17,6 +17,7 @@ interface StatementsSectionProps {
 export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, incomes, accounts, householdCurrency, onExpensesChanged, customCategories = [], onCategoryCreated }) => {
   const [imports, setImports] = useState<StatementImportSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewImportId, setReviewImportId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -24,11 +25,17 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
   const [isSavingRename, setIsSavingRename] = useState(false);
 
   const fetchImports = useCallback(() => {
+    setLoadError(false);
     fetch('/api/statements')
       .then((res) => res.json())
       .then((data) => {
-        if (data.status === 'ok') setImports(data.imports);
+        if (data.status === 'ok') {
+          setImports(data.imports);
+        } else {
+          setLoadError(true);
+        }
       })
+      .catch(() => setLoadError(true))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -119,7 +126,20 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
           </button>
         </div>
 
-        {!isLoading && imports.length === 0 && (
+        {!isLoading && loadError && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
+            padding: '0.85rem 1rem', borderRadius: 'var(--ha-radius-sm)',
+            backgroundColor: 'var(--ha-red-tint)', border: '1px solid var(--ha-red)', color: 'var(--ha-red)', fontSize: '0.85rem',
+          }}>
+            <span>Couldn&apos;t load your statement imports.</span>
+            <button onClick={fetchImports} className="btn btn-secondary" style={{ fontSize: '0.78rem', flexShrink: 0 }}>
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !loadError && imports.length === 0 && (
           <div style={{ textAlign: 'center', padding: '1.5rem 1rem', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
             No statements imported yet.
           </div>

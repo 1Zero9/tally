@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.64.0';
+export const APP_VERSION = '1.65.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.65.0',
+    date: '2026-09-07',
+    changes: [
+      'Fixed a race where two quick edits to the same bill, income or account in close succession (e.g. a slow connection racing a fast retry) could let an old failed request silently undo a newer, already-successful change — only the most recent action for a given record can now affect it once it resolves.',
+      'If one part of your data fails to load (e.g. a network hiccup on transfers), the rest of the app now loads normally instead of everything silently stopping — you\'ll see a clear message naming what failed to load.',
+      'Statement imports and Reports now show a clear "failed to load, retry" message instead of silently appearing empty when their data can\'t be fetched.',
+      'The bills ledger now shows a loading indicator on first load instead of a moment of "your ledger is clean" before your data actually arrives.',
+    ],
+  },
   {
     version: '1.64.0',
     date: '2026-09-06',

@@ -4,7 +4,7 @@ import { CATEGORY_LIST, getCategoryMeta } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle } from '../utils/formatters';
 import { hasTextSelection } from '../utils/dom';
-import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal, Loader2 } from 'lucide-react';
 
 function isOverdue(dateStr: string): boolean {
   if (!dateStr) return false;
@@ -40,6 +40,10 @@ interface ExpenseListProps {
   onQuickUpdateAmount: (expense: ExpenseItem, newAmount: number) => void;
   onContactVendor: (expense: ExpenseItem) => void;
   customCategories?: CustomCategoryItem[];
+  /** True only while the very first load is still in flight — lets the
+   * list show a real loading state instead of momentarily flashing the
+   * "ledger is clean" empty state before data has actually arrived. */
+  isLoading?: boolean;
 }
 
 export const ExpenseList: React.FC<ExpenseListProps> = ({
@@ -57,6 +61,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   onQuickUpdateAmount,
   onContactVendor,
   customCategories = [],
+  isLoading = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'unpaid' | 'overdue'>('all');
@@ -221,7 +226,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
       </div>
 
       {/* Ledger Table Rows */}
-      {expenses.length === 0 ? (
+      {isLoading && expenses.length === 0 ? (
+        <div style={{ padding: '3.5rem 2rem', textAlign: 'center', color: 'var(--ha-muted)' }}>
+          <Loader2 size={24} className="spin" style={{ marginBottom: '0.75rem' }} />
+          <p style={{ fontSize: '0.85rem' }}>Loading your ledger…</p>
+        </div>
+      ) : expenses.length === 0 ? (
         <div style={{ padding: '3.5rem 2rem', textAlign: 'center', color: 'var(--ha-muted)' }}>
           <div style={{
             width: '48px',
