@@ -787,14 +787,35 @@ export default function TallyPage() {
     );
   };
 
-  // Scroll to and focus the Ask Tally input
+  // Scroll to and focus the Ask Tally input. The Ask box only exists in the
+  // DOM on Overview (every other tab is gated to its own content), so the
+  // top-bar shortcut has to switch there first when invoked from elsewhere
+  // — otherwise getElementById finds nothing and silently does nothing,
+  // breaking the shortcut's whole "works from anywhere" purpose.
+  const [pendingFocusAsk, setPendingFocusAsk] = useState(false);
+
   const handleFocusAsk = () => {
+    if (activeTab !== 'overview') {
+      setActiveTab('overview');
+      setPendingFocusAsk(true);
+      return;
+    }
     const input = document.getElementById('ask-tally-input');
     if (input) {
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
       input.focus();
     }
   };
+
+  useEffect(() => {
+    if (!pendingFocusAsk || activeTab !== 'overview') return;
+    const input = document.getElementById('ask-tally-input');
+    if (input) {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.focus();
+    }
+    setPendingFocusAsk(false);
+  }, [pendingFocusAsk, activeTab]);
 
   // Show loading spinner while checking auth
   if (isAuthenticated === null) {

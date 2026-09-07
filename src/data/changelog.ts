@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.66.0';
+export const APP_VERSION = '1.67.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.67.0',
+    date: '2026-09-07',
+    changes: [
+      'Fixed the "Ask Tally" shortcut in the top bar — clicking it from any page other than Overview silently did nothing, since the Ask box only exists there. It now switches to Overview and focuses the Ask box, from anywhere in the app, as intended.',
+    ],
+  },
   {
     version: '1.66.0',
     date: '2026-09-07',
