@@ -210,6 +210,10 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
   const [categorizingGroupKey, setCategorizingGroupKey] = useState<string | null>(null);
   const [selectedGroupCategory, setSelectedGroupCategory] = useState<Record<string, ExpenseCategory | ''>>({});
+  // "Log all as transfer" for a group — which key's panel is open, and the
+  // counterparty account chosen for it ('' = external payee).
+  const [loggingTransferGroupKey, setLoggingTransferGroupKey] = useState<string | null>(null);
+  const [groupTransferAccountId, setGroupTransferAccountId] = useState<Record<string, string>>({});
   const [isLoadingReview, setIsLoadingReview] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [busyGroupKey, setBusyGroupKey] = useState<string | null>(null);
@@ -279,6 +283,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setNicknameInput({});
     setCategorizingGroupKey(null);
     setSelectedGroupCategory({});
+    setLoggingTransferGroupKey(null);
+    setGroupTransferAccountId({});
     setCollapsedGroups(new Set());
     setBusyGroupKey(null);
     setAiRows(null);
@@ -747,15 +753,18 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     });
   };
 
-  const resolveGroup = async (group: TxGroup, action: 'ignore' | 'log_transfer') => {
+  const resolveGroup = async (group: TxGroup, action: 'ignore' | 'log_transfer', counterpartyAccountId?: string) => {
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
       await Promise.all(
         unmatched.map((tx) =>
-          resolveTx(tx.id, action, action === 'log_transfer' ? { vendorName: tx.vendorName || tx.rawDescription } : undefined)
+          resolveTx(tx.id, action, action === 'log_transfer'
+            ? { vendorName: tx.vendorName || tx.rawDescription, counterpartyAccountId: counterpartyAccountId || undefined }
+            : undefined)
         )
       );
+      setLoggingTransferGroupKey(null);
     } finally {
       setBusyGroupKey(null);
     }
@@ -1650,11 +1659,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     </button>
                                     <button
                                       disabled={isGroupBusy}
-                                      onClick={() => resolveGroup(group, 'log_transfer')}
+                                      onClick={() => { setCategorizingGroupKey(null); setLoggingTransferGroupKey(loggingTransferGroupKey === group.key ? null : group.key); }}
                                       className="btn btn-secondary"
                                       style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
                                     >
-                                      {isGroupBusy ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />} Log all
+                                      {isGroupBusy ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />} Log all as transfer
                                     </button>
                                     <button
                                       disabled={isGroupBusy}
@@ -1729,6 +1738,46 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                               </div>
                             </div>
                           )}
+
+                          {isMultiple && loggingTransferGroupKey === group.key && (() => {
+                            const groupUnmatchedCount = group.items.filter((t) => t.status === 'UNMATCHED').length;
+                            const groupIsCredit = group.items[0].direction === 'CREDIT';
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--ha-radius-sm)', backgroundColor: '#f0f0ec' }}>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>
+                                  {groupIsCredit
+                                    ? `All ${groupUnmatchedCount} came into ${importAccount?.name || 'this account'} — where from?`
+                                    : `All ${groupUnmatchedCount} left ${importAccount?.name || 'this account'} — where to?`}
+                                </span>
+                                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <select
+                                    value={groupTransferAccountId[group.key] ?? ''}
+                                    onChange={(e) => setGroupTransferAccountId((prev) => ({ ...prev, [group.key]: e.target.value }))}
+                                    className="ha-input"
+                                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    <option value="">External — a payee outside the household</option>
+                                    {accounts.filter((a) => a.id !== accountId).map((a) => (
+                                      <option key={a.id} value={a.id}>
+                                        {groupIsCredit ? 'From ' : 'To '}{a.name}{a.institution ? ` — ${a.institution}` : ''}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    disabled={isGroupBusy}
+                                    onClick={() => resolveGroup(group, 'log_transfer', groupTransferAccountId[group.key])}
+                                    className="btn btn-primary"
+                                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                  >
+                                    {isGroupBusy ? <Loader2 size={12} className="spin" /> : <PlusCircle size={12} />} Log all {groupUnmatchedCount} as transfer
+                                  </button>
+                                  <button onClick={() => setLoggingTransferGroupKey(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
 
                           {!isCollapsed && group.items.map((tx) => {
                       const isBusy = busyTxId === tx.id;

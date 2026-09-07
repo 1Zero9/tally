@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.74.0';
+export const APP_VERSION = '1.75.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.75.0',
+    date: '2026-09-07',
+    changes: [
+      'Statement import — "Log all as transfer" on a merchant group (e.g. a run of Revolut top-ups) now asks which account the money went to / came from before logging, instead of silently defaulting every row to an external payee. Pick one of your own accounts and the whole group is recorded as internal transfers.',
+    ],
+  },
   {
     version: '1.74.0',
     date: '2026-09-07',
