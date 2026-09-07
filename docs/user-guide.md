@@ -4,6 +4,8 @@
 
 Tally is a shared household ledger for expenses, income, accounts, and the real journey your money takes — plus AI-assisted insights to help you save. This guide walks through every part of the app, section by section, so you can jump straight to what you need.
 
+The same content in this file also powers the [in-app searchable user guide](/guide) (with search, an index, quick links, and screenshots), the in-app Help guide, and the "Ask Tally" assistant's answers to how-to questions — all three draw from the same source, so they stay in sync with what the app can actually do.
+
 ---
 
 ## Why Tally?
@@ -21,9 +23,9 @@ Most budgeting apps show you category totals and ask you to trust them. Tally is
 
 1. [Signing in](#1-signing-in)
 2. [Overview](#2-overview)
-3. [Spending](#3-spending)
-4. [Bills (calendar)](#4-bills-calendar)
-5. [Income](#5-income)
+3. [Asking Tally a question](#3-asking-tally-a-question)
+4. [Spending](#4-spending)
+5. [Bills](#5-bills)
 6. [Accounts](#6-accounts)
 7. [Flow (the money journey ledger)](#7-flow-the-money-journey-ledger)
 8. [Goals](#8-goals)
@@ -31,13 +33,12 @@ Most budgeting apps show you category totals and ask you to trust them. Tally is
 10. [Money Map](#10-money-map)
 11. [Insights](#11-insights)
 12. [Reports](#12-reports)
-13. [Asking Tally a question](#13-asking-tally-a-question)
-14. [Settings & preferences](#14-settings--preferences)
-15. [Sharing your household workspace](#15-sharing-your-household-workspace)
-16. [Admin & users](#16-admin--users)
+13. [Settings & preferences](#13-settings--preferences)
+14. [Sharing your household workspace](#14-sharing-your-household-workspace)
+15. [Privacy & security](#15-privacy--security)
+16. [Frequently asked questions](#16-frequently-asked-questions)
 17. [Data export & backup](#17-data-export--backup)
-18. [Privacy & security](#18-privacy--security)
-19. [Frequently asked questions](#19-frequently-asked-questions)
+18. [Admin & users](#18-admin--users)
 
 ---
 
@@ -57,34 +58,41 @@ The landing dashboard once you sign in. It shows your household's current-period
 - A **statement import** banner shows here whenever you've never imported one, or it's been 30+ days since your last one — even before you've added anything else, so importing a statement is a one-click primary action, not something buried in Flow. Dismissing it snoozes it for two weeks rather than turning it off for good; it naturally stops showing once you've imported something recently.
 - A **Net worth** figure appears once at least one [Account](#6-accounts) has a balance set — assets (checking, savings, PayPal, investments, etc.) minus credit cards and loans. It's blurred the same way as "Left after bills" until you click to reveal it.
 
-## 3. Spending
+## 3. Asking Tally a question
+
+Click the search icon in the top bar to ask a plain-English question about your own household data — e.g. *"where can I save"* or *"what's going out this week"* — or a how-to question like *"how do I import a statement"*. Tally answers using only your household's own records for the first kind of question, and this guide's own content for the second; it never sees or uses data from any other household. Once you have a few entries, quick-question buttons appear under the search box for common questions.
+
+## 4. Spending
 
 The **Spending** tab (and its sub-views: **All**, **AI & Tech**, **Utilities**, **Education**, **Mortgage, Loans & Big Purchases**) is your recurring-bill ledger — subscriptions, utilities, household costs, and big-ticket items like mortgage or loan repayments and one-off large purchases.
 
-- **Add expense**: set the amount, currency, billing cycle (`weekly`, `monthly`, `quarterly`, `termly`, `annual`, `once`), category, payment method, and optional contract end date.
+- **Add expense**: set the amount, currency, billing cycle (`weekly`, `monthly`, `quarterly`, `termly`, `annual`, `once`), category, and payment method up front — everything else (assigned member, contract end date, reimbursement, vendor contact, notes) sits behind an "Add optional details" toggle, collapsed by default, and expands automatically when you edit a bill that already has any of that set.
 - **Custom categories**: don't see a fit among the built-in categories (e.g. road/bridge tolls)? Pick **+ Create new category…** at the bottom of the category dropdown, name it, and it's instantly available on every category picker in the app — shared across the household, with an automatically assigned colour.
-- **One-off costs**: use billing cycle `once` for a single payment (e.g. a large purchase). It won't recur or roll forward once its date passes — mark it paid or delete it when done. Its date doubles as its payment date: "This month spent", Budgets, and the category charts count it in full in the calendar month it's dated, same as any actual payment — but, unlike a recurring bill's steady-state rate, it only counts in that one month, not every month after.
+- **One-off costs**: use billing cycle `once` for a single payment (e.g. a large purchase). It won't recur or roll forward once its date passes — mark it paid or delete it when done. Its date doubles as its payment date: "This month's committed spend", Budgets, and the category charts count it in full in the calendar month it's dated, same as any actual payment — but, unlike a recurring bill's steady-state rate, it only counts in that one month, not every month after.
 - **Catalog**: add common household bills (Netflix, electricity, broadband, etc.) in one click instead of typing them from scratch.
 - **Usage rating**: mark a subscription as low/medium/high usage — low-usage items are flagged as cancellation candidates in Insights.
 - **Pause / resume**: pause a subscription instead of deleting it, so you keep the history and see it counted in your "already saving" total.
 - **Find and filter**: use the ledger toolbar to search by name, choose one category, filter by payment/activity status, or change the sort order. The spending-mix legend above it is a quick visual summary and does not change the ledger.
-- **Row controls**: **Paid/Unpaid** tracks the current payment cycle; the separately labelled **Active/Paused** switch controls whether the expense is ongoing. **Edit** stays visible, while less common actions—including update amount, contact vendor, duplicate, and delete—are under **More** (•••).
+- **Row controls**: **Paid/Unpaid** tracks the current payment cycle; the separately labelled **Active/Paused** switch controls whether the expense is ongoing. **Edit** stays visible, while less common actions — including update amount, contact vendor, duplicate, and delete — are under **More** (•••).
 - **Contract renewal reminders**: once an expense's contract end date is within 60 days, a badge appears on it, and the household is emailed automatically at 30, 14 and 7 days before it ends.
 - **Contact a vendor**: if an expense has a vendor email saved, open **More** (•••) and choose **Contact vendor** to have Tally draft a polite email (negotiate a better rate, cancel, or ask about renewal terms). You always review and send it yourself — nothing is emailed automatically.
-- **Reimbursements & claims**: set "Reimbursement/claim expected" on any expense (e.g. a health insurance claim on a doctor visit) — the full amount still counts until you mark it received, since the money is genuinely out of pocket until then. Once you enter what was actually received, only the net cost counts toward Spending, Budgets, and category totals from then on — including for a one-off cost, in the month it's actually dated. Once the claim actually lands in an account, log it as a real transfer in Flow too, the same way as the BOI/Revolut money mentioned above, so your account balances and history stay accurate.
+- **Reimbursements & claims**: set "Reimbursement/claim expected" on any expense (e.g. a health insurance claim on a doctor visit) — the full amount still counts until you mark it received, since the money is genuinely out of pocket until then. Once you enter what was actually received, only the net cost counts toward Spending, Budgets, and category totals from then on — including for a one-off cost, in the month it's actually dated. Once the claim actually lands in an account, log it as a real transfer in Flow too, so your account balances and history stay accurate.
 - **Budgets**: on the **All spending** view, set a monthly limit for any category (built-in or custom) under **Set a budget**. Each budgeted category shows a progress bar comparing its current monthly-equivalent spend (the same run-rate figure used everywhere else in Tally) against your limit — turning amber near the limit and red once it's exceeded. Edit or remove a limit any time; categories with no limit set just don't show a bar. This is a simple monthly check, not a full budgeting system — there's no rollover of unused amounts, no spending history, and no per-person split.
+- **Assigning a bill**: open "Add optional details" when adding or editing an expense and use the "Assigned Household Member" dropdown to pick who it belongs to instead of leaving it as "Household (Shared)". Add more household members first from the avatar menu → Admin & users → Household Users → Add household user.
+- **Scanning a bill or receipt**: click the scan icon in the top bar, then paste, drag-and-drop, or upload a screenshot or photo. Tally reads the vendor, amount, date and currency and either pre-fills a new bill for review or matches it to an existing one. A foreign-currency bill gets a one-click live conversion, with the original amount, currency, rate and date kept alongside the converted figure as a small "Originally..." note wherever the bill appears.
 
-## 4. Bills (calendar)
-
-A 31-day renewal calendar showing what's due and when, with urgency indicators for anything renewing within 7 days. Use it to plan cash flow around due dates.
-
-## 5. Income
-
-Record salary, freelance, rental, or other recurring income with an amount, currency, and frequency. Link each income source to the account it lands in (see [Accounts](#6-accounts)) so Money Map and money-flow analysis can use it.
+Switch to the **Income** tab to record salary, freelance, rental, or other recurring income with an amount, currency, and frequency. Link each income source to the account it lands in (see [Accounts](#6-accounts)) so Money Map and money-flow analysis can use it.
 
 **Marking income received**: click **Not yet** to confirm an income has actually landed — this opens a small form for the **actual amount** and **date received**, pre-filled with the usual figures but editable. This matters for anything that fluctuates (a salary that isn't the same every month, tips, commission): once confirmed, "This month's income" everywhere in Tally (Overview, Insights) uses the real amount you entered, not the estimate — the estimate is only ever a fallback for a month nothing real has been logged yet. Click **Received** again to undo a mistake — this also removes the real entry it logged for the month, so re-confirming with the correct figure doesn't double it up.
 
 Money landing on a real bank statement can be tied to an income source directly too — see [Link to income](#7-flow-the-money-journey-ledger) under Statement imports.
+
+## 5. Bills
+
+The **Bills** tab is a payment-schedule view of your recurring bills and contracts only — one-off spending doesn't show here, just in Spending.
+
+- A chart shows bills actually paid over each of the last several months (1/3/6/12mo or all time), so you can see whether your recurring costs are trending up or down.
+- "Upcoming renewals & debits" totals what's due in the next 7 and 30 days, then lists them chronologically — a quick way to plan cash flow around due dates without scanning the full Spending ledger.
 
 ## 6. Accounts
 
@@ -93,7 +101,6 @@ Your household's bank accounts, cards, and loans, stored with sensitive fields (
 Supported account types: **Checking, Savings, Credit Union, Credit Card, Debit Card, PayPal, Loan, Investment, Other**.
 
 - **Current balance**: optionally set a balance and an "as of" date on any account. This is entered manually — Tally has no live bank sync, so it's only as current as you keep it — but it's what powers the **Net worth** figure on Overview (assets minus credit cards and loans).
-
 - Link expenses to the account they're paid from, and income to the account it's deposited into — this powers Money Map and the Insights AI analysis.
 - For a **Loan**, you can track the original amount, interest rate, term, and payoff date.
 - Don't have any accounts yet? You don't need to start here — [Statement imports](#7-flow-the-money-journey-ledger) let you add your first account inline, right from the import screen.
@@ -128,7 +135,7 @@ Under Flow, **Statement imports** lets you cross-check a real bank or credit-car
 - Tally suggests matches against your existing bills and transfers, and flags recurring-but-untracked charges worth checking — but only auto-confirms a merchant you've personally confirmed before. Everything else waits in **Needs review**.
 - A suggested match is only ever a guess: the confirm and correct buttons are equally weighted, and a low-confidence guess shows a reassurance note. Correcting a match also improves future suggestions for that merchant.
 - Not a bill you've tracked? **Add as expense** logs it with a proper spending category (remembered per merchant next time) — or use **Log as transfer** for a quick, uncategorized entry. Either one has an optional note field, so something worth remembering the context of (e.g. a car service, or a large one-off repair) can get proper detail right there — no need to log it manually beforehand just to have somewhere to put a note. Routine small spending (a coffee, weekly shopping) doesn't need this at all — just let it show up here and clear it in a batch when you next reconcile.
-- **Money landing in your account**: a credit (money in) row shows different buttons — **Link to income** ties it to one of your recorded income sources at its real amount and date (a fluctuating salary reconciles here automatically), or use **Log as transfer** for a one-off credit that isn't tracked income (a refund, a gift). Linking marks that income "Received" too, so you don't need to separately confirm it under [Income](#5-income).
+- **Money landing in your account**: a credit (money in) row shows different buttons — **Link to income** ties it to one of your recorded income sources at its real amount and date (a fluctuating salary reconciles here automatically), or use **Log as transfer** for a one-off credit that isn't tracked income (a refund, a gift). Linking marks that income "Received" too, so you don't need to separately confirm it under [Spending](#4-spending).
 - **Duplicates are caught automatically**: a row that matches one you've already imported (same date, amount, direction and merchant) is flagged **Duplicate** and kept out of Needs review, instead of risking being logged twice — this is what catches the common case of two statements overlapping by a few days. Check the **Duplicates** tab if you want to double-check them; **Not a duplicate** puts a row back in Needs review if Tally got it wrong.
 - **Sort the list**: use the Sort dropdown next to the filter tabs to order rows by newest/oldest, highest/lowest amount, merchant A–Z, or needs-review-first — handy once a single statement covers several months' worth of rows. Merchant grouping stays in place either way; the sort just controls which group/row comes first.
 
@@ -168,6 +175,8 @@ A visual diagram of your money's journey, with two modes:
 - **Actual journey** (default once you've logged transfers in Flow): built from your real dated Transfer records. Three columns — money in (external sources) → your accounts → money out (external destinations) — plus a distinct violet path for direct account-to-account transfers. Filter by **All time / 90 days / 30 days**.
 - **Projected**: the original monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you've logged any real transfers, or to see a "typical month" projection alongside the real history.
 
+There's also **My map**, your own freeform, editable canvas — add any object (an account, a loan, anything not yet tracked), connect objects with a directional arrow, and drag them around to sketch out exactly how your money moves.
+
 Hover any connection to see the exact amount. Account circles are colored blue when net-positive and red when net-negative or a loan.
 
 ## 11. Insights
@@ -190,21 +199,45 @@ A transfer between two of the household's own accounts never counts as spend or 
 
 To get a clean PDF, use your browser's Print (Save as PDF) from the Reports tab — it prints just the report, without the navigation or buttons.
 
-## 13. Asking Tally a question
+## 13. Settings & preferences
 
-Click the search icon in the top bar to ask a plain-English question about your own household data — e.g. *"where can I save"* or *"what's going out this week"*. Tally answers using only your household's expense and income records; it never sees or uses data from any other household.
+Open via the gear icon in the top bar. Set your preferred display currency (EUR, GBP, USD, CAD, AUD, JPY — amounts convert automatically), and manage other household-wide preferences from the same place, including shortcuts to the 1-Click Catalog, Export, and Share Workspace.
 
-## 14. Settings & preferences
-
-Open via the gear icon in the top bar. Set your preferred display currency (EUR, GBP, USD, CAD, AUD, JPY — amounts convert automatically), and manage other household-wide preferences.
-
-## 15. Sharing your household workspace
+## 14. Sharing your household workspace
 
 Click **Share** to send a direct email invite to a partner or family member — enter their email (and optionally a name and role) and Tally adds them to your household right away. If email sending is configured, they'll also get an email with a link to the app; either way, they can sign in with that email as soon as you've added them. There's no shareable link or code — Tally is invite-only, and only an admin can add someone.
 
 Everyone in the same household sees the same shared ledger — accounts, expenses, income, transfers, and goals are all shared, not per-person.
 
-## 16. Admin & users
+## 15. Privacy & security
+
+- Passwordless sign-in via one-time 6-digit codes — no passwords stored anywhere.
+- Session tokens live in a secure, httpOnly cookie, valid up to 30 days — but an idle tab automatically signs out after 30 minutes of no activity, independent of that 30-day window.
+- The screen blurs automatically for privacy after 90 seconds of inactivity (or when the tab loses focus) — select **Reveal Tally** to return. Toggle it manually anytime with the eye icon in the top bar.
+- A handful of the most sensitive figures — **Left after bills** on Overview, and every income amount (monthly total and each source) on the Income tab — carry a second, independent blur on top of that. It stays blurred even when the screen-wide privacy blur above is switched off, and each figure only unblurs on its own click (revealing one doesn't reveal the others). Once you click to reveal one, it stays visible for the rest of your session.
+- Sensitive account fields (account numbers, online banking logins, security notes) are encrypted at rest and only decrypted on an explicit "reveal" action — or, for statement imports, an on-the-fly admin-only comparison that returns a match/mismatch signal but never the decrypted value itself.
+- AI features (the Ask box and Money flow analysis) only ever send your own household's data, and only when you actively trigger them — nothing runs automatically in the background.
+- Full details: see the in-app **Privacy** page (footer link) and the **AI transparency** page.
+
+## 16. Frequently asked questions
+
+The same questions are also answerable directly from the **Ask Tally** box (see [§3](#3-asking-tally-a-question)) — click one under "Frequently asked," or type your own.
+
+- **What happens if you delete a statement import?** Any bill or one-off payment you already logged from it stays in your ledger untouched. But every row still sitting in Needs review, Ignored, or flagged as a Duplicate is permanently deleted along with the import — there's no undo, so resolve or double-check those first. For a stronger reset, "Undo this import" removes everything the import produced, bills and transfers included — not just the unresolved rows.
+- **What happens if you delete an account?** Expenses, income, transfers and savings goals linked to it are not deleted — they just lose that account link (e.g. "paid from" becomes unset). The one exception is a custom Money Map: any node you placed for that account is removed along with it.
+- **What happens if you delete a custom category?** Expenses already using it are not deleted or reassigned — they just show a generic fallback label until you edit them with a different category.
+- **What happens if you delete an expense that a statement row was matched to?** That statement row keeps showing "Matched" but with no name — click "Undo" on it to send it back to Needs review, where you can resolve it again.
+- **What happens if you remove a household member?** Nothing they created — bills, income, transfers, goals — is deleted. Those records stay exactly as they are, they just lose the "added by" attribution.
+
+## 17. Data export & backup
+
+Click **Export** at any time to download your bills as a CSV spreadsheet or a JSON file — a portable copy to keep or move elsewhere.
+
+For a real, restorable backup, admins use **Admin → Database Snapshots**: it captures your entire household in one snapshot — every account, goal, bill, income record, transfer, statement import (with its matched rows), custom category, budget, and your custom Money Map — stored directly in the cloud, and **Restore** replaces the household's current data with what's in that snapshot — a genuine point-in-time undo, not just a file download. The restore confirmation shows exactly how old the snapshot is and how many records it holds before you confirm.
+
+A snapshot is also taken **automatically every day**, tagged "Automatic" in the list — the most recent 14 are always kept, so there's a real backup even if nobody remembers to click "Create Snapshot." Manual snapshots you create yourself are never automatically deleted.
+
+## 18. Admin & users
 
 Available to **Admin** and **Backup Admin** roles via the avatar menu. Manage household member accounts, change roles, and remove accounts that no longer belong. A household must always keep at least one Admin — Tally won't let you remove the last one. Admins can also trigger a full database backup export.
 
@@ -215,34 +248,6 @@ Roles:
 - **Member** — day-to-day use: log, categorize, and edit household expenses, income, accounts, transfers, and goals.
 - **Backup Admin** — a disaster-recovery role for emergency failover if the primary Admin is unavailable. Carries identical permissions to Admin today (same access to users, sharing, and backups) — it's a separate role only so it's clear who the "usual" admin is, not a restricted tier.
 
-## 17. Data export & backup
-
-Click **Export** at any time to download your bills as a CSV spreadsheet or a JSON file — a portable copy to keep or move elsewhere.
-
-For a real, restorable backup, admins use **Admin → Database Snapshots**: it captures your entire household in one snapshot — every account, goal, bill, income record, transfer, statement import (with its matched rows), custom category, budget, and your custom Money Map — stored directly in the cloud, and **Restore** replaces the household's current data with what's in that snapshot — a genuine point-in-time undo, not just a file download. The restore confirmation shows exactly how old the snapshot is and how many records it holds before you confirm, since it can't be undone once you do.
-
-A snapshot is also taken **automatically every day**, tagged "Automatic" in the list — the most recent 14 are always kept, so there's a real backup even if nobody remembers to click "Create Snapshot." Manual snapshots you create yourself are never automatically deleted.
-
-## 18. Privacy & security
-
-- Passwordless sign-in via one-time 6-digit codes — no passwords stored anywhere.
-- Session tokens live in a secure, httpOnly cookie, valid up to 30 days — but an idle tab automatically signs out after 30 minutes of no activity, independent of that 30-day window.
-- The screen blurs automatically for privacy after 90 seconds of inactivity (or when the tab loses focus) — select **Reveal Tally** to return. Toggle it manually anytime with the eye icon in the top bar.
-- A handful of the most sensitive figures — **Left after bills** on Overview, and every income amount (monthly total and each source) on the Income tab — carry a second, independent blur on top of that. It stays blurred even when the screen-wide privacy blur above is switched off, and each figure only unblurs on its own click (revealing one doesn't reveal the others). Once you click to reveal one, it stays visible for the rest of your session.
-- Sensitive account fields (account numbers, online banking logins, security notes) are encrypted at rest and only decrypted on an explicit "reveal" action — or, for statement imports, an on-the-fly admin-only comparison that returns a match/mismatch signal but never the decrypted value itself.
-- AI features (the Ask box and Money flow analysis) only ever send your own household's data, and only when you actively trigger them — nothing runs automatically in the background.
-- Full details: see the in-app **Privacy** page (footer link) and the **AI transparency** page.
-
-## 19. Frequently asked questions
-
-The same questions are also answerable directly from the **Ask Tally** box (see [§12](#12-asking-tally-a-question)) — click one under "Frequently asked," or type your own.
-
-- **What happens if you delete a statement import?** Any bill or one-off payment you already logged from it stays in your ledger untouched. But every row still sitting in Needs review, Ignored, or flagged as a Duplicate is permanently deleted along with the import — there's no undo, so resolve or double-check those first.
-- **What happens if you delete an account?** Expenses, income, transfers and savings goals linked to it are not deleted — they just lose that account link (e.g. "paid from" becomes unset). The one exception is a custom Money Map: any node you placed for that account is removed along with it.
-- **What happens if you delete a custom category?** Expenses already using it are not deleted or reassigned — they just show a generic fallback label until you edit them with a different category.
-- **What happens if you delete an expense that a statement row was matched to?** That statement row keeps showing "Matched" but with no name — click "Undo" on it to send it back to Needs review, where you can resolve it again.
-- **What happens if you remove a household member?** Nothing they created — bills, income, transfers, goals — is deleted. Those records stay exactly as they are, they just lose the "added by" attribution.
-
 ---
 
-*Still stuck? Use the in-app Help guide (avatar menu → Help guide) for a quick tour, or reach out to whoever set up your household workspace.*
+*Still stuck? Use the in-app Help guide (avatar menu → Help guide), the [full searchable guide](/guide), or reach out to whoever set up your household workspace.*

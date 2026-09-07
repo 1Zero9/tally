@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.67.0';
+export const APP_VERSION = '1.68.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.68.0',
+    date: '2026-09-07',
+    changes: [
+      'The public User Guide (/guide) is now the real, full guide — search, a jump-to index, quick links for the most common tasks, and real screenshots inline, instead of the shorter summary it showed before.',
+      'The in-app Help guide and the "Ask Tally" assistant\'s how-to answers now draw from that same complete content, so all three stay consistent with each other and with what the app actually does.',
+    ],
+  },
   {
     version: '1.67.0',
     date: '2026-09-07',
