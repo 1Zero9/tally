@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.102.2';
+export const APP_VERSION = '1.102.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.102.3',
+    date: '2026-09-08',
+    changes: [
+      'Fixed the statement review list jumping around when you process a single row inside an expanded merchant group. The list now holds its position on that group as the row is resolved and removed, so you no longer have to scroll and find your place again after every item.',
+    ],
+  },
   {
     version: '1.102.2',
     date: '2026-09-08',

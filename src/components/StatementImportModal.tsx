@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   X,
   Upload,
@@ -247,6 +247,49 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [pendingNewAccount, setPendingNewAccount] = useState<{ id: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadedInitialRef = useRef(false);
+
+  // Keep the review list from jumping when a row is resolved. Resolving a
+  // row can shrink or remove it (it leaves the "needs review" filter, or
+  // renders compact), so everything below shifts up and the scroll offset
+  // now points at a different group. Before the state change we note where
+  // the acted-on group sits; right after React commits we nudge scrollTop
+  // so that group stays visually put. Falls back to the group above it if
+  // the acted group was fully cleared out of the list.
+  const reviewScrollRef = useRef<HTMLDivElement>(null);
+  const groupElsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const scrollAnchorRef = useRef<{ key: string; top: number; prevKey: string | null; prevTop: number | null } | null>(null);
+
+  const rememberScrollAnchor = (groupKey: string) => {
+    const container = reviewScrollRef.current;
+    const el = groupElsRef.current.get(groupKey);
+    if (!container || !el) { scrollAnchorRef.current = null; return; }
+    const prev = el.previousElementSibling as HTMLElement | null;
+    scrollAnchorRef.current = {
+      key: groupKey,
+      top: el.getBoundingClientRect().top,
+      prevKey: prev?.dataset.groupKey ?? null,
+      prevTop: prev ? prev.getBoundingClientRect().top : null,
+    };
+  };
+
+  useLayoutEffect(() => {
+    const a = scrollAnchorRef.current;
+    if (!a) return;
+    scrollAnchorRef.current = null;
+    const container = reviewScrollRef.current;
+    if (!container) return;
+
+    let el = groupElsRef.current.get(a.key) as HTMLElement | undefined;
+    let oldTop = el ? a.top : null;
+    if ((!el || oldTop == null) && a.prevKey && a.prevTop != null) {
+      el = groupElsRef.current.get(a.prevKey) as HTMLElement | undefined;
+      oldTop = el ? a.prevTop : null;
+    }
+    if (!el || oldTop == null) return;
+
+    const delta = el.getBoundingClientRect().top - oldTop;
+    if (Math.abs(delta) > 0.5) container.scrollTop += delta;
+  });
 
   const reset = useCallback(() => {
     setStep('upload');
@@ -724,6 +767,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       });
       const data = await res.json();
       if (data.status === 'ok') {
+        const acted = transactions.find((t) => t.id === txId);
+        if (acted) rememberScrollAnchor(acted.normalizedDescription || acted.rawDescription);
         setTransactions((prev) => prev.map((t) => (t.id === txId || (action === 'rename_merchant' && t.normalizedDescription === data.transaction.normalizedDescription) ? { ...t, vendorName: data.transaction.vendorName ?? t.vendorName, ...(t.id === txId ? data.transaction : {}) } : t)));
         setLinkingTxId(null);
         setLinkingIncomeTxId(null);
@@ -866,6 +911,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         const updatedById = new Map<string, StatementTransactionItem>(
           data.transactions.map((t: StatementTransactionItem) => [t.id, t])
         );
+        rememberScrollAnchor(group.key);
         setTransactions((prev) => prev.map((t) => updatedById.get(t.id) || t));
         setCategorizingGroupKey(null);
         onExpensesChanged?.();
@@ -1666,7 +1712,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '440px', overflowY: 'auto' }}>
+                  <div ref={reviewScrollRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '440px', overflowY: 'auto' }}>
                     {filteredTransactions.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
                         {reviewFilter === 'needs_review' && (matchedCount + ignoredCount + duplicateCount) > 0 ? (
@@ -1693,7 +1739,16 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                       const groupCurrency = group.items[0].currency;
 
                       return (
-                        <div key={group.key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div
+                          key={group.key}
+                          data-group-key={group.key}
+                          ref={(el) => {
+                            const m = groupElsRef.current;
+                            if (el) m.set(group.key, el);
+                            else m.delete(group.key);
+                          }}
+                          style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+                        >
                           {isMultiple && (
                             <div
                               style={{
