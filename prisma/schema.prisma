@@ -22,6 +22,8 @@ enum AccountType {
   PAYPAL
   LOAN
   INVESTMENT
+  SHARES
+  STATE_SAVINGS
   OTHER
 }
 

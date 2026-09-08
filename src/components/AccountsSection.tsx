@@ -16,6 +16,8 @@ const TYPE_LABELS: Record<string, string> = {
   PAYPAL: 'PayPal',
   LOAN: 'Loan',
   INVESTMENT: 'Investment',
+  SHARES: 'Shares',
+  STATE_SAVINGS: 'State Savings',
   OTHER: 'Other',
 };
 

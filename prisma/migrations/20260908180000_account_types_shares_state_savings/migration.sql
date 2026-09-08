@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "AccountType" ADD VALUE 'SHARES';
+ALTER TYPE "AccountType" ADD VALUE 'STATE_SAVINGS';

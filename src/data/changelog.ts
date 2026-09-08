@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.92.0';
+export const APP_VERSION = '1.93.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.93.0',
+    date: '2026-09-08',
+    changes: [
+      'Two new account types — Shares and State Savings — so those aren\'t lumped under "Investment". The Savings section on the Progress tab now groups accounts by vehicle (Savings, Credit Union, Investment, Shares, State Savings) with a subtotal per group before the combined total.',
+    ],
+  },
   {
     version: '1.92.0',
     date: '2026-09-08',

@@ -145,6 +145,8 @@ const ACCOUNT_TYPES: { id: AccountType; label: string }[] = [
   { id: 'PAYPAL', label: 'PayPal' },
   { id: 'LOAN', label: 'Loan' },
   { id: 'INVESTMENT', label: 'Investment' },
+  { id: 'SHARES', label: 'Shares' },
+  { id: 'STATE_SAVINGS', label: 'State Savings' },
   { id: 'OTHER', label: 'Other' },
 ];
 

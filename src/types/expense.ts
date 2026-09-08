@@ -50,6 +50,8 @@ export type AccountType =
   | 'PAYPAL'
   | 'LOAN'
   | 'INVESTMENT'
+  | 'SHARES'
+  | 'STATE_SAVINGS'
   | 'OTHER';
 
 export interface UserProfile {
