@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.102.3';
+export const APP_VERSION = '1.103.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.103.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement import: you can now rename a whole merchant group from its header ("Rename" next to "Ignore all"), not just one row at a time. The new name applies to every row in the group and is remembered for future statements from that merchant.',
+    ],
+  },
   {
     version: '1.102.3',
     date: '2026-09-08',

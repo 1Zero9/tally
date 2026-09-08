@@ -221,6 +221,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [billAmountInput, setBillAmountInput] = useState<Record<string, string>>({});
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
+  const [renamingGroupKey, setRenamingGroupKey] = useState<string | null>(null);
+  const [groupNameInput, setGroupNameInput] = useState<Record<string, string>>({});
   const [categorizingGroupKey, setCategorizingGroupKey] = useState<string | null>(null);
   const [selectedGroupCategory, setSelectedGroupCategory] = useState<Record<string, ExpenseCategory | ''>>({});
   // "Log all as transfer" for a group — which key's panel is open, and the
@@ -340,6 +342,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setBillAmountInput({});
     setRenamingTxId(null);
     setNicknameInput({});
+    setRenamingGroupKey(null);
+    setGroupNameInput({});
     setCategorizingGroupKey(null);
     setSelectedGroupCategory({});
     setLoggingTransferGroupKey(null);
@@ -832,6 +836,21 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+  };
+
+  // Rename a whole merchant group at once. rename_merchant already renames
+  // every row that shares this normalized description (across imports) and
+  // upserts the learned alias, so one call on any row in the group does it.
+  const renameGroup = async (group: TxGroup) => {
+    const name = (groupNameInput[group.key] ?? group.label).trim();
+    if (!name || !group.items[0]) return;
+    setBusyGroupKey(group.key);
+    try {
+      const ok = await resolveTx(group.items[0].id, 'rename_merchant', { vendorName: name });
+      if (ok) setRenamingGroupKey(null);
+    } finally {
+      setBusyGroupKey(null);
+    }
   };
 
   const resolveGroup = async (group: TxGroup, action: 'ignore' | 'log_transfer', counterpartyAccountId?: string) => {
@@ -1817,7 +1836,61 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     </button>
                                   </>
                                 )}
+                                <button
+                                  disabled={isGroupBusy}
+                                  onClick={() => {
+                                    setRenamingGroupKey(renamingGroupKey === group.key ? null : group.key);
+                                    setGroupNameInput((prev) => ({ ...prev, [group.key]: group.label }));
+                                  }}
+                                  className="btn btn-ghost"
+                                  style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                                  title="Rename this merchant everywhere it appears"
+                                >
+                                  <Edit2 size={11} /> Rename
+                                </button>
                               </div>
+                            </div>
+                          )}
+
+                          {isMultiple && renamingGroupKey === group.key && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--ha-radius-sm)',
+                                backgroundColor: '#f0f0ec',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <input
+                                autoFocus
+                                value={groupNameInput[group.key] ?? group.label}
+                                onChange={(e) => setGroupNameInput((prev) => ({ ...prev, [group.key]: e.target.value }))}
+                                onKeyDown={(e) => { if (e.key === 'Enter') renameGroup(group); }}
+                                placeholder="Merchant name"
+                                className="ha-input"
+                                style={{ flex: 1, minWidth: '160px', fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+                              />
+                              <button
+                                className="btn btn-secondary"
+                                disabled={isGroupBusy || !(groupNameInput[group.key] ?? group.label).trim()}
+                                onClick={() => renameGroup(group)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', flexShrink: 0 }}
+                              >
+                                {isGroupBusy ? <Loader2 size={11} className="spin" /> : 'Save'}
+                              </button>
+                              <button
+                                className="btn btn-ghost"
+                                onClick={() => setRenamingGroupKey(null)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.4rem', flexShrink: 0 }}
+                              >
+                                Cancel
+                              </button>
+                              <span style={{ flexBasis: '100%', fontSize: '0.7rem', color: 'var(--ha-muted)' }}>
+                                Applies to all {group.items.length} rows here and any future statements from this merchant.
+                              </span>
                             </div>
                           )}
 
