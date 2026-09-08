@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.95.0';
+export const APP_VERSION = '1.96.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.96.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement import now lets you set who new bills and expenses belong to. A "New bills & expenses assigned to" picker in the review step defaults to "Whole household"; pick a member to tag everything you add from that statement to them — no more editing each one afterwards. (Only shown when the household has more than one member.)',
+    ],
+  },
   {
     version: '1.95.0',
     date: '2026-09-08',

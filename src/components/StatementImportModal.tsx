@@ -45,6 +45,7 @@ interface StatementImportModalProps {
   initialImportId?: string | null;
   customCategories?: CustomCategoryItem[];
   onCategoryCreated?: (category: CustomCategoryItem) => void;
+  members?: { id: string; name: string }[];
 }
 
 type Step = 'upload' | 'map' | 'review';
@@ -164,6 +165,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   initialImportId,
   customCategories = [],
   onCategoryCreated,
+  members = [],
 }) => {
   const [step, setStep] = useState<Step>('upload');
   const [fileName, setFileName] = useState('');
@@ -202,6 +204,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [categorizingTxId, setCategorizingTxId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Record<string, ExpenseCategory | ''>>({});
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
+  // Owner for new bills/expenses from this import — '' = whole household.
+  const [reviewAssignee, setReviewAssignee] = useState('');
   const [loggingTransferTxId, setLoggingTransferTxId] = useState<string | null>(null);
   // The account on the *other* side of a "Log as transfer" — '' means an
   // external payee (money genuinely leaving / entering the household).
@@ -807,7 +811,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       for (let i = 0; i < unmatched.length; i += 4) {
         await Promise.all(
           unmatched.slice(i, i + 4).map((tx) =>
-            resolveTx(tx.id, 'categorize', { category, vendorName: tx.vendorName || tx.rawDescription }, { silent: true })
+            resolveTx(tx.id, 'categorize', { category, vendorName: tx.vendorName || tx.rawDescription, assignedUserId: reviewAssignee || null }, { silent: true })
           )
         );
       }
@@ -830,6 +834,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
           txIds: unmatched.map((t) => t.id),
           category,
           vendorName: group.items.find((t) => t.vendorName)?.vendorName || group.label,
+          assignedUserId: reviewAssignee || null,
         }),
       });
       const data = await res.json();
@@ -1558,6 +1563,21 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                     </div>
                   )}
 
+                  {members.length > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--ha-muted)' }}>
+                      <span>New bills &amp; expenses assigned to</span>
+                      <select
+                        value={reviewAssignee}
+                        onChange={(e) => setReviewAssignee(e.target.value)}
+                        className="ha-input"
+                        style={{ fontSize: '0.78rem', padding: '0.3rem 0.5rem', width: 'auto' }}
+                      >
+                        <option value="">Whole household</option>
+                        {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {FILTERS.map((f) => {
@@ -2058,6 +2078,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                         name: (incomeNameInput[tx.id] ?? (tx.vendorName || tx.rawDescription)).trim(),
                                         frequency: incomeFreqInput[tx.id] ?? 'monthly',
                                         amount: incomeAmountInput[tx.id] ?? String(tx.amount),
+                                        assignedUserId: reviewAssignee || null,
                                       })}
                                       className="btn btn-primary"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
@@ -2096,6 +2117,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                         category: selectedCategory[tx.id] || tx.suggestedCategory,
                                         vendorName: tx.vendorName || tx.rawDescription,
                                         notes: noteInput[tx.id]?.trim() || undefined,
+                                        assignedUserId: reviewAssignee || null,
                                       })}
                                       className="btn btn-primary"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
@@ -2153,6 +2175,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                         billingCycle: billCycleInput[tx.id] ?? 'monthly',
                                         amount: billAmountInput[tx.id] ?? String(tx.amount),
                                         vendorName: tx.vendorName || tx.rawDescription,
+                                        assignedUserId: reviewAssignee || null,
                                       })}
                                       className="btn btn-primary"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}

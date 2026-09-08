@@ -37,6 +37,20 @@ export async function POST(
       return NextResponse.json({ status: 'error', message: 'Statement transaction not found' }, { status: 404 });
     }
 
+    // Owner for any Expense / Income this resolve creates. `assignedUserId`:
+    // absent → the importer; null or "" → the whole household; a member id →
+    // that member (validated). Transfers stay owned by the importer.
+    let ownerId: string | null = auth.user.id;
+    if ('assignedUserId' in body) {
+      const v = body.assignedUserId;
+      if (v === null || v === '') {
+        ownerId = null;
+      } else if (typeof v === 'string') {
+        const member = await prisma.user.findFirst({ where: { id: v, householdId: auth.user.householdId } });
+        ownerId = member ? v : null;
+      }
+    }
+
     if (action === 'ignore') {
       const updated = await prisma.statementTransaction.update({
         where: { id: txId },
@@ -320,7 +334,7 @@ export async function POST(
           depositAccountId: statementImport?.accountId ?? null,
           notes: 'Created from statement import',
           statementImportId: id,
-          createdById: auth.user.id,
+          createdById: ownerId,
           householdId: auth.user.householdId,
         },
       });
@@ -384,7 +398,7 @@ export async function POST(
           lastPaidAt: new Date(tx.date),
           paymentAccountId: statementImport?.accountId ?? null,
           notes: customNote ? `${customNote} (logged from statement import)` : 'Logged from statement import',
-          createdById: auth.user.id,
+          createdById: ownerId,
           householdId: auth.user.householdId,
           statementImportId: id,
         },
@@ -460,7 +474,7 @@ export async function POST(
           lastPaidAt: new Date(tx.date),
           paymentAccountId: statementImport?.accountId ?? null,
           notes: 'Created from statement import',
-          createdById: auth.user.id,
+          createdById: ownerId,
           householdId: auth.user.householdId,
           statementImportId: id,
         },

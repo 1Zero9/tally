@@ -1333,6 +1333,7 @@ export default function TallyPage() {
               onExpensesChanged={fetchDatabaseData}
               customCategories={customCategories}
               onCategoryCreated={handleCategoryCreated}
+              members={users}
             />
             <StatementActivitySection reloadSignal={dataVersion} onChanged={fetchDatabaseData} />
             <TransfersSection
@@ -1638,6 +1639,7 @@ export default function TallyPage() {
         onExpensesChanged={fetchDatabaseData}
         customCategories={customCategories}
         onCategoryCreated={handleCategoryCreated}
+        members={users}
       />
 
       {/* Popular Presets Modal */}

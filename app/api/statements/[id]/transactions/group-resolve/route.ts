@@ -44,6 +44,17 @@ export async function POST(
       return NextResponse.json({ status: 'error', message: 'A valid category must be selected' }, { status: 400 });
     }
 
+    // Owner: absent → importer; null/"" → household; a member id → that member.
+    let ownerId: string | null = auth.user.id;
+    if ('assignedUserId' in body) {
+      const v = body.assignedUserId;
+      if (v === null || v === '') ownerId = null;
+      else if (typeof v === 'string') {
+        const member = await prisma.user.findFirst({ where: { id: v, householdId: auth.user.householdId } });
+        ownerId = member ? v : null;
+      }
+    }
+
     const statementImport = await prisma.statementImport.findUnique({ where: { id } });
     if (!statementImport || statementImport.householdId !== auth.user.householdId) {
       return NextResponse.json({ status: 'error', message: 'Statement import not found' }, { status: 404 });
@@ -97,7 +108,7 @@ export async function POST(
           lastPaidAt: new Date(lastRow.date),
           paymentAccountId: statementImport.accountId,
           notes: customNote ? `${customNote} (logged from statement import)` : `Recognized as a recurring bill from ${sortedRows.length} statement rows`,
-          createdById: auth.user.id,
+          createdById: ownerId,
           householdId: auth.user.householdId,
           statementImportId: id,
         },

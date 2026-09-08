@@ -12,9 +12,10 @@ interface StatementsSectionProps {
   onExpensesChanged?: () => void;
   customCategories?: CustomCategoryItem[];
   onCategoryCreated?: (category: CustomCategoryItem) => void;
+  members?: { id: string; name: string }[];
 }
 
-export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, incomes, accounts, householdCurrency, onExpensesChanged, customCategories = [], onCategoryCreated }) => {
+export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, incomes, accounts, householdCurrency, onExpensesChanged, customCategories = [], onCategoryCreated, members }) => {
   const [imports, setImports] = useState<StatementImportSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -253,6 +254,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
         onExpensesChanged={onExpensesChanged}
         customCategories={customCategories}
         onCategoryCreated={onCategoryCreated}
+        members={members}
       />
 
       <StatementImportModal
@@ -267,6 +269,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
         initialImportId={reviewImportId}
         customCategories={customCategories}
         onCategoryCreated={onCategoryCreated}
+        members={members}
       />
     </div>
   );
