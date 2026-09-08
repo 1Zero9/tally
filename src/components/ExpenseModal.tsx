@@ -399,6 +399,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               onChange={(id) => setCategory(id as ExpenseCategory)}
               customCategories={customCategories}
               onCategoryCreated={(cat) => onCategoryCreated?.(cat)}
+              suggestFrom={[name, vendor].filter(Boolean).join(' ')}
             />
           </div>
 

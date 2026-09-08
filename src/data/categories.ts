@@ -109,6 +109,42 @@ export const CATEGORIES: Record<BuiltinExpenseCategory, CategoryInfo> = {
     borderColor: '#d8e8bd',
     icon: 'Utensils',
   },
+  'personal': {
+    id: 'personal',
+    name: 'Personal Care & Clothing',
+    description: 'Haircuts, beauty, cosmetics, clothes, footwear and accessories',
+    color: '#4338CA', // Indigo
+    bgColor: '#ecebfa',
+    borderColor: '#cfccf2',
+    icon: 'Shirt',
+  },
+  'travel': {
+    id: 'travel',
+    name: 'Travel & Holidays',
+    description: 'Flights, hotels, car hire and spending money on trips away',
+    color: '#0369A1', // Blue
+    bgColor: '#e6f2f9',
+    borderColor: '#bfdcec',
+    icon: 'Plane',
+  },
+  'banking': {
+    id: 'banking',
+    name: 'Banking & Fees',
+    description: 'ATM withdrawals, account maintenance fees, bank charges, interest and stamp duty',
+    color: '#475569', // Slate
+    bgColor: '#eef1f4',
+    borderColor: '#d5dbe1',
+    icon: 'Landmark',
+  },
+  'pets': {
+    id: 'pets',
+    name: 'Pets',
+    description: 'Vet, pet food, pet insurance and grooming',
+    color: '#92400E', // Brown
+    bgColor: '#f7ede4',
+    borderColor: '#ead9c6',
+    icon: 'Dog',
+  },
 };
 
 export const CATEGORY_LIST = Object.values(CATEGORIES);

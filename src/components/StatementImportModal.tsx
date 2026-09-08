@@ -1758,6 +1758,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                   customCategories={customCategories}
                                   onCategoryCreated={(cat) => onCategoryCreated?.(cat)}
                                   placeholderOption="— Choose a category —"
+                                  suggestFrom={group.items.find((t) => t.vendorName)?.vendorName || group.items[0].rawDescription}
                                 />
                                 <button
                                   disabled={!(selectedGroupCategory[group.key] || group.items[0].suggestedCategory) || isGroupBusy}
@@ -2078,6 +2079,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     customCategories={customCategories}
                                     onCategoryCreated={(cat) => onCategoryCreated?.(cat)}
                                     placeholderOption="— Choose a category —"
+                                    suggestFrom={tx.vendorName || tx.rawDescription}
                                   />
                                   <input
                                     type="text"
@@ -2118,6 +2120,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     customCategories={customCategories}
                                     onCategoryCreated={(cat) => onCategoryCreated?.(cat)}
                                     placeholderOption="— Choose a category —"
+                                    suggestFrom={tx.vendorName || tx.rawDescription}
                                   />
                                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                                     <select

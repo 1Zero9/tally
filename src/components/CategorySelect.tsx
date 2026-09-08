@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import type { CustomCategoryItem } from '../types/expense';
-import { getOrderedCategories } from '../data/categories';
+import { getOrderedCategories, getCategoryMeta } from '../data/categories';
+import { suggestCategory } from '../data/categorySuggest';
 
 const NEW_CATEGORY_SENTINEL = '__new_category__';
 
@@ -15,6 +16,10 @@ interface CategorySelectProps {
   placeholderOption?: string;
   disabled?: boolean;
   id?: string;
+  /** A description / name to guess a category from — shows a one-click
+   *  "Suggest: <category>" under the picker when there's a confident match
+   *  that isn't already selected. */
+  suggestFrom?: string;
 }
 
 /**
@@ -34,6 +39,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   placeholderOption,
   disabled,
   id,
+  suggestFrom,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -114,7 +120,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     );
   }
 
-  return (
+  const select = (
     <select
       id={id}
       className={className}
@@ -127,5 +133,24 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
       {getOrderedCategories(customCategories).map((o) => <option key={o.id} value={o.id}>{o.meta.name}</option>)}
       <option value={NEW_CATEGORY_SENTINEL}>+ Create new category…</option>
     </select>
+  );
+
+  if (!suggestFrom) return select;
+
+  const suggestion = suggestCategory(suggestFrom, customCategories);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+      {select}
+      {suggestion && suggestion !== value && (
+        <button
+          type="button"
+          onClick={() => onChange(suggestion)}
+          className="btn btn-ghost"
+          style={{ alignSelf: 'flex-start', fontSize: '0.72rem', padding: '0.2rem 0.3rem', color: 'var(--ha-blue)' }}
+        >
+          <Sparkles size={11} /> Suggest: {getCategoryMeta(suggestion, customCategories).name}
+        </button>
+      )}
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.94.0';
+export const APP_VERSION = '1.95.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.95.0',
+    date: '2026-09-08',
+    changes: [
+      'Four more built-in categories so scattered custom ones have a broad home to merge into: Personal Care & Clothing, Travel & Holidays, Banking & Fees, and Pets.',
+      'Category auto-suggest: when adding an expense or categorising a statement row, a "Suggest: …" link now appears under the category picker if the name/description clearly points at one (e.g. "Circle K" → Transport & Motoring, "Netflix" → Streaming & Media) — one click applies it. It also matches your own custom category names.',
+    ],
+  },
   {
     version: '1.94.0',
     date: '2026-09-08',
