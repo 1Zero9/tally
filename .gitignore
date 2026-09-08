@@ -26,3 +26,8 @@ dist-ssr
 *.sln
 *.sw?
 *.tsbuildinfo
+
+# Local planning / research scratch — not part of the app
+docs/ideas.md
+docs/research/
+scripts/build_competitor_report.py
