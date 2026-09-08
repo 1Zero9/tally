@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.85.0';
+export const APP_VERSION = '1.86.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.86.0',
+    date: '2026-09-08',
+    changes: [
+      'Home projects are much easier to work with when you have a few: each project is now a collapsible card showing name, status, spent/budget and item count in one line — expand only the one you\'re working on. Added status filter chips (All / Active / Planning / Done) and a project search, plus a "N projects · €X spent of €Y budgeted" summary at the top. Line items were re-laid-out so the figures sit next to the item name (Estimate / Spent / over-under) instead of stretched across the full width.',
+    ],
+  },
   {
     version: '1.85.0',
     date: '2026-09-08',
