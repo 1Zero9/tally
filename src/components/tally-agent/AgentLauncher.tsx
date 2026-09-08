@@ -23,7 +23,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, h
     data-hidden={hidden ? 'true' : undefined}
   >
     <span className="ha-agent-launcher-img">
-      <Image src="/tally-agent.png" alt="" fill sizes="60px" style={{ objectFit: 'contain' }} priority />
+      <Image src="/tally-agent.png" alt="" fill sizes="48px" style={{ objectFit: 'contain' }} priority />
     </span>
   </button>
 );

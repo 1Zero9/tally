@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.102.0';
+export const APP_VERSION = '1.102.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.102.1',
+    date: '2026-09-08',
+    changes: [
+      'Made the Tally Agent launcher easier to spot: the mascot now sits on a soft round cream disc with a hairline ring and a slightly stronger shadow, instead of floating semi-transparent against the page.',
+    ],
+  },
   {
     version: '1.102.0',
     date: '2026-09-08',

@@ -1509,15 +1509,22 @@ input:checked + .slider:before {
   right: max(1.25rem, env(safe-area-inset-right));
   bottom: max(1.25rem, env(safe-area-inset-bottom));
   z-index: 90;
-  width: 60px;
-  height: 60px;
-  padding: 0;
-  border: none;
-  background: transparent;
+  width: 64px;
+  height: 64px;
+  /* A soft disc behind the mascot — the character alone is too low-contrast
+     against the app's cream background to find. Kept subtle: cream fill,
+     hairline ring, a brand-tinted glow. */
+  padding: 9px;
+  border: 1px solid var(--ha-line);
+  border-radius: 50%;
+  background: var(--ha-white);
   cursor: pointer;
-  filter: drop-shadow(0 8px 18px rgba(24, 43, 34, 0.18));
+  box-shadow:
+    0 8px 24px rgba(24, 43, 34, 0.18),
+    0 2px 6px rgba(24, 43, 34, 0.12),
+    0 0 0 5px rgba(23, 107, 82, 0.06);
   animation: haAgentIdle 6s ease-in-out infinite;
-  transition: transform 0.16s ease;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 .ha-agent-launcher-img {
   position: relative;
@@ -1527,11 +1534,16 @@ input:checked + .slider:before {
   pointer-events: none;
   user-select: none;
 }
-.ha-agent-launcher:hover { transform: translateY(-2px) scale(1.05); }
+.ha-agent-launcher:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 12px 30px rgba(24, 43, 34, 0.22),
+    0 3px 8px rgba(24, 43, 34, 0.14),
+    0 0 0 6px rgba(23, 107, 82, 0.10);
+}
 .ha-agent-launcher:focus-visible {
   outline: 2px solid var(--ha-blue);
-  outline-offset: 4px;
-  border-radius: 14px;
+  outline-offset: 3px;
 }
 .ha-agent-launcher.is-thinking { animation: haAgentPulse 1.6s ease-in-out infinite; }
 .ha-agent-launcher[data-hidden='true'] { display: none; }
@@ -1746,7 +1758,7 @@ input:checked + .slider:before {
 .ha-agent-send:disabled { opacity: 0.4; cursor: default; }
 
 @media (max-width: 640px) {
-  .ha-agent-launcher { width: 54px; height: 54px; }
+  .ha-agent-launcher { width: 56px; height: 56px; padding: 8px; }
   .ha-agent-scrim { background: rgba(22, 35, 30, 0.28); }
   .ha-agent-panel {
     right: 0;
