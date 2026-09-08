@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  X, Plus, Pencil, Trash2, RotateCcw, Check, Loader2,
+  X, Plus, Pencil, Trash2, RotateCcw, Check, Loader2, GitMerge,
   Tag, Home, Zap, Car, Fuel, ShoppingCart, Utensils, Coffee, Plane, Train,
   Bus, Heart, HeartPulse, Stethoscope, Pill, Dog, Cat, Baby, GraduationCap,
   BookOpen, Dumbbell, Bike, Music, Film, Tv, Gamepad2, Gift, Shirt, Scissors,
@@ -39,6 +39,25 @@ interface Draft {
   color: string;
   bgColor: string;
   borderColor: string;
+}
+
+const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const nameTokens = (s: string) =>
+  normName(s).split(' ').filter(Boolean).map((t) => (t.length > 3 && t.endsWith('s') ? t.slice(0, -1) : t));
+
+/** 0..1 rough similarity between two category names — flags "Tolls" vs "Toll Roads". */
+function nameSimilarity(a: string, b: string): number {
+  const na = normName(a);
+  const nb = normName(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  const ta = new Set(nameTokens(a));
+  const tb = new Set(nameTokens(b));
+  if (ta.size === 0 || tb.size === 0) return 0;
+  let overlap = 0;
+  ta.forEach((t) => { if (tb.has(t)) overlap += 1; });
+  return overlap / Math.max(ta.size, tb.size);
 }
 
 const BLANK_DRAFT: Draft = {
@@ -167,6 +186,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   const [error, setError] = useState('');
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [mergingId, setMergingId] = useState<string | null>(null);
   const [reassignTo, setReassignTo] = useState('');
   // Set when the server rejects a delete for reassignment even though no
   // bills reference the category locally (e.g. a budget still points at it).
@@ -187,6 +207,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
     setEditingBuiltin(null);
     setAdding(false);
     setDeletingId(null);
+    setMergingId(null);
     setReassignTo('');
     setForceReassign(false);
     setError('');
@@ -262,6 +283,19 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
     setError(data.message || 'Failed to delete category');
   };
 
+  const handleMerge = async (id: string) => {
+    if (!reassignTo) return;
+    const { ok, data } = await api(`/api/categories/${id}`, 'DELETE', { reassignTo });
+    if (ok) { resetForms(); onChanged(); }
+    else setError(data.message || 'Failed to merge category');
+  };
+
+  const startMerge = (id: string, prefillTarget?: string) => {
+    resetForms();
+    setMergingId(id);
+    setReassignTo(prefillTarget ?? '');
+  };
+
   const startEditCustom = (c: CustomCategoryItem) => {
     resetForms();
     setEditingId(c.id);
@@ -275,11 +309,26 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
     setDraft({ name: meta.name, icon: meta.icon, color: meta.color, bgColor: meta.bgColor, borderColor: meta.borderColor });
   };
 
-  // Every category a user could move items into (excludes the one being deleted).
-  const reassignOptions = [
+  const allCatOptions = [
     ...CATEGORY_LIST.map((c) => ({ id: c.id, name: c.name })),
     ...custom.map((c) => ({ id: c.id, name: c.name })),
-  ].filter((o) => o.id !== deletingId);
+  ];
+  // Every category a user could move items into (excludes the one being consolidated).
+  const activeConsolidateId = deletingId ?? mergingId;
+  const reassignOptions = allCatOptions.filter((o) => o.id !== activeConsolidateId);
+
+  // For each custom category, the most similarly-named other category — a
+  // gentle "did you mean to reuse this?" nudge to keep the list from sprawling.
+  const nearDuplicate = new Map<string, { id: string; name: string }>();
+  for (const c of custom) {
+    let best: { id: string; name: string; score: number } | null = null;
+    for (const o of allCatOptions) {
+      if (o.id === c.id) continue;
+      const score = nameSimilarity(c.name, o.name);
+      if (score >= 0.55 && (!best || score > best.score)) best = { ...o, score };
+    }
+    if (best) nearDuplicate.set(c.id, { id: best.id, name: best.name });
+  }
 
   return (
     <div className="modal-overlay">
@@ -333,18 +382,58 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                         <IconGlyph name={c.icon} size={14} color={c.color} />
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{c.name}</div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          {c.name}
+                          {count === 0 && (
+                            <span className="ha-badge" style={{ fontSize: '0.62rem', fontWeight: 700, backgroundColor: '#fdf2e3', color: '#B45309' }}>Unused</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)' }}>
-                          {count === 0 ? 'Not used yet' : `${count} bill${count === 1 ? '' : 's'}`}
+                          {count === 0 ? 'Not used by any bills' : `${count} bill${count === 1 ? '' : 's'}`}
                         </div>
                       </div>
                       <button onClick={() => startEditCustom(c)} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Edit">
                         <Pencil size={13} />
                       </button>
+                      <button onClick={() => startMerge(c.id)} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Merge into another category">
+                        <GitMerge size={13} />
+                      </button>
                       <button onClick={() => { resetForms(); setDeletingId(c.id); }} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem', color: 'var(--ha-red)' }} title="Delete">
                         <Trash2 size={13} />
                       </button>
                     </div>
+
+                    {nearDuplicate.has(c.id) && mergingId !== c.id && deletingId !== c.id && (
+                      <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        Looks close to <strong style={{ color: 'var(--ha-ink)' }}>{nearDuplicate.get(c.id)!.name}</strong>
+                        <button
+                          onClick={() => startMerge(c.id, nearDuplicate.get(c.id)!.id)}
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.72rem', padding: '0.15rem 0.4rem', color: 'var(--ha-blue)' }}
+                        >
+                          Merge into it
+                        </button>
+                      </div>
+                    )}
+
+                    {mergingId === c.id && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px dashed var(--ha-line)', paddingTop: '0.5rem' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--ha-ink)' }}>
+                          Merge <strong>{c.name}</strong>{count > 0 ? ` and its ${count} bill${count === 1 ? '' : 's'}` : ''} into:
+                        </div>
+                        <select className="ha-input" value={reassignTo} onChange={(e) => setReassignTo(e.target.value)} style={{ fontSize: '0.8rem' }}>
+                          <option value="">— Choose a category —</option>
+                          {reassignOptions.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                        </select>
+                        {error && <div style={{ fontSize: '0.75rem', color: 'var(--ha-red)' }}>{error}</div>}
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button onClick={() => handleMerge(c.id)} disabled={busy || !reassignTo} className="btn btn-primary" style={{ fontSize: '0.78rem', padding: '0.4rem 0.75rem' }}>
+                            {busy ? <Loader2 size={13} className="spin" /> : <GitMerge size={13} />} Merge
+                          </button>
+                          <button onClick={resetForms} className="btn btn-ghost" style={{ fontSize: '0.78rem', padding: '0.4rem 0.6rem' }}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
 
                     {deletingId === c.id && (() => {
                       const needsReassign = count > 0 || forceReassign;

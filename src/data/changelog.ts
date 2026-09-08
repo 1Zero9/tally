@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.87.0';
+export const APP_VERSION = '1.88.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.88.0',
+    date: '2026-09-08',
+    changes: [
+      'Three new built-in categories so there\'s less need to invent your own: Transport & Motoring (fuel, tolls, parking, servicing), Health & Medical, and Eating Out & Takeaway.',
+      'Category Manager (Settings → Categories) can now merge a custom category into another — moves all its bills across and removes the original in one step. It also flags any custom category whose name looks close to an existing one (with a one-click "merge into it"), and marks categories not used by any bill as "Unused".',
+    ],
+  },
   {
     version: '1.87.0',
     date: '2026-09-08',

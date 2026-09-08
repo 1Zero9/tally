@@ -7,7 +7,10 @@ export type BuiltinExpenseCategory =
   | 'lifestyle'      // Sports Club, Gym, Coaching, Activities, Health
   | 'shopping'       // Groceries & general shopping — one lump total, not itemized
   | 'big-ticket'     // Mortgage, car/personal loan repayments, holidays & other big purchases
-  | 'insurance';     // Car/life/health insurance, motor tax, NCT & vehicle renewals
+  | 'insurance'      // Car/life/health insurance, motor tax, NCT & vehicle renewals
+  | 'transport'      // Fuel, tolls, parking, public transport, servicing & repairs
+  | 'health'         // GP, dentist, pharmacy, physio, glasses
+  | 'dining';        // Restaurants, cafés, coffee, food delivery
 
 // A household-defined custom category's id is a Prisma cuid — an arbitrary
 // string. The `(string & {})` branded-union trick keeps autocomplete for the

@@ -82,6 +82,33 @@ export const CATEGORIES: Record<BuiltinExpenseCategory, CategoryInfo> = {
     borderColor: '#bfe3ea',
     icon: 'ShieldCheck',
   },
+  'transport': {
+    id: 'transport',
+    name: 'Transport & Motoring',
+    description: 'Fuel, tolls, parking, public transport, car servicing & repairs (tax/NCT/insurance stay under Insurance)',
+    color: '#15803D', // Green
+    bgColor: '#e9f6ee',
+    borderColor: '#c3e6d1',
+    icon: 'Car',
+  },
+  'health': {
+    id: 'health',
+    name: 'Health & Medical',
+    description: 'GP, dentist, pharmacy, physio, glasses and other medical costs',
+    color: '#BE185D', // Rose
+    bgColor: '#fdeef4',
+    borderColor: '#f7cbdd',
+    icon: 'HeartPulse',
+  },
+  'dining': {
+    id: 'dining',
+    name: 'Eating Out & Takeaway',
+    description: 'Restaurants, cafés, coffee and food delivery — kept separate from the grocery shop',
+    color: '#4D7C0F', // Lime
+    bgColor: '#f0f6e6',
+    borderColor: '#d8e8bd',
+    icon: 'Utensils',
+  },
 };
 
 export const CATEGORY_LIST = Object.values(CATEGORIES);
