@@ -16,7 +16,10 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
   currency,
   onEditExpense,
 }) => {
-  const activeItems = expenses.filter((e) => e.isActive && e.isBill !== false);
+  // Recurring bills & contracts only — never one-off spending (a `once`
+  // expense isn't a renewal, even if its isBill flag was left on, e.g. by an
+  // older "Add as expense" from a statement import).
+  const activeItems = expenses.filter((e) => e.isActive && e.isBill !== false && e.billingCycle !== 'once');
 
   const sortedRenewals = activeItems.map((item) => {
     const daysLeft = getDaysUntilRenewal(item.nextRenewalDate || `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${item.renewalDay}`, item.billingCycle);

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.86.0';
+export const APP_VERSION = '1.87.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.87.0',
+    date: '2026-09-08',
+    changes: [
+      'Fixed one-off expenses showing up in the Bills renewal schedule. "Add as expense" from a statement import was creating incidental one-offs with the "recurring bill" flag left on, so they appeared in Bills and counted as bills (not one-off spend) on the Overview. They\'re now created as one-off spending, the Bills schedule ignores any `once` expense regardless of the flag, and a one-time cleanup corrected the existing ones.',
+    ],
+  },
   {
     version: '1.86.0',
     date: '2026-09-08',

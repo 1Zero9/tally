@@ -371,6 +371,9 @@ export async function POST(
           amount: tx.amount,
           currency: tx.currency,
           billingCycle: 'once',
+          // Incidental one-off spend — belongs in Spending, not the Bills
+          // renewal schedule.
+          isBill: false,
           category,
           icon: meta.icon,
           color: meta.color,

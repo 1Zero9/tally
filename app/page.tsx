@@ -1217,7 +1217,7 @@ export default function TallyPage() {
 
         {activeTab === 'calendar' && (
           <>
-            {liveExpenses.some((e) => e.isBill !== false) && (
+            {liveExpenses.some((e) => e.isBill !== false && e.billingCycle !== 'once') && (
               <TrendChart
                 currency={currency}
                 metric="spending"
