@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.104.0';
+export const APP_VERSION = '1.104.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.104.1',
+    date: '2026-09-08',
+    changes: [
+      'Fixed statement review creating duplicate records. Resolving a row that was already resolved — from a double-click, a slow response you clicked through, or a "resolve all" batch overlapping a row you also handled — was creating a second bill / income / transfer and orphaning the first (so Undo could no longer remove it). The server now treats a repeat resolve of an already-done row as a no-op, and the review screen blocks a row (or a whole group) from being processed twice at once.',
+      'A group "resolve all" no longer fails outright if a couple of its rows were already handled individually — it just processes whatever is left.',
+      'When resolving a single row fails, you now get a clear message instead of the row silently staying put.',
+    ],
+  },
   {
     version: '1.104.0',
     date: '2026-09-08',

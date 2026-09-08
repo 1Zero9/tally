@@ -37,6 +37,21 @@ export async function POST(
       return NextResponse.json({ status: 'error', message: 'Statement transaction not found' }, { status: 404 });
     }
 
+    // Idempotency guard. These actions each create a new Expense / Income /
+    // Transfer and re-point the row at it. If the row is already resolved —
+    // a double-click, a retried request, or a stale "resolve all" batch
+    // re-sending a row a sibling call already handled — running the action
+    // again would create a SECOND record and silently orphan the first
+    // (which "Undo" can then no longer clean up). Treat it as a no-op and
+    // hand back the row exactly as it stands.
+    const CREATES_RECORD = new Set([
+      'categorize', 'add_bill', 'add_income', 'log_transfer', 'link_income', 'link_expense', 'confirm',
+    ]);
+    if (CREATES_RECORD.has(action) && tx.status !== 'UNMATCHED') {
+      const current = await prisma.statementTransaction.findUnique({ where: { id: txId }, include: TX_INCLUDE });
+      return NextResponse.json({ status: 'ok', transaction: current, alreadyResolved: true });
+    }
+
     // Owner for any Expense / Income this resolve creates. `assignedUserId`:
     // absent → the importer; null or "" → the whole household; a member id →
     // that member (validated). Transfers stay owned by the importer.

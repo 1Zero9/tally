@@ -268,6 +268,13 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const groupElsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const scrollAnchorRef = useRef<{ key: string; top: number; prevKey: string | null; prevTop: number | null } | null>(null);
 
+  // Guards against a row (or a group) being resolved twice at once — a fast
+  // double-click, or a group "resolve all" batch overlapping a row the user
+  // also clicked. Without this each concurrent call creates its own
+  // Expense/Income/Transfer for the same statement line.
+  const inFlightTxIdsRef = useRef<Set<string>>(new Set());
+  const groupBusyRef = useRef(false);
+
   const rememberScrollAnchor = (groupKey: string) => {
     const container = reviewScrollRef.current;
     const el = groupElsRef.current.get(groupKey);
@@ -362,6 +369,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setGroupLinkIncomeId({});
     setCollapsedGroups(new Set());
     setBusyGroupKey(null);
+    groupBusyRef.current = false;
+    inFlightTxIdsRef.current.clear();
     setAiRows(null);
     setIsExtracting(false);
     setAccountInfo(null);
@@ -774,6 +783,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     opts?: { silent?: boolean },
   ) => {
     if (!importId) return false;
+    if (inFlightTxIdsRef.current.has(txId)) return false;
+    inFlightTxIdsRef.current.add(txId);
     setBusyTxId(txId);
     try {
       const res = await fetch(`/api/statements/${importId}/transactions/${txId}/resolve`, {
@@ -809,10 +820,20 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
           `You already track a recurring bill "${data.duplicateOf.name}".\n\n` +
           `OK = add a second one anyway.\nCancel = do nothing (use "Link to a bill" to attach this charge to the existing one).`,
         );
-        if (go) return resolveTx(txId, action, { ...extra, allowDuplicate: true }, opts);
+        if (go) {
+          inFlightTxIdsRef.current.delete(txId);
+          return resolveTx(txId, action, { ...extra, allowDuplicate: true }, opts);
+        }
+        return false;
+      }
+      // Surface a real failure instead of the row just silently not moving —
+      // a group batch stays quiet (its caller reports one summary).
+      if (!opts?.silent) {
+        alert(data.message || 'Could not process that row — refresh the review list and try again.');
       }
       return false;
     } finally {
+      inFlightTxIdsRef.current.delete(txId);
       setBusyTxId(null);
     }
   };
@@ -856,16 +877,21 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const renameGroup = async (group: TxGroup) => {
     const name = (groupNameInput[group.key] ?? group.label).trim();
     if (!name || !group.items[0]) return;
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       const ok = await resolveTx(group.items[0].id, 'rename_merchant', { vendorName: name });
       if (ok) setRenamingGroupKey(null);
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };
 
   const resolveGroup = async (group: TxGroup, action: 'ignore' | 'log_transfer', counterpartyAccountId?: string) => {
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
@@ -884,11 +910,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       setLoggingTransferGroupKey(null);
       if (action === 'log_transfer') onExpensesChanged?.();
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };
 
   const resolveGroupCategorize = async (group: TxGroup, category: ExpenseCategory) => {
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
@@ -902,12 +931,15 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       setCategorizingGroupKey(null);
       onExpensesChanged?.();
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };
 
   const resolveGroupAsRecurring = async (group: TxGroup, category: ExpenseCategory) => {
     if (!importId) return;
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
@@ -950,6 +982,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         alert(data.message || 'Failed to create recurring bill');
       }
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };
@@ -964,22 +997,37 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     if (unmatched.length === 0) return;
     const name = (groupIncomeName[group.key] ?? group.label).trim() || group.label;
     const frequency = groupIncomeFreq[group.key] || 'monthly';
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       rememberScrollAnchor(group.key);
       const first = unmatched[0];
-      const res = await fetch(`/api/statements/${importId}/transactions/${first.id}/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add_income', learnAlias: true, name, frequency, assignedUserId: reviewAssignee || null }),
-      });
-      const data = await res.json();
+      let data: { status?: string; message?: string; transaction?: StatementTransactionItem & { matchedTransfer?: { linkedIncome?: { id?: string } } }; income?: { id?: string } } = {};
+      if (inFlightTxIdsRef.current.has(first.id)) return;
+      inFlightTxIdsRef.current.add(first.id);
+      try {
+        const res = await fetch(`/api/statements/${importId}/transactions/${first.id}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add_income', learnAlias: true, name, frequency, assignedUserId: reviewAssignee || null }),
+        });
+        data = await res.json();
+      } finally {
+        inFlightTxIdsRef.current.delete(first.id);
+      }
       if (data.status !== 'ok') {
         alert(data.message || 'Failed to add income');
         return;
       }
-      setTransactions((prev) => prev.map((t) => (t.id === first.id ? { ...t, ...data.transaction } : t)));
-      const incomeId = data.income.id as string;
+      if (data.transaction) setTransactions((prev) => prev.map((t) => (t.id === first.id ? { ...t, ...data.transaction } : t)));
+      // Normally the freshly-created income; if the first row had already
+      // been resolved to an income individually, reuse that one.
+      const incomeId = data.income?.id ?? data.transaction?.matchedTransfer?.linkedIncome?.id;
+      if (!incomeId) {
+        alert('Could not work out which income to link the rest of the group to. Handle these rows individually.');
+        return;
+      }
       const rest = unmatched.slice(1);
       for (let i = 0; i < rest.length; i += 4) {
         await Promise.all(rest.slice(i, i + 4).map((tx) => resolveTx(tx.id, 'link_income', { incomeId }, { silent: true })));
@@ -987,6 +1035,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       setIncomeGroupKey(null);
       onExpensesChanged?.();
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };
@@ -998,6 +1047,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     if (!incomeId) return;
     const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
     if (unmatched.length === 0) return;
+    if (groupBusyRef.current) return;
+    groupBusyRef.current = true;
     setBusyGroupKey(group.key);
     try {
       rememberScrollAnchor(group.key);
@@ -1007,6 +1058,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       setLinkIncomeGroupKey(null);
       onExpensesChanged?.();
     } finally {
+      groupBusyRef.current = false;
       setBusyGroupKey(null);
     }
   };

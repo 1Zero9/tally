@@ -63,8 +63,15 @@ export async function POST(
     const rows = await prisma.statementTransaction.findMany({
       where: { id: { in: txIds }, importId: id, householdId: auth.user.householdId, status: 'UNMATCHED' },
     });
-    if (rows.length !== txIds.length) {
-      return NextResponse.json({ status: 'error', message: 'Some rows were not found or have already been resolved — refresh and try again' }, { status: 400 });
+    // Tolerate a stale request: some of the sent rows may have already been
+    // resolved individually since the group action was clicked. Proceed
+    // with whatever is still unresolved rather than failing the whole batch
+    // — only bail if there's nothing left, or too little to call recurring.
+    if (rows.length === 0) {
+      return NextResponse.json({ status: 'error', message: 'These rows have already been resolved — nothing left to do here.' }, { status: 400 });
+    }
+    if (rows.length < 3) {
+      return NextResponse.json({ status: 'error', message: 'Only ' + rows.length + ' of these rows are still unresolved — need at least 3 to treat as a recurring bill. Handle the rest individually.' }, { status: 400 });
     }
 
     const first = rows[0];
