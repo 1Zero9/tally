@@ -22,7 +22,7 @@ const PRIMARY_NAV_ITEMS: { id: TabId; label: string }[] = [
 // rail so nobody needs to learn a hidden grouping or dropdown.
 const JOURNEY_NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: 'flow', label: 'Flow' },
-  { id: 'goals', label: 'Goals' },
+  { id: 'goals', label: 'Progress' },
   { id: 'planned', label: 'Planned' },
   { id: 'moneymap', label: 'Money Map' },
 ];

@@ -49,7 +49,7 @@ import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
 import { StatementImportModal } from '@/src/components/StatementImportModal';
 import { StatementReminderBanner } from '@/src/components/StatementReminderBanner';
-import { GoalsSection } from '@/src/components/GoalsSection';
+import { ProgressSection } from '@/src/components/ProgressSection';
 import { GoalModal } from '@/src/components/GoalModal';
 import { PrivacyBlurOverlay } from '@/src/components/PrivacyBlurOverlay';
 import { usePrivacyBlur } from '@/src/hooks/usePrivacyBlur';
@@ -1336,8 +1336,12 @@ export default function TallyPage() {
         )}
 
         {activeTab === 'goals' && (
-          <GoalsSection
+          <ProgressSection
             goals={goals}
+            expenses={expenses}
+            accounts={accounts}
+            transfers={transfers}
+            currency={currency}
             onEditGoal={(item) => {
               setEditingGoal(item);
               setIsGoalModalOpen(true);

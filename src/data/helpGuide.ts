@@ -153,11 +153,12 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
   },
   {
     id: 'goals',
-    title: 'Goals',
+    title: 'Progress',
     body: [
-      'Track savings targets like an emergency fund or a holiday. Each goal has a name, target amount, current amount, optional target date, and can be linked to the account the money is actually sitting in — the progress bar shows percentage complete and days remaining.',
-      'You can also link a goal from a Planned expense, or from any regular bill — handy for something cheaper paid annually that you can\'t afford in one go, like a subscription. Link a mini goal, top it up monthly, and its progress shows right on that ledger row.',
-      'When adding or editing a goal, use "Split into equal payments" to see what the remaining amount works out to per instalment (2, 4, 12, 20, or any custom number) — it\'s just a quick calculator, nothing is saved.',
+      'The Progress tab is one place for the things you\'re slowly moving a needle on: loans and credit cards being paid down, and savings goals being built up. A strip at the top shows total owed, total saved toward goals, and how many goals are on track.',
+      'Loans & cards: every Loan or Credit Card account with a balance shows here. For a loan with an original amount set (in Accounts), you get a payoff bar — how much is cleared, how much is left — plus any payments logged toward it from Flow, and its rate, term and target payoff date. Credit cards just show the amount owed and payments logged.',
+      'Goals: track savings targets like an emergency fund or a holiday. Each goal has a name, target amount, current amount, optional target date, and can be linked to the account the money is actually sitting in. Link a recurring top-up (a regular bill or Planned expense pointing at the goal) and Tally projects when you\'ll reach it — "~€150/mo → on track for Mar 2027 (2 mo ahead of target)".',
+      'You can also link a goal from a Planned expense, or from any regular bill — handy for something cheaper paid annually that you can\'t afford in one go, like a subscription. When adding or editing a goal, use "Split into equal payments" to see what the remaining amount works out to per instalment (2, 4, 12, 20, or any custom number) — it\'s just a quick calculator, nothing is saved.',
     ],
   },
   {

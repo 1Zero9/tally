@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.81.0';
+export const APP_VERSION = '1.82.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.82.0',
+    date: '2026-09-08',
+    changes: [
+      'The "Goals" tab is now "Progress" — one place for the things you move a needle on slowly. Loans & cards: every loan or credit card with a balance shows a payoff bar (for loans with an original amount set) plus any payments logged toward it from Flow, its rate, term and target payoff date. Savings goals: the same progress cards as before, now with a projected finish date when you\'ve linked a recurring top-up to the goal — e.g. "~€150/mo → on track for Mar 2027 (2 mo ahead of target)". A strip at the top shows total owed, total saved toward goals, and how many goals are on track.',
+    ],
+  },
   {
     version: '1.81.0',
     date: '2026-09-08',
