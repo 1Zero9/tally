@@ -916,9 +916,17 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
 ];
 
-export const MOBILE_APP_VERSION = '1.2.1';
+export const MOBILE_APP_VERSION = '1.3.0';
 
 export const MOBILE_CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.3.0',
+    date: '2026-09-08',
+    changes: [
+      'Mobile is now deliberately a quick-glance experience. The menu keeps the read views up front — Overview, Spending, Bills, Income, Accounts, Insights, Reports, Progress — and tucks Flow, Planned and Money Map under "More — best on desktop".',
+      'The dense authoring flows — statement import and the Category Manager — now show a short "open on a larger screen" note on a phone instead of a cramped editor. Home projects show a read-only summary on mobile.',
+    ],
+  },
   {
     version: '1.2.1',
     date: '2026-09-04',

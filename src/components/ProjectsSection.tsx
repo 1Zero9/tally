@@ -3,6 +3,7 @@ import type { ProjectRecord, ProjectLineItem, ExpenseItem, TransferItem, Currenc
 import { formatCurrency } from '../utils/formatters';
 import { convertCurrency } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { Hammer, Plus, Trash2, X, Check, Loader2, Link2, Pencil, Search, ChevronRight } from 'lucide-react';
 
 interface ProjectsSectionProps {
@@ -347,6 +348,35 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, expe
   }, [projects, statusFilter, search]);
 
   const isFiltered = statusFilter !== 'all' || !!search.trim();
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <CollapsibleSection
+        id="home-projects"
+        defaultOpen={false}
+        bodyStyle={{ padding: '1.25rem 1.5rem' }}
+        title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><Hammer size={15} /> Home projects ({projects.length})</span>}
+      >
+        {projects.length === 0 ? (
+          <p style={{ fontSize: '0.82rem', color: 'var(--ha-muted)', margin: 0 }}>No projects. Set them up on desktop.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {projects.map((p) => {
+              const t = projectTotals(p, currency);
+              return (
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', fontSize: '0.85rem', padding: '0.4rem 0', borderBottom: '1px solid var(--ha-line)' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--ha-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                  <span className="tabular-nums" style={{ color: 'var(--ha-muted)', flexShrink: 0 }}>{formatCurrency(t.actual, currency)} / {formatCurrency(t.est, currency)}</span>
+                </div>
+              );
+            })}
+            <p style={{ fontSize: '0.74rem', color: 'var(--ha-muted)', marginTop: '0.4rem' }}>Open Tally on desktop to add or edit projects.</p>
+          </div>
+        )}
+      </CollapsibleSection>
+    );
+  }
 
   const create = async () => {
     if (!newName.trim()) return;

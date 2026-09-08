@@ -28,6 +28,8 @@ import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurring
 import type { StatementAccountInfo } from '../lib/ai';
 import { CategorySelect } from './CategorySelect';
 import { useModalA11y } from '../hooks/useModalA11y';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { DesktopOnlyNotice } from './DesktopOnlyNotice';
 
 type FieldMatch = 'match' | 'mismatch' | 'not_set' | 'no_data';
 
@@ -329,6 +331,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   };
 
   const { dialogRef, dialogProps } = useModalA11y(isOpen, requestClose);
+  const isMobile = useIsMobile();
 
   // Sets the loaded rows and, for a large statement (several repeat
   // merchants), starts those groups collapsed rather than dumping
@@ -871,6 +874,16 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  if (isMobile) {
+    return (
+      <DesktopOnlyNotice
+        title="Statement import"
+        message="Importing and reconciling a statement is a lot of close work — it's built for a larger screen. Open Tally on a laptop or desktop to do it."
+        onClose={requestClose}
+      />
+    );
+  }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();

@@ -16,6 +16,8 @@ import {
   getBuiltinOverride, getOrderedCategories,
 } from '../data/categories';
 import { useModalA11y } from '../hooks/useModalA11y';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { DesktopOnlyNotice } from './DesktopOnlyNotice';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Tag, Home, Zap, Car, Fuel, ShoppingCart, Utensils, Coffee, Plane, Train,
@@ -177,6 +179,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   isOpen, onClose, categoryRows, expenses, onChanged,
 }) => {
   const { dialogRef, dialogProps } = useModalA11y(isOpen, onClose);
+  const isMobile = useIsMobile();
 
   const [editingId, setEditingId] = useState<string | null>(null); // custom category id
   const [editingBuiltin, setEditingBuiltin] = useState<string | null>(null); // builtin key
@@ -201,6 +204,16 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   }, [expenses]);
 
   if (!isOpen) return null;
+
+  if (isMobile) {
+    return (
+      <DesktopOnlyNotice
+        title="Categories"
+        message="Renaming, recolouring, reordering and merging categories is fiddly on a phone. Open Tally on a larger screen to manage them."
+        onClose={onClose}
+      />
+    );
+  }
 
   const resetForms = () => {
     setEditingId(null);

@@ -27,6 +27,10 @@ const JOURNEY_NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: 'moneymap', label: 'Money Map' },
 ];
 
+// Tabs tucked behind "More — best on desktop" in the mobile drawer: heavy
+// authoring / wide visualisations that aren't a quick phone glance.
+const MOBILE_DESKTOP_TABS = new Set<TabId>(['flow', 'planned', 'moneymap']);
+
 interface NavbarProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
@@ -311,7 +315,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '0.85rem 0.75rem 0.35rem' }}>
                 Money journey
               </div>
-              {JOURNEY_NAV_ITEMS.map((item) => {
+              {JOURNEY_NAV_ITEMS.filter((item) => !MOBILE_DESKTOP_TABS.has(item.id)).map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
@@ -324,6 +328,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
                 );
               })}
+              <details style={{ marginTop: '0.15rem' }}>
+                <summary style={{ listStyle: 'none', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--ha-muted)', padding: '0.6rem 0.75rem' }}>
+                  More — best on desktop
+                </summary>
+                {JOURNEY_NAV_ITEMS.filter((item) => MOBILE_DESKTOP_TABS.has(item.id)).map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNav(item.id)}
+                      className="ha-dropdown-item"
+                      style={{ fontSize: '0.9rem', fontWeight: 500, color: isActive ? 'var(--ha-blue)' : 'var(--ha-muted)' }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </details>
               {isAdmin && (
                 <button onClick={() => handleNav('admin')} className="ha-dropdown-item" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
                   <ShieldCheck size={15} />
