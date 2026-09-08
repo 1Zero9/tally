@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.88.0';
+export const APP_VERSION = '1.89.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.89.0',
+    date: '2026-09-08',
+    changes: [
+      'New "How Tally works" in the avatar menu — a one-screen cheat sheet of the handful of rules that make the rest click: the three record types, internal vs external transfers, bill vs one-off, recording a statement movement once, and that Trails / Projects / Progress / Reports are lenses that never change a total.',
+    ],
+  },
   {
     version: '1.88.0',
     date: '2026-09-08',

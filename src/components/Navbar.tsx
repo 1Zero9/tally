@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { UserProfile } from '../types/expense';
-import { Plus, Search, Settings, HelpCircle, LogOut, ShieldCheck, Menu, X, ChevronDown, Eye, EyeOff, ScanLine, Lightbulb } from 'lucide-react';
+import { Plus, Search, Settings, HelpCircle, LogOut, ShieldCheck, Menu, X, ChevronDown, Eye, EyeOff, ScanLine, Lightbulb, Compass } from 'lucide-react';
 import { TallyLogo } from './TallyLogo';
 import { APP_VERSION, MOBILE_APP_VERSION } from '../data/changelog';
 
@@ -34,6 +34,7 @@ interface NavbarProps {
   onOpenScanModal: () => void;
   onOpenSettings: () => void;
   onOpenHelpModal: () => void;
+  onOpenHowItWorks: () => void;
   onOpenFeedback: () => void;
   onFocusAsk: () => void;
   onLogout: () => void;
@@ -50,6 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenScanModal,
   onOpenSettings,
   onOpenHelpModal,
+  onOpenHowItWorks,
   onOpenFeedback,
   onFocusAsk,
   onLogout,
@@ -162,6 +164,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <button className="ha-dropdown-item" onClick={() => { onOpenHelpModal(); setIsAvatarMenuOpen(false); }}>
                         <HelpCircle size={15} />
                         <span>Help guide</span>
+                      </button>
+                      <button className="ha-dropdown-item" onClick={() => { onOpenHowItWorks(); setIsAvatarMenuOpen(false); }}>
+                        <Compass size={15} />
+                        <span>How Tally works</span>
                       </button>
                       <button className="ha-dropdown-item" onClick={() => { onOpenFeedback(); setIsAvatarMenuOpen(false); }}>
                         <Lightbulb size={15} />
@@ -330,6 +336,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button onClick={() => { onOpenSettings(); setIsDrawerOpen(false); }} className="ha-dropdown-item">
                 <Settings size={15} />
                 <span>Settings & preferences</span>
+              </button>
+              <button onClick={() => { onOpenHowItWorks(); setIsDrawerOpen(false); }} className="ha-dropdown-item">
+                <Compass size={15} />
+                <span>How Tally works</span>
               </button>
               <button onClick={() => { onOpenHelpModal(); setIsDrawerOpen(false); }} className="ha-dropdown-item">
                 <HelpCircle size={15} />
