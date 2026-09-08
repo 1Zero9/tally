@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.103.0';
+export const APP_VERSION = '1.104.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.104.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement import: a repeat money-in group (e.g. a monthly government payment like Child Benefit landing several times on one statement) now has its own group actions — "Add all as income" creates one recurring income record and links every payment in the group to it, and "Link all to income" attaches them all to an income you already track. Previously you had to expand the group and process each row one by one.',
+    ],
+  },
   {
     version: '1.103.0',
     date: '2026-09-08',

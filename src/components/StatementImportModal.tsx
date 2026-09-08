@@ -229,6 +229,13 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   // counterparty account chosen for it ('' = external payee).
   const [loggingTransferGroupKey, setLoggingTransferGroupKey] = useState<string | null>(null);
   const [groupTransferAccountId, setGroupTransferAccountId] = useState<Record<string, string>>({});
+  // Money-in group actions: "Add all as income" (one Income, all rows
+  // linked) and "Link all to income" (all rows to an existing Income).
+  const [incomeGroupKey, setIncomeGroupKey] = useState<string | null>(null);
+  const [groupIncomeName, setGroupIncomeName] = useState<Record<string, string>>({});
+  const [groupIncomeFreq, setGroupIncomeFreq] = useState<Record<string, string>>({});
+  const [linkIncomeGroupKey, setLinkIncomeGroupKey] = useState<string | null>(null);
+  const [groupLinkIncomeId, setGroupLinkIncomeId] = useState<Record<string, string>>({});
   const [isLoadingReview, setIsLoadingReview] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [busyGroupKey, setBusyGroupKey] = useState<string | null>(null);
@@ -348,6 +355,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setSelectedGroupCategory({});
     setLoggingTransferGroupKey(null);
     setGroupTransferAccountId({});
+    setIncomeGroupKey(null);
+    setGroupIncomeName({});
+    setGroupIncomeFreq({});
+    setLinkIncomeGroupKey(null);
+    setGroupLinkIncomeId({});
     setCollapsedGroups(new Set());
     setBusyGroupKey(null);
     setAiRows(null);
@@ -937,6 +949,63 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       } else if (!data.duplicateOf) {
         alert(data.message || 'Failed to create recurring bill');
       }
+    } finally {
+      setBusyGroupKey(null);
+    }
+  };
+
+  // "Add all as income" for a money-in group: create ONE Income from the
+  // first row, then link every other row to it — the income-side mirror of
+  // recognising a debit group as one recurring bill. Avoids N duplicate
+  // Income records for what is really one recurring payment.
+  const resolveGroupAsIncome = async (group: TxGroup) => {
+    if (!importId) return;
+    const unmatched = group.items.filter((t) => t.status === 'UNMATCHED' && t.direction === 'CREDIT');
+    if (unmatched.length === 0) return;
+    const name = (groupIncomeName[group.key] ?? group.label).trim() || group.label;
+    const frequency = groupIncomeFreq[group.key] || 'monthly';
+    setBusyGroupKey(group.key);
+    try {
+      rememberScrollAnchor(group.key);
+      const first = unmatched[0];
+      const res = await fetch(`/api/statements/${importId}/transactions/${first.id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_income', learnAlias: true, name, frequency, assignedUserId: reviewAssignee || null }),
+      });
+      const data = await res.json();
+      if (data.status !== 'ok') {
+        alert(data.message || 'Failed to add income');
+        return;
+      }
+      setTransactions((prev) => prev.map((t) => (t.id === first.id ? { ...t, ...data.transaction } : t)));
+      const incomeId = data.income.id as string;
+      const rest = unmatched.slice(1);
+      for (let i = 0; i < rest.length; i += 4) {
+        await Promise.all(rest.slice(i, i + 4).map((tx) => resolveTx(tx.id, 'link_income', { incomeId }, { silent: true })));
+      }
+      setIncomeGroupKey(null);
+      onExpensesChanged?.();
+    } finally {
+      setBusyGroupKey(null);
+    }
+  };
+
+  // "Link all to income" for a group: attach every unresolved row to one
+  // existing Income the household already tracks.
+  const resolveGroupLinkIncome = async (group: TxGroup) => {
+    const incomeId = groupLinkIncomeId[group.key];
+    if (!incomeId) return;
+    const unmatched = group.items.filter((t) => t.status === 'UNMATCHED');
+    if (unmatched.length === 0) return;
+    setBusyGroupKey(group.key);
+    try {
+      rememberScrollAnchor(group.key);
+      for (let i = 0; i < unmatched.length; i += 4) {
+        await Promise.all(unmatched.slice(i, i + 4).map((tx) => resolveTx(tx.id, 'link_income', { incomeId }, { silent: true })));
+      }
+      setLinkIncomeGroupKey(null);
+      onExpensesChanged?.();
     } finally {
       setBusyGroupKey(null);
     }
@@ -1751,6 +1820,10 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                       const isCollapsed = isMultiple && collapsedGroups.has(group.key);
                       const isGroupBusy = busyGroupKey === group.key;
                       const groupHasUnmatched = group.items.some((t) => t.status === 'UNMATCHED');
+                      const groupUnmatched = group.items.filter((t) => t.status === 'UNMATCHED');
+                      // Every row still to resolve is money in — offer income
+                      // actions instead of the expense/transfer ones.
+                      const groupUnmatchedAllCredit = groupUnmatched.length > 0 && groupUnmatched.every((t) => t.direction === 'CREDIT');
                       const groupTotal = group.items.reduce(
                         (sum, t) => sum + (t.direction === 'DEBIT' ? -t.amount : t.amount),
                         0
@@ -1810,22 +1883,51 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                 </span>
                                 {groupHasUnmatched && (
                                   <>
-                                    <button
-                                      disabled={isGroupBusy}
-                                      onClick={() => setCategorizingGroupKey(categorizingGroupKey === group.key ? null : group.key)}
-                                      className="btn btn-secondary"
-                                      style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
-                                    >
-                                      {isGroupBusy ? <Loader2 size={11} className="spin" /> : <Tag size={11} />} Add all as expense
-                                    </button>
-                                    <button
-                                      disabled={isGroupBusy}
-                                      onClick={() => { setCategorizingGroupKey(null); setLoggingTransferGroupKey(loggingTransferGroupKey === group.key ? null : group.key); }}
-                                      className="btn btn-secondary"
-                                      style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
-                                    >
-                                      {isGroupBusy ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />} Log all as transfer
-                                    </button>
+                                    {groupUnmatchedAllCredit ? (
+                                      <>
+                                        <button
+                                          disabled={isGroupBusy}
+                                          onClick={() => {
+                                            setLinkIncomeGroupKey(null);
+                                            setIncomeGroupKey(incomeGroupKey === group.key ? null : group.key);
+                                            setGroupIncomeName((prev) => ({ ...prev, [group.key]: prev[group.key] ?? group.label }));
+                                          }}
+                                          className="btn btn-secondary"
+                                          style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                                        >
+                                          {isGroupBusy ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />} Add all as income
+                                        </button>
+                                        {incomes.length > 0 && (
+                                          <button
+                                            disabled={isGroupBusy}
+                                            onClick={() => { setIncomeGroupKey(null); setLinkIncomeGroupKey(linkIncomeGroupKey === group.key ? null : group.key); }}
+                                            className="btn btn-secondary"
+                                            style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                                          >
+                                            {isGroupBusy ? <Loader2 size={11} className="spin" /> : <Link2 size={11} />} Link all to income
+                                          </button>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          disabled={isGroupBusy}
+                                          onClick={() => setCategorizingGroupKey(categorizingGroupKey === group.key ? null : group.key)}
+                                          className="btn btn-secondary"
+                                          style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                                        >
+                                          {isGroupBusy ? <Loader2 size={11} className="spin" /> : <Tag size={11} />} Add all as expense
+                                        </button>
+                                        <button
+                                          disabled={isGroupBusy}
+                                          onClick={() => { setCategorizingGroupKey(null); setLoggingTransferGroupKey(loggingTransferGroupKey === group.key ? null : group.key); }}
+                                          className="btn btn-secondary"
+                                          style={{ fontSize: '0.72rem', padding: '0.3rem 0.5rem' }}
+                                        >
+                                          {isGroupBusy ? <Loader2 size={11} className="spin" /> : <PlusCircle size={11} />} Log all as transfer
+                                        </button>
+                                      </>
+                                    )}
                                     <button
                                       disabled={isGroupBusy}
                                       onClick={() => resolveGroup(group, 'ignore')}
@@ -1891,6 +1993,98 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                               <span style={{ flexBasis: '100%', fontSize: '0.7rem', color: 'var(--ha-muted)' }}>
                                 Applies to all {group.items.length} rows here and any future statements from this merchant.
                               </span>
+                            </div>
+                          )}
+
+                          {isMultiple && incomeGroupKey === group.key && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--ha-radius-sm)',
+                                backgroundColor: '#f0f0ec',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <input
+                                autoFocus
+                                value={groupIncomeName[group.key] ?? group.label}
+                                onChange={(e) => setGroupIncomeName((prev) => ({ ...prev, [group.key]: e.target.value }))}
+                                placeholder="Income name (e.g. Child Benefit)"
+                                className="ha-input"
+                                style={{ flex: 1, minWidth: '180px', fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+                              />
+                              <select
+                                value={groupIncomeFreq[group.key] || 'monthly'}
+                                onChange={(e) => setGroupIncomeFreq((prev) => ({ ...prev, [group.key]: e.target.value }))}
+                                className="ha-input"
+                                style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem', flexShrink: 0 }}
+                              >
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="annual">Annual</option>
+                              </select>
+                              <button
+                                className="btn btn-secondary"
+                                disabled={isGroupBusy || !(groupIncomeName[group.key] ?? group.label).trim()}
+                                onClick={() => resolveGroupAsIncome(group)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', flexShrink: 0 }}
+                              >
+                                {isGroupBusy ? <Loader2 size={11} className="spin" /> : `Create income & link all ${groupUnmatched.length}`}
+                              </button>
+                              <button
+                                className="btn btn-ghost"
+                                onClick={() => setIncomeGroupKey(null)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.4rem', flexShrink: 0 }}
+                              >
+                                Cancel
+                              </button>
+                              <span style={{ flexBasis: '100%', fontSize: '0.7rem', color: 'var(--ha-muted)' }}>
+                                One recurring income record, with all {groupUnmatched.length} payments here linked to it at their real amounts and dates.
+                              </span>
+                            </div>
+                          )}
+
+                          {isMultiple && linkIncomeGroupKey === group.key && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                padding: '0.5rem 0.75rem',
+                                borderRadius: 'var(--ha-radius-sm)',
+                                backgroundColor: '#f0f0ec',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <select
+                                autoFocus
+                                value={groupLinkIncomeId[group.key] || ''}
+                                onChange={(e) => setGroupLinkIncomeId((prev) => ({ ...prev, [group.key]: e.target.value }))}
+                                className="ha-input"
+                                style={{ flex: 1, minWidth: '180px', fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+                              >
+                                <option value="">— Choose an income —</option>
+                                {incomes.map((inc) => <option key={inc.id} value={inc.id}>{inc.name}</option>)}
+                              </select>
+                              <button
+                                className="btn btn-secondary"
+                                disabled={isGroupBusy || !groupLinkIncomeId[group.key]}
+                                onClick={() => resolveGroupLinkIncome(group)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', flexShrink: 0 }}
+                              >
+                                {isGroupBusy ? <Loader2 size={11} className="spin" /> : `Link all ${groupUnmatched.length}`}
+                              </button>
+                              <button
+                                className="btn btn-ghost"
+                                onClick={() => setLinkIncomeGroupKey(null)}
+                                style={{ fontSize: '0.72rem', padding: '0.35rem 0.4rem', flexShrink: 0 }}
+                              >
+                                Cancel
+                              </button>
                             </div>
                           )}
 
