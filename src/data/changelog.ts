@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.91.0';
+export const APP_VERSION = '1.92.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.92.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement import — a small 🔍 next to each transaction opens a Google search for the raw bank reference in a new tab, so you can work out what a cryptic descriptor actually is before deciding what to rename it to and which category it belongs in.',
+    ],
+  },
   {
     version: '1.91.0',
     date: '2026-09-08',

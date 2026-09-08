@@ -20,6 +20,7 @@ import {
   RefreshCw,
   ChevronsDownUp,
   ChevronsUpDown,
+  Search,
 } from 'lucide-react';
 import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
 import { formatCurrency } from '../utils/formatters';
@@ -1843,15 +1844,26 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                   </button>
                                 </div>
                               ) : (
-                                <div
-                                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
-                                  onClick={() => { setRenamingTxId(tx.id); setNicknameInput((prev) => ({ ...prev, [tx.id]: tx.vendorName ?? '' })); }}
-                                  title="Give this merchant a nickname"
-                                >
-                                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ha-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {tx.vendorName || tx.rawDescription}
-                                  </span>
-                                  <Edit2 size={11} color="var(--ha-muted)" style={{ flexShrink: 0 }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                  <div
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', minWidth: 0 }}
+                                    onClick={() => { setRenamingTxId(tx.id); setNicknameInput((prev) => ({ ...prev, [tx.id]: tx.vendorName ?? '' })); }}
+                                    title="Give this merchant a nickname"
+                                  >
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ha-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {tx.vendorName || tx.rawDescription}
+                                    </span>
+                                    <Edit2 size={11} color="var(--ha-muted)" style={{ flexShrink: 0 }} />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/search?q=${encodeURIComponent(tx.rawDescription)}`, '_blank', 'noopener,noreferrer'); }}
+                                    className="btn btn-ghost"
+                                    style={{ padding: '0.1rem 0.3rem', flexShrink: 0 }}
+                                    title="Look this reference up on Google (opens a new tab)"
+                                  >
+                                    <Search size={11} color="var(--ha-muted)" />
+                                  </button>
                                 </div>
                               )}
                               <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
