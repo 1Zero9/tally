@@ -3,7 +3,7 @@ import type { GoalItem, ExpenseItem, AccountItem, TransferItem, CurrencyCode } f
 import { formatCurrency } from '../utils/formatters';
 import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
-import { Edit2, Trash2, Plus, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { Edit2, Trash2, Plus, Target, TrendingDown, TrendingUp, PiggyBank } from 'lucide-react';
 
 interface ProgressSectionProps {
   goals: GoalItem[];
@@ -17,7 +17,14 @@ interface ProgressSectionProps {
 }
 
 const DEBT_TYPES = new Set(['LOAN', 'CREDIT_CARD']);
-const TYPE_LABEL: Record<string, string> = { LOAN: 'Loan', CREDIT_CARD: 'Credit card' };
+const SAVINGS_TYPES = new Set(['SAVINGS', 'CREDIT_UNION', 'INVESTMENT']);
+const TYPE_LABEL: Record<string, string> = {
+  LOAN: 'Loan',
+  CREDIT_CARD: 'Credit card',
+  SAVINGS: 'Savings',
+  CREDIT_UNION: 'Credit union',
+  INVESTMENT: 'Investment',
+};
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -56,6 +63,13 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
     [accounts],
   );
 
+  const savings = useMemo(
+    () => accounts
+      .filter((a) => SAVINGS_TYPES.has(a.type) && a.balance != null)
+      .sort((a, b) => (b.balance || 0) - (a.balance || 0)),
+    [accounts],
+  );
+
   // Payments logged toward each debt account = transfers landing in it.
   const paymentsByAccount = useMemo(() => {
     const m = new Map<string, { count: number; total: number }>();
@@ -81,6 +95,7 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
   }, [expenses, currency]);
 
   const totalOwed = debts.reduce((s, a) => s + convertCurrency(Math.abs(a.balance || 0), a.currency, currency), 0);
+  const totalSavings = savings.reduce((s, a) => s + convertCurrency(a.balance || 0, a.currency, currency), 0);
   const totalSaved = goals.filter((g) => g.isActive).reduce((s, g) => s + convertCurrency(g.currentAmount, g.currency, currency), 0);
   const activeGoals = goals.filter((g) => g.isActive);
 
@@ -105,7 +120,7 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1 }}>Progress</h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '600px', marginTop: '0.25rem' }}>
-              Loans and cards being paid down, and savings goals being built up — in one place.
+              Savings balances, loans and cards being paid down, and goals being built up — in one place.
             </p>
           </div>
           <button onClick={onOpenAddModal} className="btn btn-primary" style={{ fontSize: '0.85rem' }}>
@@ -117,10 +132,59 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
 
       {/* Overview strip */}
       <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
+        <Stat label="Savings balances" value={formatCurrency(totalSavings, currency)} tone={totalSavings > 0 ? 'lime' : 'ink'} />
         <Stat label="Total owed" value={formatCurrency(totalOwed, currency)} tone={totalOwed > 0 ? 'red' : 'ink'} />
         <Stat label="Saved toward goals" value={formatCurrency(totalSaved, currency)} tone={totalSaved > 0 ? 'lime' : 'ink'} />
         <Stat label="Goals on track" value={activeGoals.length ? `${onTrackCount} of ${activeGoals.length}` : '—'} />
       </div>
+
+      {/* Savings */}
+      <CollapsibleSection id="progress-savings" title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><PiggyBank size={15} /> Savings ({savings.length})</span>}>
+        {savings.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
+            No savings accounts yet. Add one in Accounts — a Savings, Credit Union or Investment account (State Savings, shares, and so on fit under Investment) — and its balance shows here.
+          </div>
+        ) : (
+          <div>
+            {savings.map((a) => {
+              const bal = a.balance || 0;
+              const inCcy = convertCurrency(bal, a.currency, currency);
+              const share = totalSavings > 0 ? Math.round((inCcy / totalSavings) * 100) : 0;
+              return (
+                <div key={a.id} style={{ borderBottom: '1px solid var(--ha-line)', padding: '1rem 1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+                    <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{a.name}</span>
+                        <span className="ha-badge ha-badge-neutral" style={{ fontSize: '0.7rem' }}>{TYPE_LABEL[a.type] || a.type}</span>
+                        {a.institution && <span style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>{a.institution}</span>}
+                      </div>
+                      {a.balanceAsOf && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
+                          as of {a.balanceAsOf} — entered manually
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div className="tabular-nums" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ha-ink)' }}>{formatCurrency(bal, a.currency)}</div>
+                      {totalSavings > 0 && savings.length > 1 && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>{share}% of savings</div>
+                      )}
+                    </div>
+                  </div>
+                  {totalSavings > 0 && savings.length > 1 && <Bar pct={share} color="var(--ha-lime)" />}
+                </div>
+              );
+            })}
+            {savings.length > 1 && (
+              <div style={{ padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
+                <span>Total</span>
+                <span className="tabular-nums">{formatCurrency(totalSavings, currency)}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </CollapsibleSection>
 
       {/* Debts */}
       <CollapsibleSection id="progress-debts" title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><TrendingDown size={15} /> Loans &amp; cards ({debts.length})</span>}>

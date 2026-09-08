@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.82.0';
+export const APP_VERSION = '1.83.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.83.0',
+    date: '2026-09-08',
+    changes: [
+      'Progress tab — added a Savings section: every Savings, Credit Union or Investment account with a balance, shown largest-first with each account\'s share of the total and a combined total. State Savings, shares and similar fit under an Investment-type account. The overview strip now leads with a "Savings balances" total.',
+    ],
+  },
   {
     version: '1.82.0',
     date: '2026-09-08',
