@@ -316,6 +316,22 @@ export interface StatementTransactionItem {
   updatedAt?: string;
 }
 
+export interface StatementActivityItem {
+  id: string;
+  importId: string;
+  importLabel: string;
+  date: string;
+  updatedAt: string;
+  merchant: string;
+  amount: number;
+  currency: CurrencyCode;
+  direction: StatementTxDirection;
+  status: StatementTxStatus;
+  action: string;
+  target: string | null;
+  createdHere: boolean;
+}
+
 export interface StatementImportSummary {
   id: string;
   label: string;

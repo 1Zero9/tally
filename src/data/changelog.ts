@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.80.0';
+export const APP_VERSION = '1.81.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.81.0',
+    date: '2026-09-08',
+    changes: [
+      'New: Statement activity (Flow tab). A single newest-first list of everything you\'ve added, logged or ignored from a statement — across every import — so if you processed something by mistake and can\'t remember which statement it was on, you can find it here and Undo it in one click. Search by merchant, filter by Bills / Expenses / Transfers / Income / Ignored. Undo sends the row back to "needs review" and removes any bill/transfer/income it created.',
+    ],
+  },
   {
     version: '1.80.0',
     date: '2026-09-07',

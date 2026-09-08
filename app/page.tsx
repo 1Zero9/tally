@@ -44,6 +44,7 @@ import { MoneyMap } from '@/src/components/MoneyMap';
 import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
+import { StatementActivitySection } from '@/src/components/StatementActivitySection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
 import { StatementImportModal } from '@/src/components/StatementImportModal';
@@ -70,6 +71,9 @@ export default function TallyPage() {
   const [transfers, setTransfers] = useState<TransferItem[]>([]);
   const [goals, setGoals] = useState<GoalItem[]>([]);
   const [trails, setTrails] = useState<MoneyTrailItem[]>([]);
+  // Bumped after every fetchDatabaseData() — lets self-fetching sections
+  // (e.g. Statement activity) know app data changed and re-pull.
+  const [dataVersion, setDataVersion] = useState(0);
   const [customCategories, setCustomCategories] = useState<CustomCategoryItem[]>([]);
   const [budgets, setBudgets] = useState<BudgetItem[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>('EUR');
@@ -226,6 +230,7 @@ export default function TallyPage() {
     }
 
     setIsInitialLoading(false);
+    setDataVersion((v) => v + 1);
   }, [showFeedback]);
 
   // Check auth on load
@@ -1308,6 +1313,7 @@ export default function TallyPage() {
               customCategories={customCategories}
               onCategoryCreated={handleCategoryCreated}
             />
+            <StatementActivitySection reloadSignal={dataVersion} onChanged={fetchDatabaseData} />
             <TransfersSection
               transfers={transfers}
               onEditTransfer={(item) => {
