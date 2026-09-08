@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.93.0';
+export const APP_VERSION = '1.94.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.94.0',
+    date: '2026-09-08',
+    changes: [
+      'Spending page tidied so the ledger isn\'t buried. The "Monthly spending mix" legend now lists only categories with spend this month instead of a wall of €0.00 rows, and "Spending over time" and "Category spending limits" are collapsed by default (they remember whether you\'ve opened them).',
+    ],
+  },
   {
     version: '1.93.0',
     date: '2026-09-08',

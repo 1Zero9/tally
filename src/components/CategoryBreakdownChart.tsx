@@ -71,23 +71,26 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
         })}
       </div>
 
-      {/* Informational legend. Filtering lives with the ledger controls below. */}
-      <div className="ha-spending-legend">
-        {categoryData.filter((cat) => cat.itemCount > 0).map((cat) => (
-          <div key={cat.id} className="ha-spending-legend-item">
-            <span className="ha-color-marker" style={{ backgroundColor: cat.color }} />
-            <span className="ha-spending-legend-name">
-              {cat.name}
-            </span>
-            <span className="tabular-nums ha-spending-legend-amount">
-              {formatCurrency(cat.monthlyAmount, currency)}
-            </span>
-            <span className="tabular-nums ha-spending-legend-percent">
-              {cat.percentage}%
-            </span>
+      {/* Informational legend — only categories with spend this month.
+          Filtering lives with the ledger controls below. */}
+      {(() => {
+        const withSpend = categoryData.filter((cat) => cat.monthlyAmount > 0);
+        if (withSpend.length === 0) {
+          return <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', margin: 0 }}>No spend recorded this month yet.</p>;
+        }
+        return (
+          <div className="ha-spending-legend">
+            {withSpend.map((cat) => (
+              <div key={cat.id} className="ha-spending-legend-item">
+                <span className="ha-color-marker" style={{ backgroundColor: cat.color }} />
+                <span className="ha-spending-legend-name">{cat.name}</span>
+                <span className="tabular-nums ha-spending-legend-amount">{formatCurrency(cat.monthlyAmount, currency)}</span>
+                <span className="tabular-nums ha-spending-legend-percent">{cat.percentage}%</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
     </div>
   );
 };

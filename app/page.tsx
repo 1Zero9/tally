@@ -46,6 +46,7 @@ import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { StatementActivitySection } from '@/src/components/StatementActivitySection';
+import { CollapsibleSection } from '@/src/components/CollapsibleSection';
 import { ProjectsSection } from '@/src/components/ProjectsSection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
@@ -1027,23 +1028,35 @@ export default function TallyPage() {
             )}
 
             {hasData && (
-              <TrendChart
-                currency={currency}
-                metric="spending"
+              <CollapsibleSection
+                id="spending-over-time"
+                defaultOpen={false}
+                bodyStyle={{ padding: '0.5rem 1.25rem 1.25rem' }}
                 title="Spending over time"
                 subtitle="Built from bills marked paid and logged transfers — grows as you go"
-              />
+              >
+                <TrendChart currency={currency} metric="spending" bare />
+              </CollapsibleSection>
             )}
 
-            <BudgetsSection
-              expenses={liveExpenses}
-              customCategories={customCategories}
-              currency={currency}
-              budgets={budgets}
-              onSaveBudget={handleSaveBudget}
-              onDeleteBudget={handleDeleteBudget}
-              onCategoryCreated={handleCategoryCreated}
-            />
+            <CollapsibleSection
+              id="spending-budgets"
+              defaultOpen={false}
+              bodyStyle={{ padding: '1rem 1.5rem 1.5rem' }}
+              title="Category spending limits"
+              subtitle="A monthly limit per category vs this month's spend — no rollover, just a simple check"
+            >
+              <BudgetsSection
+                expenses={liveExpenses}
+                customCategories={customCategories}
+                currency={currency}
+                budgets={budgets}
+                onSaveBudget={handleSaveBudget}
+                onDeleteBudget={handleDeleteBudget}
+                onCategoryCreated={handleCategoryCreated}
+                bare
+              />
+            </CollapsibleSection>
 
             {/* Complete Household Ledger */}
             <ExpenseList

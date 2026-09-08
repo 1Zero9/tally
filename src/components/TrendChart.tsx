@@ -19,6 +19,9 @@ interface TrendChartProps {
   metric?: 'spending' | 'income' | 'both';
   title?: string;
   subtitle?: string;
+  /** Render without the card chrome / heading — for embedding inside a
+   *  collapsible section that provides its own. */
+  bare?: boolean;
   billsOnly?: boolean;
 }
 
@@ -27,6 +30,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   metric = 'both',
   title = 'Trends over time',
   subtitle,
+  bare = false,
   billsOnly = false,
 }) => {
   const [period, setPeriod] = useState<HistoryPeriod>('6');
@@ -72,18 +76,20 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   const pieColor = pieSeries === 'spending' ? SPENDING_COLOR : INCOME_COLOR;
 
   return (
-    <div className="ha-card" style={{ padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
-        <div>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
-            {title}
-          </h3>
-          {subtitle && (
-            <p style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-              {subtitle}
-            </p>
-          )}
-        </div>
+    <div className={bare ? '' : 'ha-card'} style={bare ? {} : { padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: bare ? 'flex-end' : 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
+        {!bare && (
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
+              {title}
+            </h3>
+            {subtitle && (
+              <p style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
           <div className="ha-ledger-status" role="group" aria-label="Chart period">

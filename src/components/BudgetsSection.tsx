@@ -15,6 +15,8 @@ interface BudgetsSectionProps {
   onSaveBudget: (category: string, monthlyLimit: number) => void;
   onDeleteBudget: (id: string) => void;
   onCategoryCreated?: (category: CustomCategoryItem) => void;
+  /** Drop the card chrome / heading — for embedding in a collapsible section. */
+  bare?: boolean;
 }
 
 /**
@@ -33,6 +35,7 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
   onSaveBudget,
   onDeleteBudget,
   onCategoryCreated,
+  bare = false,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCategory, setNewCategory] = useState('');
@@ -65,19 +68,21 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div className="ha-card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-              <span className="ha-badge ha-badge-blue">Budgets</span>
+      <div className={bare ? '' : 'ha-card'} style={bare ? {} : { padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: bare ? 'flex-end' : 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          {!bare && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                <span className="ha-badge ha-badge-blue">Budgets</span>
+              </div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1 }}>
+                Category spending limits
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '560px', marginTop: '0.25rem' }}>
+                Set a monthly limit per category and see how this month&apos;s spend compares — no rollover, just a simple check.
+              </p>
             </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1 }}>
-              Category spending limits
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '560px', marginTop: '0.25rem' }}>
-              Set a monthly limit per category and see how this month&apos;s spend compares — no rollover, just a simple check.
-            </p>
-          </div>
+          )}
           <button onClick={() => setIsAdding(true)} className="btn btn-primary" style={{ fontSize: '0.85rem' }}>
             <Plus size={15} />
             <span>Set a budget</span>
@@ -118,8 +123,8 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
         )}
       </div>
 
-      <CollapsibleSection id="budgets-list" title={`Budgets (${budgets.length})`}>
-        {budgets.length === 0 ? (
+      {(() => {
+        const listContent = budgets.length === 0 ? (
           <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--ha-muted)' }}>
             <div style={{
               width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--ha-blue-light)',
@@ -206,8 +211,13 @@ export const BudgetsSection: React.FC<BudgetsSectionProps> = ({
               );
             })}
           </div>
-        )}
-      </CollapsibleSection>
+        );
+        return bare ? listContent : (
+          <CollapsibleSection id="budgets-list" title={`Budgets (${budgets.length})`}>
+            {listContent}
+          </CollapsibleSection>
+        );
+      })()}
     </div>
   );
 };
