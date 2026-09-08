@@ -6,6 +6,7 @@ import { askAboutHouseholdData, isAiConfigured } from '@/src/lib/ai';
 import { getMonthlyEquivalent } from '@/src/utils/calculations';
 import type { BillingCycle } from '@/src/types/expense';
 import { HELP_GUIDE_SECTIONS } from '@/src/data/helpGuide';
+import { classifyQuestion, lookupKbAnswer, bumpKbHit, rememberKbAnswer } from '@/src/lib/assistantKb';
 
 export async function POST(request: Request) {
   const auth = await requireHouseholdUser();
@@ -32,6 +33,18 @@ export async function POST(request: Request) {
         { status: 'error', message: 'Question is too long.' },
         { status: 400 }
       );
+    }
+
+    // App-usage ("how do I…") answers don't depend on live figures, so a
+    // previously-vetted answer to the same question is reused straight from
+    // the internal KB — no model call. Money questions are never cached.
+    const kind = classifyQuestion(question);
+    if (kind === 'help') {
+      const hit = await lookupKbAnswer(auth.user.householdId, question);
+      if (hit) {
+        void bumpKbHit(hit.id);
+        return NextResponse.json({ status: 'ok', answer: hit.answer, cached: true, kind });
+      }
     }
 
     const expenses = await prisma.expense.findMany({
@@ -93,7 +106,11 @@ export async function POST(request: Request) {
 
     const answer = await askAboutHouseholdData(question, context, helpGuide);
 
-    return NextResponse.json({ status: 'ok', answer });
+    if (kind === 'help') {
+      void rememberKbAnswer(auth.user.householdId, auth.user.id, question, answer);
+    }
+
+    return NextResponse.json({ status: 'ok', answer, cached: false, kind });
   } catch (error: unknown) {
     console.error('Assistant ask failed:', error);
     return NextResponse.json(

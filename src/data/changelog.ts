@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.101.0';
+export const APP_VERSION = '1.102.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.102.0',
+    date: '2026-09-08',
+    changes: [
+      'Added the Tally Agent — a floating assistant that lives in the bottom-right corner of every screen (the fifth tally mark, come alive). Click it for a side panel that answers questions about your money and about using Tally, with starter prompts that adapt to the tab you opened it from. The top-bar "Ask Tally" shortcut now opens this panel from anywhere.',
+      'The assistant can log feedback for you: ask to raise a bug, feature or idea (or hit the shortcut in the panel) and it writes straight into your Feedback backlog, tagged with the area you were on.',
+      'Repeated "how do I…" questions are now answered instantly from an internal, household-private knowledge base of previously-vetted answers, instead of a fresh model call each time. Questions about your actual figures are never cached — those always use live data.',
+      'Moved the quick-hide privacy button to the bottom-left so it no longer overlaps the new assistant launcher.',
+    ],
+  },
   {
     version: '1.101.0',
     date: '2026-09-08',

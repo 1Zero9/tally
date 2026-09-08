@@ -38,6 +38,7 @@ import { SettingsModal } from '@/src/components/SettingsModal';
 import { OverviewDashboard } from '@/src/components/OverviewDashboard';
 import { BudgetsSection } from '@/src/components/BudgetsSection';
 import { AssistantBox } from '@/src/components/AssistantBox';
+import { TallyAgent } from '@/src/components/tally-agent/TallyAgent';
 import { TallyLogo } from '@/src/components/TallyLogo';
 import { AccountsSection } from '@/src/components/AccountsSection';
 import { AccountModal } from '@/src/components/AccountModal';
@@ -112,6 +113,7 @@ export default function TallyPage() {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState(false);
   const [changelogVariant, setChangelogVariant] = useState<'desktop' | 'mobile'>('desktop');
@@ -807,35 +809,9 @@ export default function TallyPage() {
     );
   };
 
-  // Scroll to and focus the Ask Tally input. The Ask box only exists in the
-  // DOM on Overview (every other tab is gated to its own content), so the
-  // top-bar shortcut has to switch there first when invoked from elsewhere
-  // — otherwise getElementById finds nothing and silently does nothing,
-  // breaking the shortcut's whole "works from anywhere" purpose.
-  const [pendingFocusAsk, setPendingFocusAsk] = useState(false);
-
-  const handleFocusAsk = () => {
-    if (activeTab !== 'overview') {
-      setActiveTab('overview');
-      setPendingFocusAsk(true);
-      return;
-    }
-    const input = document.getElementById('ask-tally-input');
-    if (input) {
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      input.focus();
-    }
-  };
-
-  useEffect(() => {
-    if (!pendingFocusAsk || activeTab !== 'overview') return;
-    const input = document.getElementById('ask-tally-input');
-    if (input) {
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      input.focus();
-    }
-    setPendingFocusAsk(false);
-  }, [pendingFocusAsk, activeTab]);
+  // The top-bar "Ask Tally" shortcut opens the floating Tally Agent panel —
+  // available from any tab, unlike the Overview-only Ask box.
+  const handleFocusAsk = () => setIsAgentOpen(true);
 
   // Show loading spinner while checking auth
   if (isAuthenticated === null) {
@@ -1488,7 +1464,9 @@ export default function TallyPage() {
         </div>
       )}
 
-      {/* Quick-hide panic button — always on top, instantly blurs the screen */}
+      {/* Quick-hide panic button — always on top, instantly blurs the screen.
+          Sits bottom-LEFT so it never collides with the Tally Agent launcher
+          in the bottom-right corner. */}
       {!isPrivacyBlurred && (
         <button
           onClick={hidePrivacyNow}
@@ -1497,7 +1475,7 @@ export default function TallyPage() {
           style={{
             position: 'fixed',
             bottom: '1.25rem',
-            right: '1.25rem',
+            left: '1.25rem',
             zIndex: 100,
             width: '48px',
             height: '48px',
@@ -1514,6 +1492,18 @@ export default function TallyPage() {
         >
           <EyeOff size={20} />
         </button>
+      )}
+
+      {/* Tally Agent — floating assistant, available from every tab */}
+      {!isPrivacyBlurred && (
+        <TallyAgent
+          open={isAgentOpen}
+          onOpenChange={setIsAgentOpen}
+          firstName={firstName}
+          activeTab={activeTab}
+          onNavigate={setActiveTab}
+          onOpenFeedback={() => setIsFeedbackModalOpen(true)}
+        />
       )}
 
       {/* Changelog / What's New Modal */}

@@ -87,6 +87,8 @@ model Household {
 
   bugReports BugReport[]
 
+  assistantKbEntries AssistantKbEntry[]
+
   budgets Budget[]
 
   auditLogs AuditLog[]
@@ -121,6 +123,8 @@ model User {
   mapNodesCreated MapNode[]
 
   bugReportsCreated BugReport[]
+
+  assistantKbEntriesCreated AssistantKbEntry[]
 
   budgetsCreated Budget[]
 
@@ -851,5 +855,33 @@ model BugReport {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([householdId])
+}
+
+/// Internal knowledge base for the Tally Agent. Every "how do I / what
+/// happens if" style help answer the agent gives is saved here so a later
+/// identical or near-identical question can be served the same vetted
+/// answer instantly without another model call. Only app-usage help
+/// answers are cached — questions about the household's own money are
+/// never stored here because that data changes. Household-scoped so one
+/// household can never see another's cached text.
+model AssistantKbEntry {
+  id          String   @id @default(cuid())
+  question    String
+  normalized  String
+  answer      String
+  kind        String   @default("help")
+  hitCount    Int      @default(0)
+
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@unique([householdId, normalized])
   @@index([householdId])
 }
