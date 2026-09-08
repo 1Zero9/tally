@@ -222,3 +222,48 @@ export function getCategoryMeta(
   }
   return { ...FALLBACK_META, id, name: id };
 }
+
+export interface OrderedCategory {
+  id: string;
+  isCustom: boolean;
+  meta: CategoryInfo;
+}
+
+/**
+ * The full category list — built-ins and custom together — in the
+ * household's chosen order. Once anything has an explicit `sortOrder`
+ * (set by a reorder), everything sorts by that; otherwise it's the
+ * canonical built-in order followed by custom categories by creation.
+ */
+export function getOrderedCategories(rows: CustomCategoryItem[] | undefined | null): OrderedCategory[] {
+  const all = rows ?? [];
+  const overrideByKey = new Map<string, CustomCategoryItem>();
+  for (const r of all) if (r.builtinKey) overrideByKey.set(r.builtinKey, r);
+  const custom = all.filter((c) => !c.builtinKey);
+
+  type Entry = { id: string; isCustom: boolean; order: number | null; fallback: number };
+  const entries: Entry[] = [
+    ...CATEGORY_LIST.map((b, i) => ({
+      id: b.id, isCustom: false,
+      order: overrideByKey.get(b.id)?.sortOrder ?? null,
+      fallback: i,
+    })),
+    ...custom.map((c, i) => ({
+      id: c.id, isCustom: true,
+      order: c.sortOrder ?? null,
+      fallback: 1000 + i,
+    })),
+  ];
+
+  const anyOrdered = entries.some((e) => e.order != null);
+  entries.sort((a, b) => {
+    if (anyOrdered) {
+      const ao = a.order ?? Number.MAX_SAFE_INTEGER;
+      const bo = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (ao !== bo) return ao - bo;
+    }
+    return a.fallback - b.fallback;
+  });
+
+  return entries.map((e) => ({ id: e.id, isCustom: e.isCustom, meta: getCategoryMeta(e.id, all) }));
+}

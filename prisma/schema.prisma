@@ -656,6 +656,13 @@ model Category {
   /// of this key (e.g. "utilities"), not a standalone custom category.
   builtinKey String?
 
+  /// Position in the household's category list (built-ins + customs, one
+  /// combined order). Null until the household reorders anything; a reorder
+  /// writes an explicit position to every category (creating override rows
+  /// for built-ins that lacked one). Falls back to canonical built-in order
+  /// then custom createdAt.
+  sortOrder Int?
+
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 

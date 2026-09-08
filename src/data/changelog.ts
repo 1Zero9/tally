@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.90.0';
+export const APP_VERSION = '1.91.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.91.0',
+    date: '2026-09-08',
+    changes: [
+      'Category Manager is now one combined list of built-in and custom categories with up/down arrows to reorder them — the order flows through to every category dropdown, the spending filter and the budgets picker, so your most-used ones can sit at the top.',
+      'Also fixed: restoring a household backup was dropping any built-in category renames/recolours (and now the order too) — those are preserved again.',
+    ],
+  },
   {
     version: '1.90.0',
     date: '2026-09-08',

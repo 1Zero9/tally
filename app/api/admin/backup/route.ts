@@ -227,6 +227,9 @@ export async function PUT(request: Request) {
             color: str(item.color, '#676B73') as string,
             bgColor: str(item.bgColor, '#f1f2f4') as string,
             borderColor: str(item.borderColor, '#e7e8ea') as string,
+            // Preserve built-in overrides (rename/recolour) and the list order.
+            builtinKey: typeof item.builtinKey === 'string' ? item.builtinKey : null,
+            sortOrder: typeof item.sortOrder === 'number' ? Math.trunc(item.sortOrder) : null,
             householdId,
             createdById,
           },

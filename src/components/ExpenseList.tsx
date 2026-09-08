@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
-import { CATEGORY_LIST, getCategoryMeta, getCustomCategories } from '../data/categories';
+import { getCategoryMeta, getOrderedCategories } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle } from '../utils/formatters';
 import { hasTextSelection } from '../utils/dom';
@@ -68,7 +68,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const [sortBy, setSortBy] = useState<'amount-desc' | 'amount-asc' | 'renewal' | 'name'>('amount-desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
-  const allCategories = [...CATEGORY_LIST, ...getCustomCategories(customCategories)];
+  const allCategories = getOrderedCategories(customCategories);
 
   // A household ledger realistically holds tens to a few hundred records —
   // but importing years of statements can push it into the thousands, and
@@ -201,7 +201,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             >
               <option value="">All categories</option>
               {allCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{getCategoryMeta(cat.id, customCategories).name}</option>
+                <option key={cat.id} value={cat.id}>{cat.meta.name}</option>
               ))}
             </select>
           </label>

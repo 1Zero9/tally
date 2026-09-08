@@ -27,6 +27,8 @@ export interface CustomCategoryItem {
   /** When set, this row is an appearance override for the built-in of this
    *  key (e.g. "utilities"), not a standalone custom category. */
   builtinKey?: string | null;
+  /** Household's chosen position in the combined category list; null = unset. */
+  sortOrder?: number | null;
   createdById?: string | null;
   createdAt?: string | Date;
 }

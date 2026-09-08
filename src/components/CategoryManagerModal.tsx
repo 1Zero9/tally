@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  X, Plus, Pencil, Trash2, RotateCcw, Check, Loader2, GitMerge,
+  X, Plus, Pencil, Trash2, RotateCcw, Check, Loader2, GitMerge, ChevronUp, ChevronDown,
   Tag, Home, Zap, Car, Fuel, ShoppingCart, Utensils, Coffee, Plane, Train,
   Bus, Heart, HeartPulse, Stethoscope, Pill, Dog, Cat, Baby, GraduationCap,
   BookOpen, Dumbbell, Bike, Music, Film, Tv, Gamepad2, Gift, Shirt, Scissors,
@@ -12,8 +12,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CustomCategoryItem, ExpenseItem } from '../types/expense';
 import {
-  CATEGORY_LIST, CATEGORY_COLOR_PRESETS, getCategoryMeta, getCustomCategories,
-  getBuiltinOverride,
+  CATEGORY_LIST, CATEGORIES, CATEGORY_COLOR_PRESETS, getCategoryMeta, getCustomCategories,
+  getBuiltinOverride, getOrderedCategories,
 } from '../data/categories';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -330,6 +330,17 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
     if (best) nearDuplicate.set(c.id, { id: best.id, name: best.name });
   }
 
+  const ordered = getOrderedCategories(categoryRows);
+  const move = async (index: number, dir: -1 | 1) => {
+    const j = index + dir;
+    if (j < 0 || j >= ordered.length) return;
+    const ids = ordered.map((o) => o.id);
+    [ids[index], ids[j]] = [ids[j], ids[index]];
+    const { ok, data } = await api('/api/categories/reorder', 'POST', { orderedIds: ids });
+    if (ok) onChanged();
+    else setError(data.message || 'Failed to save the new order');
+  };
+
   return (
     <div className="modal-overlay">
       <div ref={dialogRef} {...dialogProps} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
@@ -343,22 +354,54 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
           <button onClick={onClose} className="btn btn-ghost" style={{ padding: '0.35rem' }}><X size={18} /></button>
         </div>
 
-        <div style={{ padding: '1.25rem 1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+        <div style={{ padding: '1.25rem 1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '70vh', overflowY: 'auto' }}>
 
-          {/* Custom categories */}
-          <div>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.7rem' }}>
-              Your categories
-            </h4>
+          <p style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', margin: 0 }}>
+            Your full category list, in the order it shows everywhere. Use the arrows to reorder; rename, recolour, merge or delete from each row.
+          </p>
 
-            {custom.length === 0 && !adding && (
-              <p style={{ fontSize: '0.82rem', color: 'var(--ha-muted)', marginBottom: '0.7rem' }}>
-                No custom categories yet. Add one for anything the built-in set doesn&apos;t cover.
-              </p>
-            )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {ordered.map((entry, i) => {
+                const moveBtns = (
+                  <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <button onClick={() => move(i, -1)} disabled={busy || i === 0} className="btn btn-ghost" style={{ padding: '0.02rem 0.25rem' }} title="Move up"><ChevronUp size={13} /></button>
+                    <button onClick={() => move(i, 1)} disabled={busy || i === ordered.length - 1} className="btn btn-ghost" style={{ padding: '0.02rem 0.25rem' }} title="Move down"><ChevronDown size={13} /></button>
+                  </div>
+                );
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {custom.map((c) => {
+                if (!entry.isCustom) {
+                  const base = CATEGORIES[entry.id as keyof typeof CATEGORIES];
+                  const meta = entry.meta;
+                  const override = getBuiltinOverride(categoryRows, entry.id);
+                  if (editingBuiltin === entry.id) {
+                    return (
+                      <CategoryForm key={entry.id} draft={draft} onDraftChange={setDraft} showName onSave={handleSaveBuiltin} onCancel={resetForms} saving={busy} error={error} saveLabel="Save changes" />
+                    );
+                  }
+                  return (
+                    <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.6rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-sm)' }}>
+                      {moveBtns}
+                      <span style={{ width: '26px', height: '26px', borderRadius: 'var(--ha-radius-sm)', backgroundColor: meta.bgColor, border: `1px solid ${meta.borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <IconGlyph name={meta.icon} size={14} color={meta.color} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{meta.name}</div>
+                        {override && (
+                          <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>
+                            {meta.name !== base.name ? `Renamed from "${base.name}"` : 'Customised'}
+                          </div>
+                        )}
+                      </div>
+                      {override && (
+                        <button onClick={() => handleResetBuiltin(entry.id)} disabled={busy} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Reset to default"><RotateCcw size={13} /></button>
+                      )}
+                      <button onClick={() => startEditBuiltin(entry.id)} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Rename / recolour"><Pencil size={13} /></button>
+                    </div>
+                  );
+                }
+
+                const c = custom.find((x) => x.id === entry.id);
+                if (!c) return null;
                 const count = billCounts.get(c.id) || 0;
                 if (editingId === c.id) {
                   return (
@@ -376,8 +419,9 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                   );
                 }
                 return (
-                  <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.6rem 0.75rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-sm)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0.6rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-sm)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {moveBtns}
                       <span style={{ width: '26px', height: '26px', borderRadius: 'var(--ha-radius-sm)', backgroundColor: c.bgColor, border: `1px solid ${c.borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <IconGlyph name={c.icon} size={14} color={c.color} />
                       </span>
@@ -488,67 +532,11 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                 <button
                   onClick={() => { resetForms(); setAdding(true); setDraft(BLANK_DRAFT); }}
                   className="btn btn-secondary"
-                  style={{ alignSelf: 'flex-start', fontSize: '0.8rem', padding: '0.45rem 0.8rem' }}
+                  style={{ alignSelf: 'flex-start', fontSize: '0.8rem', padding: '0.45rem 0.8rem', marginTop: '0.3rem' }}
                 >
                   <Plus size={14} /> New category
                 </button>
               )}
-            </div>
-          </div>
-
-          {/* Built-in categories */}
-          <div style={{ borderTop: '1px solid var(--ha-line)', paddingTop: '1.1rem' }}>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.3rem' }}>
-              Built-in categories
-            </h4>
-            <p style={{ fontSize: '0.76rem', color: 'var(--ha-muted)', marginBottom: '0.7rem' }}>
-              Rename, recolour or re-icon any of these for your household. &ldquo;Reset&rdquo; puts one back to its default.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {CATEGORY_LIST.map((base) => {
-                const override = getBuiltinOverride(categoryRows, base.id);
-                const meta = getCategoryMeta(base.id, categoryRows);
-                if (editingBuiltin === base.id) {
-                  return (
-                    <CategoryForm
-                      key={base.id}
-                      draft={draft}
-                      onDraftChange={setDraft}
-                      showName
-                      onSave={handleSaveBuiltin}
-                      onCancel={resetForms}
-                      saving={busy}
-                      error={error}
-                      saveLabel="Save changes"
-                    />
-                  );
-                }
-                return (
-                  <div key={base.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 0.75rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-sm)' }}>
-                    <span style={{ width: '26px', height: '26px', borderRadius: 'var(--ha-radius-sm)', backgroundColor: meta.bgColor, border: `1px solid ${meta.borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <IconGlyph name={meta.icon} size={14} color={meta.color} />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{meta.name}</div>
-                      {override && (
-                        <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)' }}>
-                          {meta.name !== base.name ? `Renamed from "${base.name}"` : 'Customised'}
-                        </div>
-                      )}
-                    </div>
-                    {override && (
-                      <button onClick={() => handleResetBuiltin(base.id)} disabled={busy} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Reset to default">
-                        <RotateCcw size={13} />
-                      </button>
-                    )}
-                    <button onClick={() => startEditBuiltin(base.id)} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Customise">
-                      <Pencil size={13} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
