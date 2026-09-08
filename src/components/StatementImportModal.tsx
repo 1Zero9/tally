@@ -742,6 +742,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         }
         return true;
       }
+      // Adding a recurring bill that already exists — offer to link or force.
+      if (data.duplicateOf && action === 'add_bill') {
+        const go = window.confirm(
+          `You already track a recurring bill "${data.duplicateOf.name}".\n\n` +
+          `OK = add a second one anyway.\nCancel = do nothing (use "Link to a bill" to attach this charge to the existing one).`,
+        );
+        if (go) return resolveTx(txId, action, { ...extra, allowDuplicate: true }, opts);
+      }
       return false;
     } finally {
       setBusyTxId(null);
@@ -837,7 +845,23 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
           assignedUserId: reviewAssignee || null,
         }),
       });
-      const data = await res.json();
+      let data = await res.json();
+      if (data.status !== 'ok' && data.duplicateOf) {
+        if (window.confirm(`You already track a recurring bill "${data.duplicateOf.name}". Recognise these charges as a second one anyway?`)) {
+          const retry = await fetch(`/api/statements/${importId}/transactions/group-resolve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              txIds: unmatched.map((t) => t.id),
+              category,
+              vendorName: group.items.find((t) => t.vendorName)?.vendorName || group.label,
+              assignedUserId: reviewAssignee || null,
+              allowDuplicate: true,
+            }),
+          });
+          data = await retry.json();
+        }
+      }
       if (data.status === 'ok') {
         const updatedById = new Map<string, StatementTransactionItem>(
           data.transactions.map((t: StatementTransactionItem) => [t.id, t])
@@ -845,7 +869,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setTransactions((prev) => prev.map((t) => updatedById.get(t.id) || t));
         setCategorizingGroupKey(null);
         onExpensesChanged?.();
-      } else {
+      } else if (!data.duplicateOf) {
         alert(data.message || 'Failed to create recurring bill');
       }
     } finally {

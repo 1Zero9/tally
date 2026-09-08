@@ -506,3 +506,43 @@ export function findRecurringUnmatched(
   }
   return flagged;
 }
+
+// ---------------------------------------------------------------------------
+// Duplicate recurring-bill guard (statement import)
+// ---------------------------------------------------------------------------
+
+export interface RecurringExpenseRow {
+  id: string;
+  name: string;
+  vendor: string | null;
+  amount: number;
+  currency: string;
+  billingCycle: string;
+  isActive: boolean;
+}
+
+/**
+ * Finds an existing active *recurring* expense that a to-be-created bill
+ * would duplicate — same currency, amount within ~2%, and a close
+ * normalized-name/vendor match. Used by "Add as bill" and the group
+ * "recognize as recurring bill" flow to stop a second copy of the same
+ * subscription being created from a statement.
+ */
+export function findDuplicateRecurringExpense(
+  candidate: { name: string; amount: number; currency: string },
+  existing: RecurringExpenseRow[]
+): { id: string; name: string; amount: number } | null {
+  const norm = normalizeDescription(candidate.name);
+  if (!norm) return null;
+  for (const e of existing) {
+    if (!e.isActive || e.billingCycle === 'once' || e.currency !== candidate.currency) continue;
+    const amountTolerance = Math.max(0.5, e.amount * 0.02);
+    if (Math.abs(e.amount - candidate.amount) > amountTolerance) continue;
+    const sim = Math.max(
+      stringSimilarity(norm, normalizeDescription(e.name)),
+      e.vendor ? stringSimilarity(norm, normalizeDescription(e.vendor)) : 0
+    );
+    if (sim >= 0.8) return { id: e.id, name: e.name, amount: e.amount };
+  }
+  return null;
+}

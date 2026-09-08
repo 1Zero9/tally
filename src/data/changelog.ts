@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.97.0';
+export const APP_VERSION = '1.98.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.98.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement import now stops you creating a second copy of a recurring bill you already track. "Add as bill" (and recognising a group as recurring) checks for an existing active bill with a matching name and amount; if it finds one it won\'t add a duplicate — you get a prompt to link the charge to the existing bill instead, or add anyway if it really is separate.',
+    ],
+  },
   {
     version: '1.97.0',
     date: '2026-09-08',

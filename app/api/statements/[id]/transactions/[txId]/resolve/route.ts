@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { buildAliasPattern, sanitizeImportedText } from '@/src/lib/statementMatching';
+import { buildAliasPattern, sanitizeImportedText, findDuplicateRecurringExpense } from '@/src/lib/statementMatching';
 import { getCategoryMeta, isBuiltinCategory } from '@/src/data/categories';
 import { advanceByCycle } from '@/src/lib/billing';
 import type { BillingCycle, ExpenseCategory } from '@/src/types/expense';
@@ -455,6 +455,21 @@ export async function POST(
       const meta = getCategoryMeta(category, customCategoryMatch ? [customCategoryMatch] : undefined);
       const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
       const dayOfMonth = new Date(tx.date).getDate();
+
+      if (body.allowDuplicate !== true) {
+        const existing = await prisma.expense.findMany({
+          where: { householdId: auth.user.householdId, isActive: true, billingCycle: { not: 'once' } },
+          select: { id: true, name: true, vendor: true, amount: true, currency: true, billingCycle: true, isActive: true },
+        });
+        const dup = findDuplicateRecurringExpense({ name: vendorName, amount, currency: tx.currency }, existing);
+        if (dup) {
+          return NextResponse.json({
+            status: 'error',
+            duplicateOf: dup,
+            message: `You already track a recurring bill "${dup.name}". Link this charge to it, or add anyway.`,
+          }, { status: 409 });
+        }
+      }
 
       const expense = await prisma.expense.create({
         data: {
