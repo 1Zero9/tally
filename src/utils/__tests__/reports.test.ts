@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bucketTransactionsByMonth, groupSpendByCategory, groupSpendByVendor, isRealSpend, isRealIncome, type ReportTransaction } from '../reports';
+import { bucketTransactionsByMonth, groupSpendByCategory, groupSpendByVendor, groupCategoryMerchantTrend, canonicalMerchant, isRealSpend, isRealIncome, type ReportTransaction } from '../reports';
 
 function tx(overrides: Partial<ReportTransaction>): ReportTransaction {
   return {
@@ -84,5 +84,62 @@ describe('groupSpendByVendor', () => {
     expect(rows[0].total).toBe(200);
     expect(rows.find((r) => r.name === 'Netflix')?.total).toBeCloseTo(35.99, 2);
     expect(rows.find((r) => r.name === 'Employer')).toBeUndefined();
+  });
+});
+
+describe('canonicalMerchant', () => {
+  it('collapses messy store labels to one canonical name', () => {
+    expect(canonicalMerchant('TESCO STORES 3538 DUBLIN')).toBe('Tesco');
+    expect(canonicalMerchant('tesco-express-6244')).toBe('Tesco');
+    expect(canonicalMerchant('SUPERVALU KILLARNEY')).toBe('SuperValu');
+    expect(canonicalMerchant('LIDL GL IRL DUBLIN 4')).toBe('Lidl');
+  });
+
+  it('keeps a cleaned label for unknown merchants rather than merging them', () => {
+    expect(canonicalMerchant('THE LOCAL DELI')).toBe('The Local Deli');
+    expect(canonicalMerchant('THE LOCAL CAFE')).not.toBe(canonicalMerchant('THE LOCAL DELI'));
+  });
+});
+
+describe('groupCategoryMerchantTrend', () => {
+  const rows: ReportTransaction[] = [
+    tx({ date: '2026-09-01', amount: 40, category: 'shopping', label: 'LIDL DUBLIN' }),
+    tx({ date: '2026-09-02', amount: 43, category: 'shopping', label: 'SUPERVALU KILLARNEY' }),
+    tx({ date: '2026-09-03', amount: 47, category: 'shopping', label: 'SUPERVALU KILLARNEY' }),
+    tx({ date: '2026-09-15', amount: 50, category: 'shopping', label: 'SUPERVALU KILLARNEY' }),
+    tx({ date: '2026-09-16', amount: 30, category: 'shopping', label: 'SUPERVALU KILLARNEY' }),
+    tx({ date: '2026-09-10', amount: 999, category: 'utilities', label: 'ESB' }),
+    tx({ date: '2026-09-10', amount: 999, direction: 'in', category: 'shopping', label: 'Refund' }),
+  ];
+
+  it('splits one category by merchant with per-merchant trip counts', () => {
+    const res = groupCategoryMerchantTrend(rows, 'shopping', 'week', 'EUR');
+    const supervalu = res.merchants.find((m) => m.name === 'SuperValu');
+    const lidl = res.merchants.find((m) => m.name === 'Lidl');
+
+    expect(res.merchants[0].name).toBe('SuperValu'); // ranked by total
+    expect(supervalu?.tripCount).toBe(4);
+    expect(supervalu?.total).toBe(170);
+    expect(supervalu?.avgBasket).toBe(42.5);
+    expect(lidl?.tripCount).toBe(1);
+    expect(lidl?.total).toBe(40);
+    expect(res.tripCount).toBe(5); // income + other category excluded
+    expect(res.total).toBe(210);
+  });
+
+  it('buckets by week and stacks merchants inside each bucket', () => {
+    const res = groupCategoryMerchantTrend(rows, 'shopping', 'week', 'EUR');
+    expect(res.points.length).toBe(2);
+    const wk1 = res.points[0];
+    expect(wk1.tripCount).toBe(3);
+    expect(wk1.byMerchant['Lidl'].tripCount).toBe(1);
+    expect(wk1.byMerchant['SuperValu'].tripCount).toBe(2);
+  });
+
+  it('returns an empty result for a category with no spend', () => {
+    const res = groupCategoryMerchantTrend(rows, 'travel', 'month', 'EUR');
+    expect(res.points).toEqual([]);
+    expect(res.merchants).toEqual([]);
+    expect(res.total).toBe(0);
   });
 });

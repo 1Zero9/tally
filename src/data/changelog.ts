@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.100.0';
+export const APP_VERSION = '1.101.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.101.0',
+    date: '2026-09-08',
+    changes: [
+      'New "Category trend" report: pick a spending category and see it broken down by shop, week by week (or monthly). Each bar stacks the shops that made up that week\'s spend, and a table underneath shows, per shop, the total, number of shops, average spend per shop, share of the category, and whether it\'s trending up or down. Messy statement labels like "TESCO STORES 3538 DUBLIN" and "SUPERVALU KILLARNEY" are folded into single shop names (Tesco, SuperValu, Lidl, Aldi, Dunnes and more) so, e.g., one €40 Lidl shop and ten SuperValu shops show as two clear lines rather than a dozen.',
+    ],
+  },
   {
     version: '1.100.0',
     date: '2026-09-08',

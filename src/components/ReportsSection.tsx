@@ -6,23 +6,32 @@ import {
   bucketTransactionsByMonth,
   groupSpendByCategory,
   groupSpendByVendor,
+  groupCategoryMerchantTrend,
   type ReportTransaction,
+  type TrendBucket,
 } from '../utils/reports';
+import { getOrderedCategories } from '../data/categories';
 import { exportReportCSV } from '../utils/reportExport';
 import { OptimizationInsights } from './OptimizationInsights';
 import { MoneyFlowInsights } from './MoneyFlowInsights';
-import { TrendingUp, Store, Clock, Sparkles, Download } from 'lucide-react';
+import { TrendingUp, Store, Clock, Sparkles, Download, BarChart3 } from 'lucide-react';
 
 const SPENDING_COLOR = '#176b52';
 const INCOME_COLOR = '#8A5CF6';
 
-type ReportType = 'trends' | 'category-vendor' | 'timeline' | 'insights';
+type ReportType = 'trends' | 'category-vendor' | 'category-trend' | 'timeline' | 'insights';
 
 const REPORT_TYPES: { id: ReportType; label: string; icon: React.ReactNode }[] = [
   { id: 'trends', label: 'Trends', icon: <TrendingUp size={14} /> },
   { id: 'category-vendor', label: 'Category & Vendor', icon: <Store size={14} /> },
+  { id: 'category-trend', label: 'Category trend', icon: <BarChart3 size={14} /> },
   { id: 'timeline', label: 'Timeline', icon: <Clock size={14} /> },
   { id: 'insights', label: 'Insights', icon: <Sparkles size={14} /> },
+];
+
+const MERCHANT_COLORS = [
+  '#176b52', '#8A5CF6', '#2563eb', '#db2777', '#d97706',
+  '#0891b2', '#65a30d', '#dc2626', '#7c3aed', '#0d9488',
 ];
 
 const PERIODS: { id: HistoryPeriod; label: string }[] = [
@@ -150,6 +159,8 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         <TrendsReport months={months} maxMonthValue={maxMonthValue} currency={currency} />
       ) : reportType === 'category-vendor' ? (
         <CategoryVendorReport categoryRows={categoryRows} vendorRows={vendorRows} currency={currency} />
+      ) : reportType === 'category-trend' ? (
+        <CategoryTrendReport transactions={transactions} currency={currency} customCategories={customCategories} />
       ) : reportType === 'timeline' ? (
         <TimelineReport transactions={transactions} customCategories={customCategories} />
       ) : (
@@ -292,6 +303,204 @@ const CategoryVendorReport: React.FC<{
     />
   </div>
 );
+
+const CategoryTrendReport: React.FC<{
+  transactions: ReportTransaction[];
+  currency: CurrencyCode;
+  customCategories: CustomCategoryItem[];
+}> = ({ transactions, currency, customCategories }) => {
+  const [bucket, setBucket] = useState<TrendBucket>('week');
+
+  // Only offer categories that actually have real spend in this period.
+  const spentCategoryIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    for (const t of transactions) {
+      if (t.direction === 'out' && t.category) ids.add(t.category);
+    }
+    return ids;
+  }, [transactions]);
+
+  const options = React.useMemo(
+    () => getOrderedCategories(customCategories).filter((c) => spentCategoryIds.has(c.id)),
+    [customCategories, spentCategoryIds]
+  );
+
+  const [categoryId, setCategoryId] = useState<string>('');
+  const activeCategory = categoryId && spentCategoryIds.has(categoryId)
+    ? categoryId
+    : options.find((c) => c.id === 'shopping')?.id || options[0]?.id || '';
+
+  const result = React.useMemo(
+    () => activeCategory ? groupCategoryMerchantTrend(transactions, activeCategory, bucket, currency) : null,
+    [transactions, activeCategory, bucket, currency]
+  );
+
+  const colorFor = (name: string) => {
+    const idx = result ? result.merchants.findIndex((m) => m.name === name) : -1;
+    return MERCHANT_COLORS[(idx < 0 ? 0 : idx) % MERCHANT_COLORS.length];
+  };
+
+  const categoryLabel = activeCategory
+    ? getCategoryMeta(activeCategory, customCategories).name
+    : '';
+
+  const handleExport = () => {
+    if (!result) return;
+    exportReportCSV(
+      `tally-${categoryLabel.toLowerCase().replace(/\s+/g, '-')}-trend-${new Date().toISOString().split('T')[0]}.csv`,
+      ['Merchant', 'Total', 'Trips', 'Avg basket', 'Share', `Change (${bucket}-on-${bucket}, 1st vs 2nd half)`],
+      result.merchants.map((m) => [
+        m.name,
+        m.total.toFixed(2),
+        String(m.tripCount),
+        m.avgBasket.toFixed(2),
+        `${m.sharePct}%`,
+        m.changePct == null ? '—' : `${m.changePct > 0 ? '+' : ''}${m.changePct}%`,
+      ])
+    );
+  };
+
+  if (options.length === 0) {
+    return (
+      <div className="ha-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.82rem' }}>
+        No categorised spend in this period yet. Categorise some transactions and this view will break each category down by shop.
+      </div>
+    );
+  }
+
+  const maxBucketTotal = result ? Math.max(1, ...result.points.map((p) => p.total)) : 1;
+  const topByTrips = result && result.merchants.length
+    ? [...result.merchants].sort((a, b) => b.tripCount - a.tripCount)[0]
+    : null;
+  const fewestByTrips = result && result.merchants.length > 1
+    ? [...result.merchants].sort((a, b) => a.tripCount - b.tripCount)[0]
+    : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="ha-card" style={{ padding: '1.1rem 1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.9rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <select
+              value={activeCategory}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="ha-input"
+              style={{ fontSize: '0.82rem', padding: '0.35rem 0.5rem' }}
+            >
+              {options.map((c) => (
+                <option key={c.id} value={c.id}>{c.meta.name}</option>
+              ))}
+            </select>
+            <div className="ha-ledger-status" role="group" aria-label="Bucket size">
+              <button onClick={() => setBucket('week')} className={bucket === 'week' ? 'is-active' : ''} aria-pressed={bucket === 'week'}>
+                <span>Weekly</span>
+              </button>
+              <button onClick={() => setBucket('month')} className={bucket === 'month' ? 'is-active' : ''} aria-pressed={bucket === 'month'}>
+                <span>Monthly</span>
+              </button>
+            </div>
+          </div>
+          <ExportButton onClick={handleExport} />
+        </div>
+
+        {!result || result.points.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.82rem' }}>
+            No {categoryLabel} spend recorded in this period yet.
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.45rem', height: '190px', paddingTop: '0.5rem' }}>
+              {result.points.map((p) => {
+                const segs = Object.entries(p.byMerchant).sort((a, b) => b[1].total - a[1].total);
+                return (
+                  <div key={p.key} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', height: '100%' }}>
+                    <div style={{ flex: 1, width: '100%', maxWidth: '46px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                      <div
+                        title={`${p.label} — ${formatCurrency(p.total, currency)} over ${p.tripCount} ${p.tripCount === 1 ? 'shop' : 'shops'}`}
+                        style={{ display: 'flex', flexDirection: 'column', height: `${Math.max(3, (p.total / maxBucketTotal) * 100)}%`, borderRadius: '3px 3px 0 0', overflow: 'hidden' }}
+                      >
+                        {segs.map(([name, v]) => (
+                          <div
+                            key={name}
+                            title={`${name}: ${formatCurrency(v.total, currency)} · ${v.tripCount} ${v.tripCount === 1 ? 'shop' : 'shops'}`}
+                            style={{ height: `${(v.total / p.total) * 100}%`, backgroundColor: colorFor(name) }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{p.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem', marginTop: '0.85rem' }}>
+              {result.merchants.map((m) => (
+                <span key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--ha-muted)' }}>
+                  <span style={{ width: '9px', height: '9px', borderRadius: '3px', backgroundColor: colorFor(m.name), display: 'inline-block' }} />
+                  {m.name}
+                </span>
+              ))}
+            </div>
+
+            {topByTrips && fewestByTrips && topByTrips.name !== fewestByTrips.name && (
+              <p style={{ fontSize: '0.78rem', color: 'var(--ha-ink)', marginTop: '0.85rem', lineHeight: 1.5 }}>
+                You shopped at <strong>{topByTrips.name}</strong> {topByTrips.tripCount} {topByTrips.tripCount === 1 ? 'time' : 'times'}
+                {' '}({formatCurrency(topByTrips.total, currency)} total, {formatCurrency(topByTrips.avgBasket, currency)} a shop)
+                {' '}but <strong>{fewestByTrips.name}</strong> just {fewestByTrips.tripCount} {fewestByTrips.tripCount === 1 ? 'time' : 'times'}
+                {' '}({formatCurrency(fewestByTrips.total, currency)} total, {formatCurrency(fewestByTrips.avgBasket, currency)} a shop).
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      {result && result.merchants.length > 0 && (
+        <div className="ha-card" style={{ padding: '1.1rem 1.25rem' }}>
+          <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ha-ink)', marginBottom: '0.75rem' }}>
+            {categoryLabel} by shop
+          </h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--ha-line)', textAlign: 'left', color: 'var(--ha-muted)' }}>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600 }}>Shop</th>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Total</th>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Shops</th>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Avg / shop</th>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Share</th>
+                  <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.merchants.map((m) => (
+                  <tr key={m.name} style={{ borderBottom: '1px solid var(--ha-line)' }}>
+                    <td style={{ padding: '0.4rem 0.5rem', color: 'var(--ha-ink)', fontWeight: 600 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: colorFor(m.name), display: 'inline-block' }} />
+                        {m.name}
+                      </span>
+                    </td>
+                    <td className="tabular-nums" style={{ padding: '0.4rem 0.5rem', textAlign: 'right', color: 'var(--ha-ink)' }}>{formatCurrency(m.total, currency)}</td>
+                    <td className="tabular-nums" style={{ padding: '0.4rem 0.5rem', textAlign: 'right', color: 'var(--ha-muted)' }}>{m.tripCount}</td>
+                    <td className="tabular-nums" style={{ padding: '0.4rem 0.5rem', textAlign: 'right', color: 'var(--ha-muted)' }}>{formatCurrency(m.avgBasket, currency)}</td>
+                    <td className="tabular-nums" style={{ padding: '0.4rem 0.5rem', textAlign: 'right', color: 'var(--ha-muted)' }}>{m.sharePct}%</td>
+                    <td className="tabular-nums" style={{ padding: '0.4rem 0.5rem', textAlign: 'right', color: m.changePct == null ? 'var(--ha-muted)' : m.changePct > 0 ? 'var(--ha-red)' : 'var(--ha-green)' }}>
+                      {m.changePct == null ? '—' : `${m.changePct > 0 ? '+' : ''}${m.changePct}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '0.6rem', lineHeight: 1.5 }}>
+            Trend compares each shop&apos;s average spend per {bucket} in the first half of the period against the second half. Tally sees totals, not receipts — a bigger basket and a pricier shop look the same here.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TimelineReport: React.FC<{
   transactions: ReportTransaction[];
