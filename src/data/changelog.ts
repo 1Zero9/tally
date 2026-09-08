@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.98.0';
+export const APP_VERSION = '1.99.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.99.0',
+    date: '2026-09-08',
+    changes: [
+      'Refined the public website so it feels less like a stack of oversized presentation panels. The product stories now sit in contained, lighter frames with more space around them, the proof strip is slimmer, and the three core benefits read as individual editorial cards.',
+    ],
+  },
   {
     version: '1.98.0',
     date: '2026-09-08',
