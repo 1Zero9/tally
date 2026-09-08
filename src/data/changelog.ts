@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.89.0';
+export const APP_VERSION = '1.90.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.90.0',
+    date: '2026-09-08',
+    changes: [
+      'You can now rename the built-in categories too, not just recolour and re-icon them — the new name shows in every category dropdown, chart and report. Do it in Settings → Categories; "Reset" puts a built-in back to its default name and look. (The short Spending sub-tab labels stay as they are — those are navigation, not the category name.)',
+    ],
+  },
   {
     version: '1.89.0',
     date: '2026-09-08',

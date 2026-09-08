@@ -51,12 +51,27 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'error', message: 'Unknown built-in category' }, { status: 400 });
       }
       const base = CATEGORIES[builtinKey];
+      // A household can rename a built-in; blank/whitespace resets to canonical.
+      const rawName = typeof body.name === 'string' ? body.name.trim().slice(0, 60) : undefined;
+      const name = rawName !== undefined ? (rawName || base.name) : undefined;
+      if (name && name.toLowerCase() !== base.name.toLowerCase()) {
+        const lower = name.toLowerCase();
+        const canonicalClash = Object.values(CATEGORIES).some(
+          (c) => c.id !== builtinKey && c.name.toLowerCase() === lower,
+        );
+        const rowClash = await prisma.category.findFirst({
+          where: { householdId, name: { equals: name, mode: 'insensitive' }, NOT: { builtinKey } },
+        });
+        if (canonicalClash || rowClash) {
+          return NextResponse.json({ status: 'error', message: 'Another category already has that name' }, { status: 409 });
+        }
+      }
       const override = await prisma.category.upsert({
         where: { householdId_builtinKey: { householdId: householdId!, builtinKey } },
         create: {
           householdId,
           builtinKey,
-          name: base.name,
+          name: name ?? base.name,
           icon: icon ?? base.icon,
           color: color ?? base.color,
           bgColor: bgColor ?? base.bgColor,
@@ -64,6 +79,7 @@ export async function POST(request: Request) {
           createdById: auth.user.id,
         },
         update: {
+          ...(name !== undefined ? { name } : {}),
           ...(icon ? { icon } : {}),
           ...(color ? { color } : {}),
           ...(bgColor ? { bgColor } : {}),

@@ -93,7 +93,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     const monthlyAmount = catItems.reduce((sum, item) => {
       return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
     }, 0);
-    return { ...cat, color: getCategoryMeta(cat.id, customCategories).color, monthlyAmount };
+    const meta = getCategoryMeta(cat.id, customCategories);
+    return { ...cat, name: meta.name, color: meta.color, monthlyAmount };
   }).filter((c) => c.monthlyAmount > 0).sort((a, b) => b.monthlyAmount - a.monthlyAmount);
 
   const totalMonthly = categoryData.reduce((sum, c) => sum + c.monthlyAmount, 0);

@@ -199,6 +199,9 @@ export function getCategoryMeta(
     if (!override) return base;
     return {
       ...base,
+      // A household can rename a built-in; the override row's name only
+      // counts when it actually differs from the canonical one.
+      name: override.name && override.name !== base.name ? override.name : base.name,
       color: override.color || base.color,
       bgColor: override.bgColor || base.bgColor,
       borderColor: override.borderColor || base.borderColor,

@@ -628,9 +628,9 @@ model MerchantAlias {
 /// set (Streaming, Utilities, etc — see src/data/categories.ts). Created
 /// on the fly ("+ Create category") when nothing built-in fits (e.g. "Tolls").
 /// A row with `builtinKey` set is NOT a standalone custom category — it's a
-/// per-household appearance override for the built-in of that key (its
-/// colour/icon replace the defaults from src/data/categories.ts). Such rows
-/// carry the built-in's canonical name and never appear in the "custom
+/// per-household override for the built-in of that key: its name/colour/icon
+/// replace the defaults from src/data/categories.ts (name only counts when
+/// it differs from canonical). Such rows never appear in the "custom
 /// categories" pickers; only getCategoryMeta() and the Category Manager
 /// read them. Delete an override row to reset that built-in to default.
 /// Cached daily reference rate (against EUR) for one non-EUR currency Tally

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { CustomCategoryItem } from '../types/expense';
-import { CATEGORY_LIST, getCustomCategories } from '../data/categories';
+import { CATEGORY_LIST, getCustomCategories, getCategoryMeta } from '../data/categories';
 
 const NEW_CATEGORY_SENTINEL = '__new_category__';
 
@@ -124,7 +124,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
       disabled={disabled}
     >
       {placeholderOption && <option value="">{placeholderOption}</option>}
-      {CATEGORY_LIST.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+      {CATEGORY_LIST.map((c) => <option key={c.id} value={c.id}>{getCategoryMeta(c.id, customCategories).name}</option>)}
       {getCustomCategories(customCategories).length > 0 && (
         <optgroup label="Custom">
           {getCustomCategories(customCategories).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

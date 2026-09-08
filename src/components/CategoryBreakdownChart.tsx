@@ -26,9 +26,11 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
       return sum + convertCurrency(getMonthlyContribution(item), item.currency, currency);
     }, 0);
     const percentage = totalSpend > 0 ? (monthlyAmount / totalSpend) * 100 : 0;
+    const meta = getCategoryMeta(cat.id, customCategories);
     return {
       ...cat,
-      color: getCategoryMeta(cat.id, customCategories).color,
+      name: meta.name,
+      color: meta.color,
       itemCount: catItems.length,
       monthlyAmount,
       percentage: Math.round(percentage * 10) / 10,

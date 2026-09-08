@@ -201,7 +201,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             >
               <option value="">All categories</option>
               {allCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>{getCategoryMeta(cat.id, customCategories).name}</option>
               ))}
             </select>
           </label>

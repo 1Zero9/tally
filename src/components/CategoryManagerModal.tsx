@@ -254,11 +254,11 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   const handleSaveBuiltin = async () => {
     if (!editingBuiltin) return;
     const { ok, data } = await api('/api/categories', 'POST', {
-      builtinKey: editingBuiltin, icon: draft.icon,
+      builtinKey: editingBuiltin, name: draft.name.trim(), icon: draft.icon,
       color: draft.color, bgColor: draft.bgColor, borderColor: draft.borderColor,
     });
     if (ok) { resetForms(); onChanged(); }
-    else setError(data.message || 'Failed to save appearance');
+    else setError(data.message || 'Failed to save changes');
   };
 
   const handleResetBuiltin = async (key: string) => {
@@ -310,7 +310,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   };
 
   const allCatOptions = [
-    ...CATEGORY_LIST.map((c) => ({ id: c.id, name: c.name })),
+    ...CATEGORY_LIST.map((c) => ({ id: c.id, name: getCategoryMeta(c.id, categoryRows).name })),
     ...custom.map((c) => ({ id: c.id, name: c.name })),
   ];
   // Every category a user could move items into (excludes the one being consolidated).
@@ -502,7 +502,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
               Built-in categories
             </h4>
             <p style={{ fontSize: '0.76rem', color: 'var(--ha-muted)', marginBottom: '0.7rem' }}>
-              You can change the colour and icon. The name is fixed.
+              Rename, recolour or re-icon any of these for your household. &ldquo;Reset&rdquo; puts one back to its default.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -515,12 +515,12 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                       key={base.id}
                       draft={draft}
                       onDraftChange={setDraft}
-                      showName={false}
+                      showName
                       onSave={handleSaveBuiltin}
                       onCancel={resetForms}
                       saving={busy}
                       error={error}
-                      saveLabel="Save appearance"
+                      saveLabel="Save changes"
                     />
                   );
                 }
@@ -530,8 +530,12 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                       <IconGlyph name={meta.icon} size={14} color={meta.color} />
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{base.name}</div>
-                      {override && <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)' }}>Custom appearance</div>}
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{meta.name}</div>
+                      {override && (
+                        <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)' }}>
+                          {meta.name !== base.name ? `Renamed from "${base.name}"` : 'Customised'}
+                        </div>
+                      )}
                     </div>
                     {override && (
                       <button onClick={() => handleResetBuiltin(base.id)} disabled={busy} className="btn btn-ghost" style={{ padding: '0.3rem 0.45rem', fontSize: '0.75rem' }} title="Reset to default">
