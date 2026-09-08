@@ -104,6 +104,7 @@ export const StatementActivitySection: React.FC<StatementActivitySectionProps> =
     <CollapsibleSection
       id="statement-activity"
       defaultOpen={false}
+      bodyStyle={{ padding: '1.25rem 1.5rem' }}
       title={
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <History size={15} /> Statement activity{items.length ? ` (${isFiltered ? `${visible.length} of ${items.length}` : items.length})` : ''}
@@ -170,7 +171,7 @@ export const StatementActivitySection: React.FC<StatementActivitySectionProps> =
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
               {visible.map((it) => (
-                <div key={it.id} className="ha-ledger-row" style={{ alignItems: 'center' }}>
+                <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0', borderBottom: '1px solid var(--ha-line)' }}>
                   <div style={{ flex: '1 1 300px', minWidth: 0 }}>
                     <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }}>{it.merchant}</span>

@@ -297,6 +297,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects, expe
     <CollapsibleSection
       id="home-projects"
       defaultOpen={false}
+      bodyStyle={{ padding: '1.25rem 1.5rem' }}
       title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><Hammer size={15} /> Home projects ({projects.length})</span>}
     >
       <p style={{ fontSize: '0.82rem', color: 'var(--ha-muted)', margin: '0 0 0.85rem' }}>

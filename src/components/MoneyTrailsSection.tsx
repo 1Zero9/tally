@@ -272,6 +272,7 @@ export const MoneyTrailsSection: React.FC<MoneyTrailsSectionProps> = ({ trails, 
   return (
     <CollapsibleSection
       id="money-trails"
+      bodyStyle={{ padding: '1.25rem 1.5rem' }}
       title={`Money trails (${trails.length})`}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.84.0';
+export const APP_VERSION = '1.85.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.85.0',
+    date: '2026-09-08',
+    changes: [
+      'Fixed the alignment of the intro text and controls in the Home projects, Money trails and Statement activity panels — they were sitting flush to the card edge instead of lining up under the section heading.',
+    ],
+  },
   {
     version: '1.84.0',
     date: '2026-09-08',
