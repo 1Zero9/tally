@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { EyeOff } from 'lucide-react';
-import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, AccountItem, TransferItem, GoalItem, CustomCategoryItem, BudgetItem, MoneyTrailItem } from '@/src/types/expense';
+import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, AccountItem, TransferItem, GoalItem, CustomCategoryItem, BudgetItem, MoneyTrailItem, ProjectRecord } from '@/src/types/expense';
 import { loadCurrency, saveCurrency } from '@/src/services/storage';
 import { updateLiveRates } from '@/src/utils/currencies';
 import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/calculations';
@@ -45,6 +45,7 @@ import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { StatementActivitySection } from '@/src/components/StatementActivitySection';
+import { ProjectsSection } from '@/src/components/ProjectsSection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
 import { StatementImportModal } from '@/src/components/StatementImportModal';
@@ -71,6 +72,7 @@ export default function TallyPage() {
   const [transfers, setTransfers] = useState<TransferItem[]>([]);
   const [goals, setGoals] = useState<GoalItem[]>([]);
   const [trails, setTrails] = useState<MoneyTrailItem[]>([]);
+  const [projects, setProjects] = useState<ProjectRecord[]>([]);
   // Bumped after every fetchDatabaseData() — lets self-fetching sections
   // (e.g. Statement activity) know app data changed and re-pull.
   const [dataVersion, setDataVersion] = useState(0);
@@ -204,6 +206,9 @@ export default function TallyPage() {
       }),
       loadResource('trails', '/api/trails', (data) => {
         if (Array.isArray(data.trails)) setTrails(data.trails as MoneyTrailItem[]);
+      }),
+      loadResource('projects', '/api/projects', (data) => {
+        if (Array.isArray(data.projects)) setProjects(data.projects as ProjectRecord[]);
       }),
       loadResource('categories', '/api/categories', (data) => {
         if (Array.isArray(data.categories)) setCustomCategories(data.categories as CustomCategoryItem[]);
@@ -1355,25 +1360,34 @@ export default function TallyPage() {
         )}
 
         {activeTab === 'planned' && (
-          <PlannedExpensesSection
-            expenses={expenses}
-            currency={currency}
-            customCategories={customCategories}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setInitialCategory(null);
-              setInitialPresetId(null);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={() => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory(null);
-              setIsAddModalOpen(true);
-              setForceIsPending(true);
-            }}
-            onActivate={handleActivatePending}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            <PlannedExpensesSection
+              expenses={expenses}
+              currency={currency}
+              customCategories={customCategories}
+              onEditExpense={(item) => {
+                setEditingExpense(item);
+                setInitialCategory(null);
+                setInitialPresetId(null);
+                setIsAddModalOpen(true);
+              }}
+              onOpenAddModal={() => {
+                setEditingExpense(null);
+                setInitialPresetId(null);
+                setInitialCategory(null);
+                setIsAddModalOpen(true);
+                setForceIsPending(true);
+              }}
+              onActivate={handleActivatePending}
+            />
+            <ProjectsSection
+              projects={projects}
+              expenses={expenses}
+              transfers={transfers}
+              currency={currency}
+              onChanged={fetchDatabaseData}
+            />
+          </div>
         )}
 
         {activeTab === 'admin' && (

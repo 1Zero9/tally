@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.83.0';
+export const APP_VERSION = '1.84.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.84.0',
+    date: '2026-09-08',
+    changes: [
+      'New: Home projects (Planned tab) — a mini project manager for a refurb, a patio, anything discrete. Give a project line items with an estimated cost, then link the real spend as it lands on your statements: an item can link to several transactions, and you can set a partial amount to split one big payment across items. Each item shows actual vs estimate (over / left), and the project rolls up to total spent vs budget, with a status and target date. Projects are a lens only — deleting one never touches the linked expenses or transfers. Included in household backups.',
+    ],
+  },
   {
     version: '1.83.0',
     date: '2026-09-08',

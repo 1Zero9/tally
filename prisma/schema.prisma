@@ -90,6 +90,7 @@ model Household {
   auditLogs AuditLog[]
 
   moneyTrails MoneyTrail[]
+  projects    Project[]
 }
 
 model User {
@@ -122,6 +123,7 @@ model User {
   budgetsCreated Budget[]
 
   moneyTrailsCreated MoneyTrail[]
+  projectsCreated    Project[]
 }
 
 model Session {
@@ -213,6 +215,7 @@ model Expense {
 
   statementTransactions StatementTransaction[]
   merchantAliases       MerchantAlias[]
+  projectLinks          ProjectItemLink[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -371,6 +374,8 @@ model Transfer {
   trailId String?
   trail   MoneyTrail? @relation(fields: [trailId], references: [id], onDelete: SetNull)
 
+  projectLinks ProjectItemLink[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -404,6 +409,78 @@ model MoneyTrail {
   updatedAt DateTime @updatedAt
 
   @@index([householdId])
+}
+
+/// A "mini project manager" for a discrete piece of household work — a
+/// bedroom refurb, a new patio. Lives under the Planned tab. Each Project
+/// holds line items with an *estimated* cost; the *actual* is derived from
+/// real Expense/Transfer records the household links to each item (a
+/// statement charge can be linked to the item it belongs to). An item can
+/// link to many records; a record can be linked from many items (with an
+/// optional per-link amount so one big builder's-merchant payment can be
+/// split across several items).
+model Project {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  /// "planning" | "active" | "done"
+  status      String  @default("active")
+  targetDate  String?
+
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  items ProjectItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([householdId])
+}
+
+model ProjectItem {
+  id              String  @id @default(cuid())
+  label           String
+  estimatedAmount Float   @default(0)
+  currency        String  @default("EUR")
+  notes           String?
+  sortOrder       Int     @default(0)
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  links ProjectItemLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model ProjectItemLink {
+  id             String @id @default(cuid())
+  /// When set, this is what the linked record contributes to this item
+  /// (for splitting one payment across items); otherwise the record's full
+  /// amount is used.
+  amountOverride Float?
+
+  projectItemId String
+  projectItem   ProjectItem @relation(fields: [projectItemId], references: [id], onDelete: Cascade)
+
+  expenseId String?
+  expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  transferId String?
+  transfer   Transfer? @relation(fields: [transferId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectItemId])
+  @@index([expenseId])
+  @@index([transferId])
 }
 
 /// A savings/financial goal — optionally tied to an Account (e.g. a savings

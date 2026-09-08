@@ -248,6 +248,41 @@ export interface TransferItem {
   updatedAt?: string;
 }
 
+export interface ProjectLinkItem {
+  id: string;
+  amountOverride?: number | null;
+  kind: 'expense' | 'transfer';
+  recordId: string;
+  label: string;
+  date: string;
+  amount: number;
+  currency: CurrencyCode;
+}
+
+export interface ProjectLineItem {
+  id: string;
+  label: string;
+  estimatedAmount: number;
+  currency: CurrencyCode;
+  notes?: string | null;
+  sortOrder: number;
+  links: ProjectLinkItem[];
+}
+
+export type ProjectStatus = 'planning' | 'active' | 'done';
+
+/** A "mini project manager" bucket under the Planned tab. */
+export interface ProjectRecord {
+  id: string;
+  name: string;
+  description?: string | null;
+  status: ProjectStatus;
+  targetDate?: string | null;
+  items: ProjectLineItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /** A named chain of transfers following the same money across hops. */
 export interface MoneyTrailItem {
   id: string;

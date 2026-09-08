@@ -169,6 +169,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'Got a cost coming up that isn\'t required yet — like college fees? Tick "Planned — not required yet" when adding it, or use "Add planned expense" from the "Planned" tab.',
       'Planned items sit in their own stand-alone list and never count towards totals, bills, insights, or money-flow analysis until you hit "Activate".',
       'Optionally link a planned item to a Goal to track savings progress, and watch for the "consider activating" badge once its date is within 30 days. A quiet banner on Overview nudges you toward the Planned list whenever you have upcoming planned costs — informational only, never changes any figures.',
+      'Home projects (also on the Planned tab) are a mini project manager for a discrete piece of work — a bedroom refurb, a new patio. Break a project into line items, each with an estimated cost, then link the real spend as it appears on your statements (an item can link to several transactions, and you can set a partial amount to split one big payment across items). Each item shows actual vs estimate and over/under, and the project rolls up to total spent vs budget. Line items and links are separate from the ledger — deleting a project never touches the linked expenses or transfers.',
     ],
   },
   {

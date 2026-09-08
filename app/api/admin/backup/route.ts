@@ -180,6 +180,8 @@ export async function PUT(request: Request) {
       await tx.category.deleteMany({ where: { householdId } });
       await tx.transfer.deleteMany({ where: { householdId } });
       await tx.moneyTrail.deleteMany({ where: { householdId } });
+      // Project → ProjectItem → ProjectItemLink all cascade from Project.
+      await tx.project.deleteMany({ where: { householdId } });
       await tx.goal.deleteMany({ where: { householdId } });
       await tx.expense.deleteMany({ where: { householdId } });
       await tx.income.deleteMany({ where: { householdId } });
@@ -380,6 +382,66 @@ export async function PUT(request: Request) {
         if (typeof item.id === 'string') transferIdMap.set(item.id, created.id);
       }
 
+      // Projects → items → links. Links point at Expense/Transfer rows, so this
+      // has to run after those loops above.
+      let projectCount = 0;
+      let projectItemCount = 0;
+      let projectLinkCount = 0;
+      const projectIdMap = new Map<string, string>();
+      for (const item of payload.projects || []) {
+        const created = await tx.project.create({
+          data: {
+            name: str(item.name, 'Project') as string,
+            description: str(item.description),
+            status: str(item.status, 'active') as string,
+            targetDate: str(item.targetDate),
+            householdId,
+            createdById,
+          },
+        });
+        if (typeof item.id === 'string') projectIdMap.set(item.id, created.id);
+        projectCount += 1;
+      }
+      const projectItemIdMap = new Map<string, string>();
+      for (const item of payload.projectItems || []) {
+        const oldProjectId = typeof item.projectId === 'string' ? item.projectId : null;
+        const newProjectId = oldProjectId ? projectIdMap.get(oldProjectId) : undefined;
+        if (!newProjectId) continue;
+        const created = await tx.projectItem.create({
+          data: {
+            projectId: newProjectId,
+            label: str(item.label, 'Item') as string,
+            estimatedAmount: num(item.estimatedAmount, 0),
+            currency: str(item.currency, 'EUR') as string,
+            notes: str(item.notes),
+            sortOrder: Math.trunc(num(item.sortOrder, 0)),
+          },
+        });
+        if (typeof item.id === 'string') projectItemIdMap.set(item.id, created.id);
+        projectItemCount += 1;
+      }
+      for (const item of payload.projectItemLinks || []) {
+        const oldItemId = typeof item.projectItemId === 'string' ? item.projectItemId : null;
+        const newItemId = oldItemId ? projectItemIdMap.get(oldItemId) : undefined;
+        if (!newItemId) continue;
+        const oldExpenseId = typeof item.expenseId === 'string' ? item.expenseId : null;
+        const oldTransferId = typeof item.transferId === 'string' ? item.transferId : null;
+        const newExpenseId = oldExpenseId ? expenseIdMap.get(oldExpenseId) || null : null;
+        const newTransferId = oldTransferId ? transferIdMap.get(oldTransferId) || null : null;
+        // A link whose target didn't survive the restore is dropped.
+        if (!newExpenseId && !newTransferId) continue;
+        const override = num(item.amountOverride, NaN);
+        await tx.projectItemLink.create({
+          data: {
+            projectItemId: newItemId,
+            expenseId: newExpenseId,
+            transferId: newTransferId,
+            amountOverride: Number.isFinite(override) ? override : null,
+          },
+        });
+        projectLinkCount += 1;
+      }
+
       const budgetIdMap = new Map<string, string>();
       for (const item of payload.budgets || []) {
         const created = await tx.budget.create({
@@ -489,6 +551,9 @@ export async function PUT(request: Request) {
         incomes: incomeIdMap.size,
         transfers: transferIdMap.size,
         moneyTrails: trailIdMap.size,
+        projects: projectCount,
+        projectItems: projectItemCount,
+        projectItemLinks: projectLinkCount,
         categories: categoryIdMap.size,
         budgets: budgetIdMap.size,
         mapNodes: mapNodeIdMap.size,
