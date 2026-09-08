@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.102.1';
+export const APP_VERSION = '1.102.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.102.2',
+    date: '2026-09-08',
+    changes: [
+      'Swapped the Tally Agent to a friendlier mascot and gave the launcher a gentle continuous pulse (scale plus a soft green halo) so it draws the eye without being noisy. The pulse pauses on hover and speeds up while an answer is loading; it fully respects reduced-motion settings.',
+    ],
+  },
   {
     version: '1.102.1',
     date: '2026-09-08',

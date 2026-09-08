@@ -1523,7 +1523,7 @@ input:checked + .slider:before {
     0 8px 24px rgba(24, 43, 34, 0.18),
     0 2px 6px rgba(24, 43, 34, 0.12),
     0 0 0 5px rgba(23, 107, 82, 0.06);
-  animation: haAgentIdle 6s ease-in-out infinite;
+  animation: haAgentBreathe 2.6s ease-in-out infinite;
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 .ha-agent-launcher-img {
@@ -1535,7 +1535,9 @@ input:checked + .slider:before {
   user-select: none;
 }
 .ha-agent-launcher:hover {
-  transform: translateY(-2px) scale(1.05);
+  /* pause the breathing so the hover lift reads cleanly */
+  animation-play-state: paused;
+  transform: translateY(-2px) scale(1.06);
   box-shadow:
     0 12px 30px rgba(24, 43, 34, 0.22),
     0 3px 8px rgba(24, 43, 34, 0.14),
@@ -1545,16 +1547,25 @@ input:checked + .slider:before {
   outline: 2px solid var(--ha-blue);
   outline-offset: 3px;
 }
-.ha-agent-launcher.is-thinking { animation: haAgentPulse 1.6s ease-in-out infinite; }
+.ha-agent-launcher.is-thinking { animation: haAgentBreathe 1.3s ease-in-out infinite; }
 .ha-agent-launcher[data-hidden='true'] { display: none; }
 
-@keyframes haAgentIdle {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-2px) rotate(-1.5deg); }
-}
-@keyframes haAgentPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.04); opacity: 0.82; }
+/* Gentle continuous pulse — scale plus an expanding brand-green halo. */
+@keyframes haAgentBreathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 8px 24px rgba(24, 43, 34, 0.18),
+      0 2px 6px rgba(24, 43, 34, 0.12),
+      0 0 0 4px rgba(23, 107, 82, 0.05);
+  }
+  50% {
+    transform: scale(1.055);
+    box-shadow:
+      0 12px 30px rgba(24, 43, 34, 0.22),
+      0 3px 8px rgba(24, 43, 34, 0.14),
+      0 0 0 11px rgba(23, 107, 82, 0.12);
+  }
 }
 
 .ha-agent-scrim {

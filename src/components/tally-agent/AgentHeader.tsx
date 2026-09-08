@@ -9,7 +9,7 @@ interface AgentHeaderProps {
 
 export const AgentHeader: React.FC<AgentHeaderProps> = ({ onClose, onMinimise }) => (
   <header className="ha-agent-header">
-    <Image src="/tally-agent.png" alt="" width={30} height={27} className="ha-agent-header-mark" />
+    <Image src="/tally-agent2.png" alt="" width={29} height={30} className="ha-agent-header-mark" />
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--ha-ink)', lineHeight: 1.2 }}>Tally</div>
       <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>Your finance assistant</div>
