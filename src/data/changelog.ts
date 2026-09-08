@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.104.1';
+export const APP_VERSION = '1.105.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.105.0',
+    date: '2026-09-08',
+    changes: [
+      'Statement review now groups rows by merchant, not by the exact transaction text. Bank lines that carry a per-transaction reference (e.g. PTSB card rows with a terminal number) used to appear as many separate one-row entries for the same shop; they now collapse into a single group you can action in one go. "Rename" on such a group renames every row in it and teaches the name for each underlying pattern.',
+      'Made the "you already track this bill" prompt during import less trigger-happy — it now needs a closer name match before it interrupts you.',
+    ],
+  },
   {
     version: '1.104.1',
     date: '2026-09-08',

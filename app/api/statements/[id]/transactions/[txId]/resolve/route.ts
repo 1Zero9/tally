@@ -181,24 +181,55 @@ export async function POST(
       });
 
       if (auth.user.householdId) {
-        // Apply the nickname to every other row for this same merchant
-        // (across imports too) so it's recognised consistently from now on.
-        await prisma.statementTransaction.updateMany({
-          where: {
-            householdId: auth.user.householdId,
-            normalizedDescription: tx.normalizedDescription,
-            id: { not: txId },
-          },
-          data: { vendorName },
-        });
+        // `groupTxIds` (a group rename): rename exactly those rows and learn
+        // an alias for every distinct merchant pattern among them — the
+        // review list may group several near-identical descriptions (e.g.
+        // POS lines differing only by terminal number) under one heading.
+        // Otherwise (a single-row rename): apply to every row that shares
+        // this exact normalized description, across imports too.
+        const groupTxIds: string[] = Array.isArray(body.groupTxIds)
+          ? body.groupTxIds.filter((v: unknown): v is string => typeof v === 'string')
+          : [];
 
-        const pattern = buildAliasPattern(tx.normalizedDescription);
-        if (pattern) {
-          await prisma.merchantAlias.upsert({
-            where: { householdId_pattern: { householdId: auth.user.householdId, pattern } },
-            create: { householdId: auth.user.householdId, pattern, vendorName, matchCount: 1 },
-            update: { vendorName },
+        if (groupTxIds.length > 0) {
+          await prisma.statementTransaction.updateMany({
+            where: { householdId: auth.user.householdId, id: { in: groupTxIds } },
+            data: { vendorName },
           });
+          const rows = await prisma.statementTransaction.findMany({
+            where: { householdId: auth.user.householdId, id: { in: groupTxIds } },
+            select: { normalizedDescription: true },
+          });
+          const patterns = new Set<string>();
+          for (const r of rows) {
+            const p = buildAliasPattern(r.normalizedDescription);
+            if (p) patterns.add(p);
+          }
+          for (const pattern of patterns) {
+            await prisma.merchantAlias.upsert({
+              where: { householdId_pattern: { householdId: auth.user.householdId, pattern } },
+              create: { householdId: auth.user.householdId, pattern, vendorName, matchCount: 1 },
+              update: { vendorName },
+            });
+          }
+        } else {
+          await prisma.statementTransaction.updateMany({
+            where: {
+              householdId: auth.user.householdId,
+              normalizedDescription: tx.normalizedDescription,
+              id: { not: txId },
+            },
+            data: { vendorName },
+          });
+
+          const pattern = buildAliasPattern(tx.normalizedDescription);
+          if (pattern) {
+            await prisma.merchantAlias.upsert({
+              where: { householdId_pattern: { householdId: auth.user.householdId, pattern } },
+              create: { householdId: auth.user.householdId, pattern, vendorName, matchCount: 1 },
+              update: { vendorName },
+            });
+          }
         }
       }
 

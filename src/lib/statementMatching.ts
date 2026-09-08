@@ -542,7 +542,11 @@ export function findDuplicateRecurringExpense(
       stringSimilarity(norm, normalizeDescription(e.name)),
       e.vendor ? stringSimilarity(norm, normalizeDescription(e.vendor)) : 0
     );
-    if (sim >= 0.8) return { id: e.id, name: e.name, amount: e.amount };
+    // Deliberately strict: this fires a blocking "you already track…"
+    // prompt during import, so a near-miss on a statement full of
+    // similarly-named recurring debits shouldn't trip it. Amount already
+    // has to match within ~2%.
+    if (sim >= 0.88) return { id: e.id, name: e.name, amount: e.amount };
   }
   return null;
 }

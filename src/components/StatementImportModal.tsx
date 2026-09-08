@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
 import { formatCurrency } from '../utils/formatters';
-import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
+import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, buildAliasPattern, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
 import type { StatementAccountInfo } from '../lib/ai';
 import { CategorySelect } from './CategorySelect';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -129,11 +129,23 @@ const CYCLE_LABELS: Record<DetectedBillingCycle, string> = {
 // through fully expanded, so those groups start collapsed automatically.
 const AUTO_COLLAPSE_GROUP_THRESHOLD = 4;
 
+/**
+ * The key a row is grouped under in the review list. Uses the trimmed
+ * merchant pattern (first few significant words — the same thing merchant
+ * matching and learned aliases key on) rather than the full normalized
+ * description, so e.g. PTSB POS lines that carry a per-transaction terminal
+ * number ("…9012 TESCO STORE 1234 DUBLIN") still collapse into one group
+ * instead of one row each.
+ */
+function groupKeyFor(tx: { normalizedDescription: string; rawDescription: string }): string {
+  return buildAliasPattern(tx.normalizedDescription) || tx.normalizedDescription || tx.rawDescription;
+}
+
 /** Keys of every repeat-merchant (multi-row) group among a set of rows. */
 function multiItemGroupKeys(items: StatementTransactionItem[]): string[] {
   const counts = new Map<string, number>();
   for (const t of items) {
-    const key = t.normalizedDescription || t.rawDescription;
+    const key = groupKeyFor(t);
     counts.set(key, (counts.get(key) || 0) + 1);
   }
   return [...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key);
@@ -795,7 +807,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       const data = await res.json();
       if (data.status === 'ok') {
         const acted = transactions.find((t) => t.id === txId);
-        if (acted) rememberScrollAnchor(acted.normalizedDescription || acted.rawDescription);
+        if (acted) rememberScrollAnchor(groupKeyFor(acted));
         setTransactions((prev) => prev.map((t) => (t.id === txId || (action === 'rename_merchant' && t.normalizedDescription === data.transaction.normalizedDescription) ? { ...t, vendorName: data.transaction.vendorName ?? t.vendorName, ...(t.id === txId ? data.transaction : {}) } : t)));
         setLinkingTxId(null);
         setLinkingIncomeTxId(null);
@@ -871,18 +883,26 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     });
   };
 
-  // Rename a whole merchant group at once. rename_merchant already renames
-  // every row that shares this normalized description (across imports) and
-  // upserts the learned alias, so one call on any row in the group does it.
+  // Rename a whole merchant group at once. The group may hold rows with
+  // slightly different normalized descriptions (grouped by merchant
+  // pattern), so pass every row's id — the server renames exactly those and
+  // learns an alias for each distinct pattern among them.
   const renameGroup = async (group: TxGroup) => {
     const name = (groupNameInput[group.key] ?? group.label).trim();
     if (!name || !group.items[0]) return;
     if (groupBusyRef.current) return;
     groupBusyRef.current = true;
     setBusyGroupKey(group.key);
+    const idSet = new Set(group.items.map((i) => i.id));
     try {
-      const ok = await resolveTx(group.items[0].id, 'rename_merchant', { vendorName: name });
-      if (ok) setRenamingGroupKey(null);
+      const ok = await resolveTx(group.items[0].id, 'rename_merchant', {
+        vendorName: name,
+        groupTxIds: group.items.map((i) => i.id),
+      });
+      if (ok) {
+        setTransactions((prev) => prev.map((t) => (idSet.has(t.id) ? { ...t, vendorName: name } : t)));
+        setRenamingGroupKey(null);
+      }
     } finally {
       groupBusyRef.current = false;
       setBusyGroupKey(null);
@@ -1153,7 +1173,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const groupedTransactions: TxGroup[] = (() => {
     const map = new Map<string, StatementTransactionItem[]>();
     for (const tx of sortedTransactions) {
-      const key = tx.normalizedDescription || tx.rawDescription;
+      const key = groupKeyFor(tx);
       const arr = map.get(key);
       if (arr) arr.push(tx); else map.set(key, [tx]);
     }
