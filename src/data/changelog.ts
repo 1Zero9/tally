@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.96.0';
+export const APP_VERSION = '1.97.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.97.0',
+    date: '2026-09-08',
+    changes: [
+      'Rebuilt the public About page as a complete Tally website. It now leads with the shared, traceable household ledger, uses real product screens to explain statement reconciliation, Money Map, reporting and opt-in AI, and has a clearer trust story, responsive mobile layout and sign-in path.',
+    ],
+  },
   {
     version: '1.96.0',
     date: '2026-09-08',
