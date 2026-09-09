@@ -6,6 +6,7 @@ import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, Ac
 import { loadCurrency, saveCurrency } from '@/src/services/storage';
 import { updateLiveRates } from '@/src/utils/currencies';
 import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/calculations';
+import { formatCurrency } from '@/src/utils/formatters';
 import { Navbar, SPENDING_TABS } from '@/src/components/Navbar';
 import type { TabId } from '@/src/components/Navbar';
 import { CategoryBreakdownChart } from '@/src/components/CategoryBreakdownChart';
@@ -47,7 +48,6 @@ import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { StatementActivitySection } from '@/src/components/StatementActivitySection';
-import { CollapsibleSection } from '@/src/components/CollapsibleSection';
 import { ProjectsSection } from '@/src/components/ProjectsSection';
 import { TransferModal } from '@/src/components/TransferModal';
 import { StatementsSection } from '@/src/components/StatementsSection';
@@ -91,14 +91,15 @@ export default function TallyPage() {
   // real loading state on initial load without flashing on every save.
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  const SPENDING_CHIPS: { id: TabId; label: string }[] = [
-    { id: 'all', label: 'All spending' },
-    { id: 'ai-tech', label: 'AI & tech' },
-    { id: 'utilities', label: 'Utilities & bills' },
-    { id: 'education', label: 'Colleges & sports' },
+  const SPENDING_VIEWS: { id: TabId; label: string }[] = [
+    { id: 'all', label: 'All expenses' },
+    { id: 'ai-tech', label: 'AI & technology' },
+    { id: 'utilities', label: 'Utilities & household bills' },
+    { id: 'education', label: 'Education & activities' },
     { id: 'big-ticket', label: 'Mortgage & loans' },
     { id: 'insurance', label: 'Insurance & motor' },
   ];
+  const [spendingAnalysisView, setSpendingAnalysisView] = useState<'categories' | 'history' | 'limits'>('categories');
 
   // Users & Auth
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -973,68 +974,73 @@ export default function TallyPage() {
           />
         )}
 
-        {/* Spending Sub-Tab Chips */}
-        {SPENDING_TABS.includes(activeTab) && (
-          <div className="ha-page-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-            {SPENDING_CHIPS.map((chip) => (
-              <button
-                key={chip.id}
-                onClick={() => {
-                  setActiveTab(chip.id);
-                  setSelectedCategory(chip.id === 'all' ? null : chip.id);
+        {/* Specialist spending views are alternate workspaces, not category
+            filters. A labelled select makes that distinction explicit. */}
+        {SPENDING_TABS.includes(activeTab) && activeTab !== 'all' && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
+            <label className="ha-ledger-select-wrap" style={{ width: 'min(100%, 310px)' }}>
+              <span>View</span>
+              <select
+                aria-label="Spending view"
+                value={activeTab}
+                onChange={(e) => {
+                  setActiveTab(e.target.value as TabId);
+                  setSelectedCategory(null);
                 }}
-                className={`ha-chip${activeTab === chip.id ? ' active' : ''}`}
+                className="ha-ledger-select"
               >
-                {chip.label}
-              </button>
-            ))}
+                {SPENDING_VIEWS.map((view) => <option key={view.id} value={view.id}>{view.label}</option>)}
+              </select>
+            </label>
           </div>
         )}
 
         {/* Tab View Routing */}
         {activeTab === 'all' && (
           <>
-            {/* Category Distribution Breakdown */}
-            {hasData && (
-              <CategoryBreakdownChart
-                expenses={liveExpenses}
-                currency={currency}
-                customCategories={customCategories}
-              />
-            )}
+            <div className="ha-card" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                  <span className="ha-badge ha-badge-blue">Household costs</span>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1, marginTop: '0.55rem' }}>Spending</h2>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', marginTop: '0.25rem' }}>Your recurring bills and one-off expenses.</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Monthly committed</div>
+                    <div className="tabular-nums" style={{ fontSize: '1.5rem', fontWeight: 750, color: 'var(--ha-ink)' }}>{formatCurrency(summary.monthlyTotal, currency)}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>{summary.activeCount} active expense{summary.activeCount === 1 ? '' : 's'}</div>
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setEditingExpense(null);
+                      setInitialPresetId(null);
+                      setInitialCategory(null);
+                      setIsAddModalOpen(true);
+                    }}
+                  >
+                    Add expense
+                  </button>
+                </div>
+              </div>
+              <label className="ha-ledger-select-wrap" style={{ width: 'min(100%, 310px)', marginTop: '1.25rem' }}>
+                <span>View</span>
+                <select
+                  aria-label="Spending view"
+                  value={activeTab}
+                  onChange={(e) => {
+                    setActiveTab(e.target.value as TabId);
+                    setSelectedCategory(null);
+                  }}
+                  className="ha-ledger-select"
+                >
+                  {SPENDING_VIEWS.map((view) => <option key={view.id} value={view.id}>{view.label}</option>)}
+                </select>
+              </label>
+            </div>
 
-            {hasData && (
-              <CollapsibleSection
-                id="spending-over-time"
-                defaultOpen={false}
-                bodyStyle={{ padding: '0.5rem 1.25rem 1.25rem' }}
-                title="Spending over time"
-                subtitle="Built from bills marked paid and logged transfers — grows as you go"
-              >
-                <TrendChart currency={currency} metric="spending" bare />
-              </CollapsibleSection>
-            )}
-
-            <CollapsibleSection
-              id="spending-budgets"
-              defaultOpen={false}
-              bodyStyle={{ padding: '1rem 1.5rem 1.5rem' }}
-              title="Category spending limits"
-              subtitle="A monthly limit per category vs this month's spend — no rollover, just a simple check"
-            >
-              <BudgetsSection
-                expenses={liveExpenses}
-                customCategories={customCategories}
-                currency={currency}
-                budgets={budgets}
-                onSaveBudget={handleSaveBudget}
-                onDeleteBudget={handleDeleteBudget}
-                onCategoryCreated={handleCategoryCreated}
-                bare
-              />
-            </CollapsibleSection>
-
-            {/* Complete Household Ledger */}
+            {/* The expense list is the primary working surface. */}
             <ExpenseList
               expenses={liveExpenses}
               isLoading={isInitialLoading}
@@ -1062,6 +1068,37 @@ export default function TallyPage() {
               onQuickUpdateAmount={handleQuickUpdateAmount}
               onContactVendor={(item) => setContactVendorExpense(item)}
             />
+
+            <section className="ha-card" style={{ padding: '1.5rem', marginBottom: '2.5rem' }} aria-labelledby="spending-analysis-heading">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                <div>
+                  <h2 id="spending-analysis-heading" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Understand your spending</h2>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', marginTop: '0.2rem' }}>Optional summaries and category limits.</p>
+                </div>
+                <div className="ha-page-tabs" style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto' }} role="tablist" aria-label="Spending analysis">
+                  {([
+                    ['categories', 'By category'],
+                    ['history', 'Over time'],
+                    ['limits', 'Category limits'],
+                  ] as const).map(([id, label]) => (
+                    <button key={id} className={`ha-chip${spendingAnalysisView === id ? ' active' : ''}`} onClick={() => setSpendingAnalysisView(id)} role="tab" aria-selected={spendingAnalysisView === id}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {spendingAnalysisView === 'categories' && (
+                <CategoryBreakdownChart expenses={liveExpenses} currency={currency} customCategories={customCategories} bare />
+              )}
+              {spendingAnalysisView === 'history' && (
+                hasData
+                  ? <TrendChart currency={currency} metric="spending" title="Spending over time" subtitle="Built from bills marked paid and logged transfers — grows as you go" bare />
+                  : <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)' }}>Spending history will appear after you begin recording payments.</p>
+              )}
+              {spendingAnalysisView === 'limits' && (
+                <BudgetsSection expenses={liveExpenses} customCategories={customCategories} currency={currency} budgets={budgets} onSaveBudget={handleSaveBudget} onDeleteBudget={handleDeleteBudget} onCategoryCreated={handleCategoryCreated} bare />
+              )}
+            </section>
           </>
         )}
 

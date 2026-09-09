@@ -129,6 +129,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const unpaidCount = expenses.filter((e) => !e.isPaidThisCycle).length;
   const activeCount = expenses.filter((e) => e.isActive).length;
   const pausedCount = expenses.filter((e) => !e.isActive).length;
+  const isFiltered = !!searchQuery.trim() || !!selectedCategory || statusFilter !== 'all';
 
   const STATUS_FILTERS: { id: typeof statusFilter; label: string; count: number }[] = [
     { id: 'all', label: 'All', count: expenses.length },
@@ -143,16 +144,18 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
       <div className="ha-ledger-header">
         <div>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
-            Household ledger
+            Expenses
           </h3>
           {overdueCount > 0 && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-red)', fontWeight: 600 }}>
               {overdueCount} bill{overdueCount === 1 ? '' : 's'} overdue
             </p>
           )}
-          <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
-            {sortedItems.length} of {expenses.length} records shown
-          </p>
+          {isFiltered && (
+            <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
+              {sortedItems.length} of {expenses.length} expenses
+            </p>
+          )}
         </div>
 
         <div className="ha-ledger-toolbar">
@@ -233,8 +236,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               onChange={(e) => setSortBy(e.target.value as 'amount-desc' | 'amount-asc' | 'renewal' | 'name')}
               className="ha-ledger-select"
             >
-              <option value="amount-desc">Highest amount</option>
-              <option value="amount-asc">Lowest amount</option>
+              <option value="amount-desc">Highest monthly cost</option>
+              <option value="amount-asc">Lowest monthly cost</option>
               <option value="renewal">Renewal day (1–31)</option>
               <option value="name">Name (A–Z)</option>
             </select>
@@ -415,7 +418,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                   )}
                 </div>
 
-                {/* 3. Payment state, active state, and restrained row actions */}
+                {/* 3. Primary payment state and restrained row actions. Less
+                    frequent controls live in the expanded details/menu. */}
                 <div className="ha-ledger-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '1rem' }}>
                   <button
                     className={`ha-payment-status${item.isPaidThisCycle ? ' is-paid' : overdue ? ' is-overdue' : ' is-unpaid'}`}
@@ -423,28 +427,6 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     title={item.isPaidThisCycle ? 'Paid — click to mark unpaid' : 'Unpaid — click to mark paid'}
                   >
                     {item.isPaidThisCycle ? 'Paid' : 'Unpaid'}
-                  </button>
-
-                  <div className="ha-active-control" title={item.isActive ? 'Active — click to pause' : 'Paused — click to activate'} onClick={(e) => e.stopPropagation()}>
-                    <span>{item.isActive ? 'Active' : 'Paused'}</span>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={item.isActive}
-                        onChange={() => onToggleActive(item.id)}
-                        aria-label={`${item.isActive ? 'Pause' : 'Activate'} ${item.name}`}
-                      />
-                      <span className="slider"></span>
-                    </label>
-                  </div>
-
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onEditExpense(item); }}
-                    className="ha-row-edit"
-                    title="Edit record"
-                  >
-                    <Edit2 size={14} />
-                    <span>Edit</span>
                   </button>
 
                   <div className="ha-row-menu-wrap">
@@ -470,6 +452,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           onClick={(e) => { e.stopPropagation(); setOpenActionsId(null); }}
                         />
                         <div className="ha-row-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            role="menuitem"
+                            onClick={() => { setOpenActionsId(null); onEditExpense(item); }}
+                          >
+                            <Edit2 size={14} />
+                            <span>Edit expense</span>
+                          </button>
                           {item.isVariable && (
                             <button
                               role="menuitem"
@@ -532,6 +521,23 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
               {isExpanded && (
                 <div style={{ padding: '0 1.25rem 1rem', backgroundColor: '#fafaf7' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.85rem 0', borderTop: '1px solid var(--ha-line)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
+                      {item.isActive ? 'Included in spending totals' : 'Paused and excluded from spending totals'}
+                    </span>
+                    <div className="ha-active-control" title={item.isActive ? 'Active — click to pause' : 'Paused — click to activate'}>
+                      <span>{item.isActive ? 'Active' : 'Paused'}</span>
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={item.isActive}
+                          onChange={() => onToggleActive(item.id)}
+                          aria-label={`${item.isActive ? 'Pause' : 'Activate'} ${item.name}`}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                    </div>
+                  </div>
                   <div style={{
                     display: 'flex',
                     flexWrap: 'wrap',
@@ -539,7 +545,6 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     fontSize: '0.8rem',
                     color: 'var(--ha-muted)',
                     padding: '0.85rem 0',
-                    borderTop: '1px solid var(--ha-line)',
                   }}>
                     <span>Category: <strong style={{ color: 'var(--ha-ink)' }}>{cat.name}</strong></span>
                     <span>Billing cycle: <strong style={{ color: 'var(--ha-ink)' }}>{formatBillingCycle(item.billingCycle)}</strong></span>

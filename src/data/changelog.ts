@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.106.0';
+export const APP_VERSION = '1.107.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.107.0',
+    date: '2026-09-09',
+    changes: [
+      'Rebuilt Spending around its primary task: a clear page header and summary now lead directly into the expense list, with category breakdowns, history and limits moved below into one optional “Understand your spending” area.',
+      'Replaced the row of incomplete, category-like shortcuts with one labelled View menu for the specialist AI, utilities, education, mortgage and insurance workspaces. The complete category filter remains where it belongs, beside the expense search.',
+      'Simplified expense rows so the collapsed view focuses on the name, category, due date, amount and paid state. Active/Paused now lives in the expanded details, while Edit and secondary actions share the three-dot menu.',
+      'Clarified labels throughout Spending: “Household ledger” is now “Expenses”, monthly-cost sorting says exactly what it compares, and filtered counts only appear when a filter is actually active.',
+    ],
+  },
   {
     version: '1.106.0',
     date: '2026-09-09',

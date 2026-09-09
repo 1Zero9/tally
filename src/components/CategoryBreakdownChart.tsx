@@ -8,12 +8,14 @@ interface CategoryBreakdownChartProps {
   expenses: ExpenseItem[];
   currency: CurrencyCode;
   customCategories?: CustomCategoryItem[];
+  bare?: boolean;
 }
 
 export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
   expenses,
   currency,
   customCategories = [],
+  bare = false,
 }) => {
   const activeExpenses = expenses.filter((e) => e.isActive);
   const totalSpend = activeExpenses.reduce((sum, item) => {
@@ -38,10 +40,10 @@ export const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({
   }).sort((a, b) => b.monthlyAmount - a.monthlyAmount);
 
   return (
-    <div className="ha-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+    <div className={bare ? undefined : 'ha-card'} style={bare ? undefined : { padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
       <div style={{ marginBottom: '0.65rem' }}>
         <h3 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-          Monthly spending mix
+          Monthly commitments by category
         </h3>
       </div>
 
