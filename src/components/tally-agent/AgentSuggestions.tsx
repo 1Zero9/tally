@@ -42,7 +42,7 @@ export function suggestionsForArea(area: string | undefined): AgentSuggestion[] 
       { label: 'What happens if I delete an account?', question: 'What happens if I delete an account?' },
     ],
     moneymap: [{ label: 'What does the Money Map show?', question: 'What does the Money Map screen show me?' }],
-    flow: [{ label: 'What counts as a transfer?', question: 'What counts as a transfer in Tally?' }],
+    flow: [{ label: 'What counts as a transaction?', question: 'What counts as a transaction in Tally?' }],
     goals: [{ label: 'How much have I saved this year?', question: 'How much have I saved this year?' }],
   };
 

@@ -112,7 +112,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div id="statement-imports" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollMarginTop: '9rem' }}>
       <div className="ha-card" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>

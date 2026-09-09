@@ -94,27 +94,7 @@ export const TransfersSection: React.FC<TransfersSectionProps> = ({
     : `Transfers (${transfers.length})`;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-      <div className="ha-card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-              <span className="ha-badge ha-badge-blue">Money journey</span>
-            </div>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1 }}>
-              Flow
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '600px', marginTop: '0.25rem' }}>
-              Log every hop money takes — income landing, moving between accounts, direct debits, and one-off spends like a car repair.
-            </p>
-          </div>
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ fontSize: '0.85rem' }}>
-            <Plus size={15} />
-            <span>Log transfer</span>
-          </button>
-        </div>
-      </div>
-
+    <div id="transaction-ledger" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', scrollMarginTop: '9rem' }}>
       <CollapsibleSection id="transfers-ledger" title={title}>
         {transfers.length === 0 ? (
           <div style={{ padding: '3.5rem 2rem', textAlign: 'center', color: 'var(--ha-muted)' }}>

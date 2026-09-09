@@ -51,7 +51,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   };
 
   return (
-    <div className={className ?? 'ha-card'} style={{ overflow: 'hidden', opacity: hydrated ? 1 : 0.98 }}>
+    <div id={id} className={className ?? 'ha-card'} style={{ overflow: 'hidden', opacity: hydrated ? 1 : 0.98, scrollMarginTop: '9rem' }}>
       <button
         type="button"
         onClick={toggle}

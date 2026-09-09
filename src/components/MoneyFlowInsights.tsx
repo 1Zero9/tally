@@ -92,7 +92,7 @@ export const MoneyFlowInsights: React.FC = () => {
 
           {analysis.insights.length === 0 ? (
             <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)' }}>
-              No specific opportunities found — log more transfers in Flow for a deeper analysis.
+              No specific opportunities found — log more transfers in Transactions for a deeper analysis.
             </p>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>

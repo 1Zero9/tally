@@ -277,7 +277,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '640px', marginTop: '0.25rem' }}>
               {mode === 'journey'
-                ? 'Where money actually moved — income landing, transfers between accounts, and payments going out — built from your logged Flow entries.'
+                ? 'Where money actually moved — income landing, transfers between accounts, and payments going out — built from your logged transactions.'
                 : 'A projection based on recurring bills and income linked to accounts, shown as a typical month.'}
             </p>
           </div>
@@ -333,7 +333,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
             </h4>
             <p style={{ fontSize: '0.85rem', maxWidth: '420px', margin: '0 auto', lineHeight: 1.5 }}>
               {mode === 'journey'
-                ? 'Log transfers in the Flow tab — salary landing, sweeps between accounts, payments out — to see the real journey here.'
+                ? 'Log transfers in Transactions — salary landing, sweeps between accounts, payments out — to see the real journey here.'
                 : 'Link your income and expenses to accounts to see the flow visualized here.'}
             </p>
           </div>
@@ -474,7 +474,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
         <div className="ha-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Landmark size={18} color="var(--ha-blue)" />
           <p style={{ fontSize: '0.82rem', color: 'var(--ha-muted)' }}>
-            Add accounts and log transfers in Flow to build out the full map.
+            Add accounts and log transfers in Transactions to build out the full map.
           </p>
         </div>
       )}

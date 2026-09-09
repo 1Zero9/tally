@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.105.0';
+export const APP_VERSION = '1.106.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.106.0',
+    date: '2026-09-09',
+    changes: [
+      'Renamed Flow to Transactions and gave it a clear page introduction with direct shortcuts to Statements, Statement activity, Transactions and Money trails. Statement imports now have a natural, named destination instead of relying on users to understand what “Flow” means.',
+      'Transactions and Plans are now directly visible in the mobile menu; only the wide Money Map remains under “More — best on desktop”.',
+      'Renamed the top-level Insights area to Opportunities, removing its naming collision with the Insights report, and renamed Planned to Plans to better cover both planned expenses and home projects.',
+      'Updated the Help guide, Money Map guidance, assistant suggestions and feedback area names to use the new navigation terminology consistently.',
+    ],
+  },
   {
     version: '1.105.0',
     date: '2026-09-08',

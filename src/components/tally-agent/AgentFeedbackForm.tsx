@@ -20,9 +20,9 @@ const AREA_LABELS: Record<string, string> = {
   overview: 'Overview',
   all: 'Spending', 'ai-tech': 'Spending', utilities: 'Spending', education: 'Spending',
   'big-ticket': 'Spending', insurance: 'Spending',
-  income: 'Income', calendar: 'Bills', insights: 'Insights', reports: 'Insights',
-  accounts: 'Accounts', moneymap: 'Money Map', flow: 'Flow', goals: 'Goals',
-  planned: 'Planned', admin: 'Admin',
+  income: 'Income', calendar: 'Bills', insights: 'Opportunities', reports: 'Reports',
+  accounts: 'Accounts', moneymap: 'Money Map', flow: 'Transactions', goals: 'Progress',
+  planned: 'Plans', admin: 'Admin',
 };
 
 /** Inline "raise it" form. Nothing is sent until the user hits the button —

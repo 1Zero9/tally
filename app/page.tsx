@@ -1301,6 +1301,45 @@ export default function TallyPage() {
 
         {activeTab === 'flow' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            <div className="ha-card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <span className="ha-badge ha-badge-blue">Money activity</span>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--ha-ink)', lineHeight: 1.1, marginTop: '0.55rem' }}>
+                    Transactions
+                  </h2>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '650px', marginTop: '0.25rem' }}>
+                    Import statements, review what Tally logged, and record money moving into, out of, or between your accounts.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingTransfer(null);
+                    setIsTransferModalOpen(true);
+                  }}
+                  className="btn btn-primary"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  Log transfer
+                </button>
+              </div>
+              <div className="ha-page-tabs" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.25rem' }} aria-label="Transaction sections">
+                {[
+                  ['statement-imports', 'Statements'],
+                  ['statement-activity', 'Statement activity'],
+                  ['transaction-ledger', 'Transactions'],
+                  ['money-trails', 'Money trails'],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    className="ha-chip"
+                    onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <StatementsSection
               expenses={liveExpenses}
               incomes={incomes}
@@ -1616,7 +1655,7 @@ export default function TallyPage() {
       />
 
       {/* Import a statement — the home-page entry point (StatementReminderBanner
-          above); the Flow tab's own "Import statement" button uses its own
+          above); the Transactions tab's own "Import statement" button uses its own
           separate instance inside StatementsSection. */}
       <StatementImportModal
         isOpen={isStatementModalOpen}

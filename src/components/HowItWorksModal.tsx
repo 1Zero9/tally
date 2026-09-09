@@ -70,7 +70,7 @@ const SECTIONS: Section[] = [
     title: 'Everything from a statement is undoable',
     icon: <RotateCcw size={16} color="var(--ha-blue)" />,
     points: [
-      <>Per row inside the import review, or across all imports from the <strong>Statement activity</strong> list on the Flow tab.</>,
+      <>Per row inside the import review, or across all imports from the <strong>Statement activity</strong> list in Transactions.</>,
       <>Undo removes any bill, transfer or income the row created and sends it back to &ldquo;needs review&rdquo;.</>,
     ],
   },

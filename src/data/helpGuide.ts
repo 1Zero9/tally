@@ -29,7 +29,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     title: 'Overview',
     body: [
       'The landing dashboard once you sign in — your household\'s current-period totals at a glance: money in, money out, and how your budget is tracking. Use it as your starting point before drilling into a specific area.',
-      'A statement-import banner shows here whenever you\'ve never imported one, or it\'s been 30+ days since your last one, so importing is a one-click action from the moment you land, not something buried in Flow. Dismissing it snoozes for two weeks rather than turning it off for good.',
+      'A statement-import banner shows here whenever you\'ve never imported one, or it\'s been 30+ days since your last one, so importing is a one-click action from the moment you land, not something you have to find in Transactions. Dismissing it snoozes for two weeks rather than turning it off for good.',
       'A "Net worth" figure appears once at least one account has a balance set — assets (checking, savings, PayPal, investments, etc.) minus credit cards and loans. It\'s blurred the same way as "Left after bills" until you click to reveal it.',
     ],
     screenshots: [
@@ -53,12 +53,12 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'Use "Catalog" to add common household bills (Netflix, electricity, broadband, etc.) in one click instead of typing them from scratch.',
       'Use the Spending ledger toolbar to search, choose a category, filter by status, or change the sort order. The spending-mix legend above it is a summary only, so it never changes your filters.',
       'Paid/Unpaid tracks the current payment cycle; the separately labelled Active/Paused switch controls whether the expense is ongoing. Edit stays visible, while less common actions — update amount, contact vendor, duplicate, delete — are under the three-dot More menu.',
-      'Mark a subscription\'s usage as low/medium/high — low-usage items are flagged as cancellation candidates in Insights. Pause a subscription instead of deleting it to keep its history and see it counted in your "already saving" total.',
+      'Mark a subscription\'s usage as low/medium/high — low-usage items are flagged as cancellation candidates in Opportunities. Pause a subscription instead of deleting it to keep its history and see it counted in your "already saving" total.',
       'The built-in set is broad on purpose — Utilities, Housing, Transport & Motoring, Health & Medical, Eating Out & Takeaway, Personal Care & Clothing, Travel & Holidays, Banking & Fees, Pets, and more — so you rarely need a custom one. When adding an expense (or categorising a statement row), a "Suggest: …" link appears under the category picker when the name points at an obvious category — one click applies it.',
       'Still nothing that fits? Pick "+ Create new category…" at the bottom of the category dropdown, give it a name, and it\'s ready to use everywhere — for everyone in the household, with an automatically assigned colour. Manage them under Settings → Categories: rename, recolour, delete, or merge a near-duplicate into another (which moves all its bills across). The manager flags a custom category that looks close to an existing one, and marks any that aren\'t used by a bill.',
       'Switch to the "Income" tab to record salary, freelance or rental income and see your money in vs money out. Link each income source to the account it lands in so Money Map and money-flow analysis can use it.',
       'Click "Not yet" on an income to confirm it\'s actually landed — a small form asks for the actual amount and date received, pre-filled with the usual figures but editable. This is for anything that fluctuates (a salary that isn\'t identical every month): once confirmed, "This month\'s income" everywhere in Tally uses the real amount, not the estimate. Click "Received" again to undo a mistake — that also removes what was logged for the month, so re-confirming with the right figure doesn\'t double it up.',
-      'Expecting money back on something — a health insurance claim on a doctor visit, for example? Set "Reimbursement/claim expected" when adding the expense. The full amount still counts as spend until you mark what was actually received, since it\'s genuinely out of pocket until then; once received, only the net cost counts toward Spending, Budgets and category totals — including for a one-off cost, in the month it\'s actually dated. Once the claim actually lands in an account, log it as a real transfer in Flow too, so your account balances stay accurate.',
+      'Expecting money back on something — a health insurance claim on a doctor visit, for example? Set "Reimbursement/claim expected" when adding the expense. The full amount still counts as spend until you mark what was actually received, since it\'s genuinely out of pocket until then; once received, only the net cost counts toward Spending, Budgets and category totals — including for a one-off cost, in the month it\'s actually dated. Once the claim actually lands in an account, log it as a real transfer in Transactions too, so your account balances stay accurate.',
     ],
     screenshots: [
       { src: '/guide/add-expense.png', alt: 'Add expense form with amount, description, billing cycle and category fields', caption: 'Add expense — essentials up front, optional details (assignment, contract, reimbursement, vendor contact, notes) behind one toggle.' },
@@ -123,7 +123,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     id: 'statements',
     title: 'Importing a bank/card statement',
     body: [
-      'Open "Flow" → "Statement imports" → "Import statement", then upload a CSV export, a PDF statement, or a photo/screenshot of a paper statement — Tally reads PDFs and photos with AI, so there\'s no need to convert them to CSV first.',
+      'Open "Transactions" → "Statements" → "Import statement", then upload a CSV export, a PDF statement, or a photo/screenshot of a paper statement — Tally reads PDFs and photos with AI, so there\'s no need to convert them to CSV first.',
       'For CSV, tell Tally which column is the date, description and amount. Pick which Account the statement is from either way — this keeps matching accurate once you have more than one account. No accounts yet? Use "Add your first account" right there on the import screen.',
       'From a PDF or photo, Tally also pulls out the account number, sort code, IBAN, BIC/SWIFT, account holder and statement period if they\'re printed on it, and cross-checks them against every account you\'ve already saved — not just the one you\'ve picked. A clear single match is selected automatically; if it could be more than one saved account, you\'re shown that short list to pick from instead of a guess. Once an account is picked, any mismatched field is flagged, or you can save it in one click if that account has nothing on file yet for it.',
       'If Tally also read the opening and closing balance off a PDF or photo statement, the review screen shows whether the rows it logged actually add up to that balance change — a quick sanity check that nothing was missed. CSV imports skip this, since a CSV export has no balance to read.',
@@ -143,9 +143,9 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
   },
   {
     id: 'flow',
-    title: 'Flow — log every money movement',
+    title: 'Transactions — log every money movement',
     body: [
-      'Use "Flow" to log real transfers: income landing in an account, money moving between accounts, or payments going out.',
+      'Use "Transactions" to log real transfers: income landing in an account, money moving between accounts, or payments going out.',
       'One-off spending (a car repair, a doctor\'s visit) works here too — set "From" to the account that paid, leave "To" as External, and add a note.',
       'Money moving between your own accounts (e.g. topping up Revolut from BOI) is never counted as spend, however you log it — only a transfer whose "To" is External represents money actually leaving the household. If you import both accounts\' statements, log the outgoing side as a transfer, and confirm the matching suggestion on the incoming side rather than creating a second entry.',
       'Logging a one-off transfer or expense that looks like something already on record (same account, same amount, within a couple of days) shows a dismissible heads-up — it never blocks the entry. Recurring bills and their "marked paid" transfers are never checked this way, since they\'re expected to repeat the same amount every cycle.',
@@ -157,7 +157,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     body: [
       'The Progress tab is one place for the things you\'re slowly moving a needle on: savings balances, loans and credit cards being paid down, and savings goals being built up. A strip at the top shows savings balances, total owed, total saved toward goals, and how many goals are on track.',
       'Savings: every Savings, Credit Union, Investment, Shares or State Savings account you\'ve added shows here — grouped by type with a subtotal per group, each account\'s share of your total savings, and a combined total. Set the account type when you add it in Accounts.',
-      'Loans & cards: every Loan or Credit Card account with a balance shows here. For a loan with an original amount set (in Accounts), you get a payoff bar — how much is cleared, how much is left — plus any payments logged toward it from Flow, and its rate, term and target payoff date. Credit cards just show the amount owed and payments logged.',
+      'Loans & cards: every Loan or Credit Card account with a balance shows here. For a loan with an original amount set (in Accounts), you get a payoff bar — how much is cleared, how much is left — plus any payments logged toward it from Transactions, and its rate, term and target payoff date. Credit cards just show the amount owed and payments logged.',
       'Goals: track savings targets like an emergency fund or a holiday. Each goal has a name, target amount, current amount, optional target date, and can be linked to the account the money is actually sitting in. Link a recurring top-up (a regular bill or Planned expense pointing at the goal) and Tally projects when you\'ll reach it — "~€150/mo → on track for Mar 2027 (2 mo ahead of target)".',
       'You can also link a goal from a Planned expense, or from any regular bill — handy for something cheaper paid annually that you can\'t afford in one go, like a subscription. When adding or editing a goal, use "Split into equal payments" to see what the remaining amount works out to per instalment (2, 4, 12, 20, or any custom number) — it\'s just a quick calculator, nothing is saved.',
     ],
@@ -166,17 +166,17 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     id: 'planned',
     title: 'Planned expenses',
     body: [
-      'Got a cost coming up that isn\'t required yet — like college fees? Tick "Planned — not required yet" when adding it, or use "Add planned expense" from the "Planned" tab.',
+      'Got a cost coming up that isn\'t required yet — like college fees? Tick "Planned — not required yet" when adding it, or use "Add planned expense" from the "Plans" tab.',
       'Planned items sit in their own stand-alone list and never count towards totals, bills, insights, or money-flow analysis until you hit "Activate".',
       'Optionally link a planned item to a Goal to track savings progress, and watch for the "consider activating" badge once its date is within 30 days. A quiet banner on Overview nudges you toward the Planned list whenever you have upcoming planned costs — informational only, never changes any figures.',
-      'Home projects (also on the Planned tab) are a mini project manager for a discrete piece of work — a bedroom refurb, a new patio. Break a project into line items, each with an estimated cost, then link the real spend as it appears on your statements (an item can link to several transactions, and you can set a partial amount to split one big payment across items). Each item shows actual vs estimate and over/under, and the project rolls up to total spent vs budget. Line items and links are separate from the ledger — deleting a project never touches the linked expenses or transfers.',
+      'Home projects (also on the Plans tab) are a mini project manager for a discrete piece of work — a bedroom refurb, a new patio. Break a project into line items, each with an estimated cost, then link the real spend as it appears on your statements (an item can link to several transactions, and you can set a partial amount to split one big payment across items). Each item shows actual vs estimate and over/under, and the project rolls up to total spent vs budget. Line items and links are separate from the ledger — deleting a project never touches the linked expenses or transfers.',
     ],
   },
   {
     id: 'moneymap',
     title: 'Money Map',
     body: [
-      'A visual diagram of your money\'s journey, with two modes. "Actual journey" (default once you\'ve logged transfers in Flow) is built from your real dated Transfer records — three columns (money in → your accounts → money out) plus a distinct path for direct account-to-account transfers. Filter by All time / 90 days / 30 days.',
+      'A visual diagram of your money\'s journey, with two modes. "Actual journey" (default once you\'ve logged transfers in Transactions) is built from your real dated Transfer records — three columns (money in → your accounts → money out) plus a distinct path for direct account-to-account transfers. Filter by All time / 90 days / 30 days.',
       '"Projected" is the original monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you\'ve logged any real transfers, or to see a "typical month" projection alongside the real history.',
       '"My map" is your own freeform, editable canvas — add any object (an account, a loan, anything not yet tracked), connect objects with a directional arrow, and drag them around to sketch out exactly how your money moves.',
       'Hover any connection to see the exact amount. Account circles are colored blue when net-positive and red when net-negative or a loan.',
@@ -187,7 +187,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
   },
   {
     id: 'insights',
-    title: 'Insights',
+    title: 'Opportunities',
     body: [
       'Money flow analysis (AI): click "Analyze my money flow" for an on-demand AI review of your accounts, transfers, and goals — flagging idle cash sitting in low-interest accounts, direct-debit timing risk (bills landing before income arrives), account consolidation opportunities, and concrete savings suggestions. This is opt-in per click, not automatic, and only ever uses your own household\'s data.',
       'What could we save? — a rule-based (non-AI) breakdown of savings opportunities: switching monthly subscriptions to annual billing, rarely-used subscriptions worth cancelling, and a running total of what you\'re already saving from paused subscriptions. Toggle the horizon between 1 month, 1 year, 3 years, and 5 years.',
@@ -197,8 +197,8 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     id: 'reports',
     title: 'Reports',
     body: [
-      'The "Reports" tab has four views — Trends, Category & Vendor, Timeline, and Insights — each covering a period you choose (1/3/6/12 months, or all time).',
-      'Every report is built from the household\'s full real transfer ledger, including ad-hoc transfers not tied to a tracked bill or income, so nothing real gets missed. A transfer between two of your own accounts never counts as spend or income, the same rule Flow and Spending use. Spend with no linked bill shows up under "Uncategorized" rather than being dropped.',
+      'The "Reports" tab has five views — Trends, Category & Vendor, Category trend, Timeline, and Insights — each covering a period you choose (1/3/6/12 months, or all time).',
+      'Every report is built from the household\'s full real transfer ledger, including ad-hoc transfers not tied to a tracked bill or income, so nothing real gets missed. A transfer between two of your own accounts never counts as spend or income, the same rule Transactions and Spending use. Spend with no linked bill shows up under "Uncategorized" rather than being dropped.',
       'Every table has an "Export CSV" button. For a clean PDF, use your browser\'s Print (Save as PDF) from the Reports tab — it prints just the report, without navigation or buttons.',
     ],
     screenshots: [

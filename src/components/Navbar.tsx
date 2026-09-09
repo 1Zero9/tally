@@ -14,22 +14,22 @@ const PRIMARY_NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: 'calendar', label: 'Bills' },
   { id: 'income', label: 'Income' },
   { id: 'accounts', label: 'Accounts' },
-  { id: 'insights', label: 'Insights' },
+  { id: 'insights', label: 'Opportunities' },
   { id: 'reports', label: 'Reports' },
 ];
 
 // Journey destinations remain directly visible in the dedicated navigation
 // rail so nobody needs to learn a hidden grouping or dropdown.
 const JOURNEY_NAV_ITEMS: { id: TabId; label: string }[] = [
-  { id: 'flow', label: 'Flow' },
+  { id: 'flow', label: 'Transactions' },
   { id: 'goals', label: 'Progress' },
-  { id: 'planned', label: 'Planned' },
+  { id: 'planned', label: 'Plans' },
   { id: 'moneymap', label: 'Money Map' },
 ];
 
 // Tabs tucked behind "More — best on desktop" in the mobile drawer: heavy
 // authoring / wide visualisations that aren't a quick phone glance.
-const MOBILE_DESKTOP_TABS = new Set<TabId>(['flow', 'planned', 'moneymap']);
+const MOBILE_DESKTOP_TABS = new Set<TabId>(['moneymap']);
 
 interface NavbarProps {
   activeTab: TabId;
