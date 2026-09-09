@@ -25,6 +25,7 @@ import {
 import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
 import { formatCurrency } from '../utils/formatters';
 import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, buildAliasPattern, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
+import { uploadAttachment } from '../lib/attachments';
 import type { StatementAccountInfo } from '../lib/ai';
 import { CategorySelect } from './CategorySelect';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -181,6 +182,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 }) => {
   const [step, setStep] = useState<Step>('upload');
   const [fileName, setFileName] = useState('');
+  // The original uploaded file, kept so it can be saved to Files (attached
+  // to the created import) after a successful import.
+  const [rawFile, setRawFile] = useState<File | null>(null);
   const [label, setLabel] = useState('');
   const [accountId, setAccountId] = useState('');
   const [importAccount, setImportAccount] = useState<{ id: string; name: string; institution?: string | null } | null>(null);
@@ -322,6 +326,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const reset = useCallback(() => {
     setStep('upload');
     setFileName('');
+    setRawFile(null);
     setLabel('');
     setAccountId('');
     setImportAccount(null);
@@ -513,6 +518,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
   const handleFile = (file: File) => {
     setFileName(file.name);
+    setRawFile(file);
     setParseError('');
 
     const lowerName = file.name.toLowerCase();
@@ -781,6 +787,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       applyLoadedTransactions(data.transactions);
       setStep('review');
       onImported();
+
+      // Keep the original file in Files, attached to this import (best-effort).
+      if (rawFile) {
+        void uploadAttachment(rawFile, rawFile.name || fileName || 'statement', 'statementImport', data.import.id);
+      }
     } catch {
       setSubmitError('Failed to import statement. Please try again.');
     } finally {

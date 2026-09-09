@@ -4,7 +4,7 @@ import { Plus, Search, Settings, HelpCircle, LogOut, ShieldCheck, Menu, X, Chevr
 import { TallyLogo } from './TallyLogo';
 import { APP_VERSION, MOBILE_APP_VERSION } from '../data/changelog';
 
-export type TabId = 'overview' | 'all' | 'income' | 'calendar' | 'reports' | 'accounts' | 'moneymap' | 'flow' | 'goals' | 'planned' | 'admin';
+export type TabId = 'overview' | 'all' | 'income' | 'calendar' | 'reports' | 'accounts' | 'moneymap' | 'flow' | 'goals' | 'planned' | 'files' | 'admin';
 
 
 const PRIMARY_NAV_ITEMS: { id: TabId; label: string }[] = [
@@ -22,12 +22,13 @@ const JOURNEY_NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: 'flow', label: 'Transactions' },
   { id: 'goals', label: 'Progress' },
   { id: 'planned', label: 'Plans' },
+  { id: 'files', label: 'Files' },
   { id: 'moneymap', label: 'Money Map' },
 ];
 
 // Tabs tucked behind "More — best on desktop" in the mobile drawer: heavy
 // authoring / wide visualisations that aren't a quick phone glance.
-const MOBILE_DESKTOP_TABS = new Set<TabId>(['moneymap']);
+const MOBILE_DESKTOP_TABS = new Set<TabId>(['moneymap', 'files']);
 
 interface NavbarProps {
   activeTab: TabId;

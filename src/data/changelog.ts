@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.113.2';
+export const APP_VERSION = '1.114.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.114.0',
+    date: '2026-09-09',
+    changes: [
+      'New "Files" tab — a single browser for every document in your household. Filter by file type, by what it\'s linked to (expenses, accounts, statements) or by date, search by filename, and see how much of your 250 MB you\'ve used. Each row links back to the record it belongs to.',
+      'Statements and scanned receipts now keep their original file automatically. Importing a bank/card statement saves the PDF/photo/CSV to Files linked to that import; scanning a receipt saves the photo linked to the expense it creates. (Both are best-effort — they never hold up the import or the scan.)',
+    ],
+  },
   {
     version: '1.113.2',
     date: '2026-09-09',

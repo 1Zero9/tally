@@ -25,6 +25,25 @@ const SELECT = {
   uploadedBy: { select: { id: true, name: true } },
 } as const;
 
+const SELECT_WITH_OWNER = {
+  ...SELECT,
+  expense: { select: { name: true } },
+  account: { select: { name: true } },
+  statementImport: { select: { label: true } },
+} as const;
+
+type RowWithOwner = {
+  expenseId: string | null; accountId: string | null; statementImportId: string | null;
+  expense: { name: string } | null; account: { name: string } | null; statementImport: { label: string | null } | null;
+};
+
+function ownerOf(r: RowWithOwner): { type: string; id: string; label: string } | null {
+  if (r.expenseId) return { type: 'expense', id: r.expenseId, label: r.expense?.name || 'Expense' };
+  if (r.accountId) return { type: 'account', id: r.accountId, label: r.account?.name || 'Account' };
+  if (r.statementImportId) return { type: 'statementImport', id: r.statementImportId, label: r.statementImport?.label || 'Statement import' };
+  return null;
+}
+
 /** Confirms the owner record exists and belongs to this household. */
 async function ownerExists(type: AttachmentOwnerType, id: string, householdId: string): Promise<boolean> {
   if (type === 'expense') return !!(await prisma.expense.findFirst({ where: { id, householdId } }));
@@ -42,12 +61,40 @@ export async function GET(request: Request) {
   const expenseId = searchParams.get('expense');
   const accountId = searchParams.get('account');
   const statementImportId = searchParams.get('statementImport');
+  const wantAll = searchParams.get('all') === '1';
   if (expenseId) where.expenseId = expenseId;
   else if (accountId) where.accountId = accountId;
   else if (statementImportId) where.statementImportId = statementImportId;
-  else return NextResponse.json({ status: 'error', message: 'A record to list attachments for is required' }, { status: 400 });
+  else if (!wantAll) return NextResponse.json({ status: 'error', message: 'A record to list attachments for is required' }, { status: 400 });
 
   try {
+    if (wantAll) {
+      const rows = await prisma.attachment.findMany({
+        where: { householdId: auth.user.householdId },
+        select: SELECT_WITH_OWNER,
+        orderBy: { createdAt: 'desc' },
+      });
+      const totals = await prisma.attachment.aggregate({
+        where: { householdId: auth.user.householdId },
+        _sum: { size: true },
+        _count: true,
+      });
+      const attachments = rows.map((r) => ({
+        id: r.id,
+        fileName: r.fileName,
+        contentType: r.contentType,
+        size: r.size,
+        createdAt: r.createdAt,
+        uploadedBy: r.uploadedBy,
+        owner: ownerOf(r),
+      }));
+      return NextResponse.json({
+        status: 'ok',
+        attachments,
+        usage: { bytes: totals._sum.size ?? 0, count: totals._count },
+      });
+    }
+
     const attachments = await prisma.attachment.findMany({
       where,
       select: SELECT,

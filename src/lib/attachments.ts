@@ -48,3 +48,34 @@ export function formatBytes(n: number): string {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/** base64 (no data: prefix) → a Blob, for uploading a scanned image. */
+export function base64ToBlob(base64: string, mimeType: string): Blob {
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  return new Blob([bytes], { type: mimeType });
+}
+
+/**
+ * Client-side: attach a file to a record. Used by the manual strip and by
+ * the auto-capture paths (statement import, receipt scan). Resolves to
+ * false on any failure — callers treat auto-capture as best-effort and
+ * never block their own flow on it.
+ */
+export async function uploadAttachment(
+  file: Blob,
+  fileName: string,
+  ownerType: AttachmentOwnerType,
+  ownerId: string,
+): Promise<boolean> {
+  try {
+    const form = new FormData();
+    form.append('file', file, fileName);
+    form.append('ownerType', ownerType);
+    form.append('ownerId', ownerId);
+    const res = await fetch('/api/attachments', { method: 'POST', body: form });
+    const data = await res.json();
+    return data.status === 'ok';
+  } catch {
+    return false;
+  }
+}

@@ -211,6 +211,15 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     ],
   },
   {
+    id: 'files',
+    title: 'Files',
+    body: [
+      'The "Files" tab is one place for every document attached anywhere in Tally. When you import a bank/card statement, the original file (PDF, photo or CSV) is saved here automatically and linked to that import. When you scan a receipt, the photo is saved and linked to the expense it created.',
+      'You can also attach files by hand: open an existing expense or account and use the "Attachments" panel to add a statement, invoice or policy document (PDF, image, CSV or text, up to 10 MB each; 250 MB per household).',
+      'Filter the list by file type, by what it\'s linked to (expenses / accounts / statements), and by date, or search by filename. Each row links back to the record it belongs to. Files are stored privately — they only ever open through Tally after a sign-in check, never a public link.',
+    ],
+  },
+  {
     id: 'renewals',
     title: 'Contract renewals & reminders',
     body: [

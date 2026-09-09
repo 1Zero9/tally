@@ -35,6 +35,8 @@ import { TallyLogo } from '@/src/components/TallyLogo';
 import { AccountsSection } from '@/src/components/AccountsSection';
 import { AccountModal } from '@/src/components/AccountModal';
 import { MoneyMap } from '@/src/components/MoneyMap';
+import { FilesSection } from '@/src/components/FilesSection';
+import { uploadAttachment, base64ToBlob } from '@/src/lib/attachments';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { StatementActivitySection } from '@/src/components/StatementActivitySection';
@@ -105,6 +107,9 @@ export default function TallyPage() {
   const [draftExpense, setDraftExpense] = useState<Partial<ExpenseItem> | null>(null);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [scanInitialImage, setScanInitialImage] = useState<{ dataUrl: string; base64: string; mimeType: string } | null>(null);
+  // Set when the Add-expense modal was opened from a receipt scan — the
+  // image is attached to the expense once it's saved (best-effort).
+  const [pendingScanImage, setPendingScanImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<IncomeItem | null>(null);
   const [contactVendorExpense, setContactVendorExpense] = useState<ExpenseItem | null>(null);
@@ -452,6 +457,16 @@ export default function TallyPage() {
           errorMessage: 'Failed to update expense — please try again.',
         }
       );
+      if (result.ok && pendingScanImage) {
+        const ext = pendingScanImage.mimeType.split('/')[1] || 'jpg';
+        void uploadAttachment(
+          base64ToBlob(pendingScanImage.base64, pendingScanImage.mimeType),
+          `receipt-${new Date().toISOString().slice(0, 10)}.${ext}`,
+          'expense',
+          existingId,
+        );
+        setPendingScanImage(null);
+      }
       return result.ok;
     }
 
@@ -474,6 +489,16 @@ export default function TallyPage() {
           if (data.possibleDuplicate) {
             const d = data.possibleDuplicate;
             setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`);
+          }
+          if (pendingScanImage && data.expense?.id) {
+            const ext = pendingScanImage.mimeType.split('/')[1] || 'jpg';
+            void uploadAttachment(
+              base64ToBlob(pendingScanImage.base64, pendingScanImage.mimeType),
+              `receipt-${new Date().toISOString().slice(0, 10)}.${ext}`,
+              'expense',
+              data.expense.id,
+            );
+            setPendingScanImage(null);
           }
         },
       }
@@ -1120,6 +1145,8 @@ export default function TallyPage() {
           />
         )}
 
+        {activeTab === 'files' && <FilesSection onNavigate={setActiveTab} />}
+
         {activeTab === 'flow' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             <div className="ha-card" style={{ padding: '1.5rem' }}>
@@ -1383,6 +1410,7 @@ export default function TallyPage() {
           setInitialCategory(null);
           setDraftExpense(null);
           setForceIsPending(false);
+          setPendingScanImage(null);
         }}
         onSave={handleSaveExpense}
         editingExpense={editingExpense}
@@ -1411,6 +1439,7 @@ export default function TallyPage() {
           setDraftExpense(null);
           setInitialPresetId(null);
           setInitialCategory(null);
+          if (scanInitialImage) setPendingScanImage({ base64: scanInitialImage.base64, mimeType: scanInitialImage.mimeType });
           setEditingExpense(mergedExpense);
           setIsAddModalOpen(true);
         }}
@@ -1418,6 +1447,7 @@ export default function TallyPage() {
           setEditingExpense(null);
           setInitialPresetId(null);
           setInitialCategory(null);
+          if (scanInitialImage) setPendingScanImage({ base64: scanInitialImage.base64, mimeType: scanInitialImage.mimeType });
           setDraftExpense(draft);
           setIsAddModalOpen(true);
         }}
