@@ -31,5 +31,6 @@ dist-ssr
 docs/ideas.md
 docs/tally-agent.md
 docs/roadmap.md
+docs/simplify.md
 docs/research/
 scripts/build_competitor_report.py
