@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.113.0';
+export const APP_VERSION = '1.113.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.113.1',
+    date: '2026-09-09',
+    changes: [
+      'Attachment serving: send X-Content-Type-Options: nosniff and no-cache, so files can\'t be MIME-sniffed and a shared cache can\'t serve one past a delete or permission change.',
+    ],
+  },
   {
     version: '1.113.0',
     date: '2026-09-09',

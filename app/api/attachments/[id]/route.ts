@@ -38,7 +38,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         'Content-Type': attachment.contentType,
         'Content-Length': String(attachment.size),
         'Content-Disposition': `inline; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(attachment.fileName)}`,
-        'Cache-Control': 'private, max-age=300',
+        // Auth-gated content — revalidate every time rather than let a
+        // shared/proxy cache hold a file past a permission change or delete.
+        'Cache-Control': 'private, no-cache',
+        // Never let the browser MIME-sniff an uploaded file into something
+        // it wasn't declared as.
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error: unknown) {
