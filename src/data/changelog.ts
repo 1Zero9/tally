@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.115.0';
+export const APP_VERSION = '1.115.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.115.1',
+    date: '2026-09-09',
+    changes: [
+      'The assistant panel now opens from whichever corner you\'ve dragged the launcher to, instead of always from the bottom-right. (Mobile still uses the full-width bottom sheet.)',
+    ],
+  },
   {
     version: '1.115.0',
     date: '2026-09-09',

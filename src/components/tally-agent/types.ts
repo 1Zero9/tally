@@ -3,6 +3,12 @@ import type { FeedbackType } from '../../types/expense';
 
 export type AgentStatus = 'idle' | 'thinking' | 'answering' | 'success' | 'error';
 
+/** localStorage key for the dragged launcher position ({left, top} of the button). */
+export const LAUNCHER_POS_KEY = 'tally.agentLauncherPos';
+/** Launcher button size (px) — desktop / mobile. Keep in sync with globals.css. */
+export const LAUNCHER_SIZE_DESKTOP = 104;
+export const LAUNCHER_SIZE_MOBILE = 78;
+
 export interface AgentAction {
   label: string;
   /** internal navigation target, opened in the app */

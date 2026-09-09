@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import type { AgentStatus } from './types';
+import { LAUNCHER_POS_KEY, LAUNCHER_SIZE_DESKTOP, LAUNCHER_SIZE_MOBILE, type AgentStatus } from './types';
 
 interface AgentLauncherProps {
   onClick: () => void;
@@ -8,7 +8,7 @@ interface AgentLauncherProps {
   hidden?: boolean;
 }
 
-const STORAGE_KEY = 'tally.agentLauncherPos';
+const STORAGE_KEY = LAUNCHER_POS_KEY;
 const EDGE_MARGIN = 12;
 const CORNER_INSET = 16; // matches the CSS default right/bottom of 1rem
 const DRAG_THRESHOLD = 4; // px moved before it counts as a drag, not a tap
@@ -16,8 +16,8 @@ const DRAG_THRESHOLD = 4; // px moved before it counts as a drag, not a tap
 type Pos = { left: number; top: number };
 
 function launcherSize(): number {
-  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) return 78;
-  return 104;
+  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) return LAUNCHER_SIZE_MOBILE;
+  return LAUNCHER_SIZE_DESKTOP;
 }
 
 /** The untransformed top-left the button sits at with no saved position. */
