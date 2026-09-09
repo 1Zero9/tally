@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.0';
+export const APP_VERSION = '1.119.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.1',
+    date: '2026-09-09',
+    changes: [
+      'The Tally assistant launcher now stays visible on top of the privacy screen instead of disappearing. Tapping it while the screen is hidden reveals the screen and opens the assistant in one step; turning the privacy screen on also closes the assistant panel and stops any nudge, so figures aren\'t left showing over the blur.',
+    ],
+  },
   {
     version: '1.119.0',
     date: '2026-09-09',

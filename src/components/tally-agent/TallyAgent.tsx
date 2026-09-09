@@ -13,6 +13,10 @@ interface TallyAgentProps {
   activeTab: TabId;
   onNavigate: (tab: TabId) => void;
   onOpenFeedback: () => void;
+  /** The privacy screen is up — keep the launcher visible above it, but
+   *  don't nudge, and reveal the screen before opening the panel. */
+  blurred?: boolean;
+  onReveal?: () => void;
 }
 
 const NUDGE_OFF_KEY = 'tally.agentNudgeOff';
@@ -38,14 +42,33 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   activeTab,
   onNavigate,
   onOpenFeedback,
+  blurred = false,
+  onReveal,
 }) => {
   const launcherWasFocused = useRef(false);
   const [nudge, setNudge] = useState<string | null>(null);
 
   const openRef = useRef(open);
   const activeTabRef = useRef(activeTab);
+  const blurredRef = useRef(blurred);
   useEffect(() => { openRef.current = open; }, [open]);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => { blurredRef.current = blurred; }, [blurred]);
+
+  // Privacy screen went up — hide any bubble and close the panel so live
+  // figures aren't left showing over the blur.
+  useEffect(() => {
+    if (blurred) {
+      setNudge(null);
+      if (open) onOpenChange(false);
+    }
+  }, [blurred, open, onOpenChange]);
+
+  const requestOpen = () => {
+    if (blurred) onReveal?.();
+    launcherWasFocused.current = true;
+    onOpenChange(true);
+  };
 
   // Return focus to the launcher when the panel closes.
   useEffect(() => {
@@ -72,7 +95,7 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
 
     const fire = () => {
       if (shown >= NUDGE_MAX_PER_SESSION) return;
-      if (openRef.current || document.hidden) {
+      if (openRef.current || blurredRef.current || document.hidden) {
         scheduleTimer = window.setTimeout(fire, 90_000);
         return;
       }
@@ -128,15 +151,11 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
         nudge={nudge}
         onNudgeOpen={() => {
           setNudge(null);
-          launcherWasFocused.current = true;
-          onOpenChange(true);
+          requestOpen();
         }}
         onNudgeDismiss={() => setNudge(null)}
         onNudgeDisable={disableNudges}
-        onClick={() => {
-          launcherWasFocused.current = true;
-          onOpenChange(true);
-        }}
+        onClick={requestOpen}
       />
 
       {open && (

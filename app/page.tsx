@@ -1403,17 +1403,18 @@ export default function TallyPage() {
         </button>
       )}
 
-      {/* Tally Agent — floating assistant, available from every tab */}
-      {!isPrivacyBlurred && (
-        <TallyAgent
-          open={isAgentOpen}
-          onOpenChange={setIsAgentOpen}
-          firstName={firstName}
-          activeTab={activeTab}
-          onNavigate={setActiveTab}
-          onOpenFeedback={() => setIsFeedbackModalOpen(true)}
-        />
-      )}
+      {/* Tally Agent — floating assistant, available from every tab and
+          kept visible above the privacy screen. */}
+      <TallyAgent
+        open={isAgentOpen}
+        onOpenChange={setIsAgentOpen}
+        firstName={firstName}
+        activeTab={activeTab}
+        onNavigate={setActiveTab}
+        onOpenFeedback={() => setIsFeedbackModalOpen(true)}
+        blurred={isPrivacyBlurred}
+        onReveal={revealPrivacyBlur}
+      />
 
       {/* Household master ledger */}
       <MasterLedgerModal
