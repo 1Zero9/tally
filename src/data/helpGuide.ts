@@ -163,6 +163,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'One-off spending (a car repair, a doctor\'s visit) works here too — set "From" to the account that paid, leave "To" as External, and add a note.',
       'Money moving between your own accounts (e.g. topping up Revolut from BOI) is never counted as spend, however you log it — only a transfer whose "To" is External represents money actually leaving the household. If you import both accounts\' statements, log the outgoing side as a transfer, and confirm the matching suggestion on the incoming side rather than creating a second entry.',
       'Logging a one-off transfer or expense that looks like something already on record (same account, same amount, within a couple of days) shows a dismissible heads-up — it never blocks the entry. Recurring bills and their "marked paid" transfers are never checked this way, since they\'re expected to repeat the same amount every cycle.',
+      'The "Household ledger" button opens an accountant\'s-book view: every logged movement of money into or out of the household, newest first, with money-out (red) and money-in columns and a running household balance. Transfers between your own accounts aren\'t shown there (they don\'t change the total) — for those, expand an account in the Accounts tab and choose "View register". Both are anchored to the balances you\'ve entered and only cover logged activity, so treat the balance column as a guide.',
     ],
   },
   {

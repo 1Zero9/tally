@@ -37,6 +37,7 @@ import { AccountsSection } from '@/src/components/AccountsSection';
 import { AccountModal } from '@/src/components/AccountModal';
 import { MoneyMap } from '@/src/components/MoneyMap';
 import { FilesSection } from '@/src/components/FilesSection';
+import { MasterLedgerModal } from '@/src/components/MasterLedgerModal';
 import { uploadAttachment, base64ToBlob } from '@/src/lib/attachments';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
@@ -98,6 +99,7 @@ export default function TallyPage() {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [isMasterLedgerOpen, setIsMasterLedgerOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState(false);
   const [changelogVariant, setChangelogVariant] = useState<'desktop' | 'mobile'>('desktop');
@@ -1171,16 +1173,25 @@ export default function TallyPage() {
                     Import statements, review what Tally logged, and record money moving into, out of, or between your accounts.
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setEditingTransfer(null);
-                    setIsTransferModalOpen(true);
-                  }}
-                  className="btn btn-primary"
-                  style={{ fontSize: '0.85rem' }}
-                >
-                  Log transfer
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setIsMasterLedgerOpen(true)}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    Household ledger
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingTransfer(null);
+                      setIsTransferModalOpen(true);
+                    }}
+                    className="btn btn-primary"
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    Log transfer
+                  </button>
+                </div>
               </div>
               <div className="ha-page-tabs" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.25rem' }} aria-label="Transaction sections">
                 {[
@@ -1403,6 +1414,15 @@ export default function TallyPage() {
           onOpenFeedback={() => setIsFeedbackModalOpen(true)}
         />
       )}
+
+      {/* Household master ledger */}
+      <MasterLedgerModal
+        isOpen={isMasterLedgerOpen}
+        onClose={() => setIsMasterLedgerOpen(false)}
+        accounts={accounts}
+        transfers={transfers}
+        currency={currency}
+      />
 
       {/* Changelog / What's New Modal */}
       <ChangelogModal

@@ -1,7 +1,7 @@
 {
   "name": "tally",
   "private": true,
-  "version": "1.117.2",
+  "version": "1.118.0",
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && prisma generate && next build",

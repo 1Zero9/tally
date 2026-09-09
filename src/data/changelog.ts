@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.117.2';
+export const APP_VERSION = '1.118.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.118.0',
+    date: '2026-09-09',
+    changes: [
+      'Added a household master ledger — the "Household ledger" button on the Transactions tab. An accountant\'s-book view of every logged movement of money into or out of the household, newest first: money-out (red) and money-in columns, and a running household balance worked backward from the sum of your account balances. Filter by date range, search by description or account. Transfers between your own accounts are left out (they don\'t change the total — use a specific account\'s register for those).',
+    ],
+  },
   {
     version: '1.117.2',
     date: '2026-09-09',
