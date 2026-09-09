@@ -126,6 +126,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'Link your expenses and income to the account they\'re paid from or deposited into — this powers Money Map, statement matching, and the AI money-flow analysis.',
       'Set a "Current balance" (and an "as of" date) on any account — it\'s entered manually since there\'s no live bank sync, and it\'s what powers the "Net worth" figure on Overview (assets minus credit cards and loans).',
       'For a Loan, you can also track the original amount, interest rate, term, and payoff date.',
+      'Expand an account and choose "View register" for a running list of every movement Tally has logged against it — transfers, bills marked paid, income received — newest first, with a running balance worked backward from the balance you entered. It only includes what\'s been logged (un-imported spending won\'t appear), so treat the balance column as a guide, not the bank\'s statement.',
       'Don\'t have any accounts yet? You don\'t need to start here — Statement imports let you add your first account inline, right from the import screen.',
     ],
     screenshots: [

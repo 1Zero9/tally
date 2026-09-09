@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import type { AccountItem, CurrencyCode } from '../types/expense';
-import { Edit2, Trash2, Plus, Landmark, Eye, EyeOff, Copy, Check, ShieldAlert, Link as LinkIcon, PiggyBank } from 'lucide-react';
+import type { AccountItem, CurrencyCode, TransferItem } from '../types/expense';
+import { Edit2, Trash2, Plus, Landmark, Eye, EyeOff, Copy, Check, ShieldAlert, Link as LinkIcon, PiggyBank, ScrollText } from 'lucide-react';
 import { hasTextSelection } from '../utils/dom';
 import { convertCurrency } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
+import { AccountRegisterModal } from './AccountRegisterModal';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 const LIABILITY_TYPES = new Set(['CREDIT_CARD', 'LOAN']);
@@ -37,6 +38,7 @@ const SENSITIVE_FIELDS: { key: string; hasKey: keyof AccountItem; label: string 
 
 interface AccountsSectionProps {
   accounts: AccountItem[];
+  transfers: TransferItem[];
   currency: CurrencyCode;
   encryptionConfigured: boolean;
   onEditAccount: (account: AccountItem) => void;
@@ -46,6 +48,7 @@ interface AccountsSectionProps {
 
 export const AccountsSection: React.FC<AccountsSectionProps> = ({
   accounts,
+  transfers,
   currency,
   encryptionConfigured,
   onEditAccount,
@@ -53,6 +56,7 @@ export const AccountsSection: React.FC<AccountsSectionProps> = ({
   onOpenAddModal,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [registerAccount, setRegisterAccount] = useState<AccountItem | null>(null);
 
   const savingsAccounts = accounts.filter((a) => SAVINGS_TYPE_ORDER.includes(a.type as typeof SAVINGS_TYPE_ORDER[number]) && a.balance != null);
   const savingsTotal = savingsAccounts.reduce((s, a) => s + convertCurrency(a.balance || 0, a.currency, currency), 0);
@@ -253,6 +257,15 @@ export const AccountsSection: React.FC<AccountsSectionProps> = ({
 
                   {isExpanded && (
                     <div style={{ padding: '0 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setRegisterAccount(item); }}
+                          className="btn btn-secondary"
+                          style={{ fontSize: '0.78rem', padding: '0.35rem 0.7rem' }}
+                        >
+                          <ScrollText size={13} /> View register
+                        </button>
+                      </div>
                       {item.balance != null && item.balanceAsOf && (
                         <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>
                           Balance as of {formatDate(item.balanceAsOf)} — entered manually, not live-synced.
@@ -326,6 +339,13 @@ export const AccountsSection: React.FC<AccountsSectionProps> = ({
           </div>
         )}
       </CollapsibleSection>
+
+      <AccountRegisterModal
+        isOpen={registerAccount !== null}
+        onClose={() => setRegisterAccount(null)}
+        account={registerAccount}
+        transfers={transfers}
+      />
     </div>
   );
 };

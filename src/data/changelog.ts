@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.116.1';
+export const APP_VERSION = '1.117.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.117.0',
+    date: '2026-09-09',
+    changes: [
+      'Added a per-account register. Expand an account and choose "View register" for a dated list of every movement Tally has logged against it — transfers, bills marked paid, income received — newest first, with money-in / money-out columns and a running balance worked backward from the balance you entered. Filter by date range. It only covers logged activity, so the balance column is a guide, not a bank statement.',
+    ],
+  },
   {
     version: '1.116.1',
     date: '2026-09-09',

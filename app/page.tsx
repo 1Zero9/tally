@@ -1120,6 +1120,7 @@ export default function TallyPage() {
         {activeTab === 'accounts' && (
           <AccountsSection
             accounts={accounts}
+            transfers={transfers}
             currency={currency}
             encryptionConfigured={encryptionConfigured}
             onEditAccount={(item) => {
