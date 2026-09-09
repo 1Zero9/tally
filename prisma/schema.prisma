@@ -92,6 +92,7 @@ model Household {
 
   moneyTrails MoneyTrail[]
   projects    Project[]
+  attachments Attachment[]
 }
 
 model User {
@@ -123,8 +124,9 @@ model User {
 
   budgetsCreated Budget[]
 
-  moneyTrailsCreated MoneyTrail[]
-  projectsCreated    Project[]
+  moneyTrailsCreated  MoneyTrail[]
+  projectsCreated     Project[]
+  attachmentsUploaded Attachment[]
 }
 
 model Session {
@@ -220,6 +222,8 @@ model Expense {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  attachments Attachment[]
 
   @@index([householdId])
   @@index([paymentAccountId])
@@ -317,6 +321,8 @@ model Account {
   goals        Goal[]     @relation("GoalAccount")
 
   statementImports StatementImport[] @relation("StatementImportAccount")
+
+  attachments Attachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -545,6 +551,8 @@ model StatementImport {
   openingBalance  Float?
   closingBalance  Float?
   statementPeriod String?
+
+  attachments Attachment[]
 
   createdAt DateTime @default(now())
 
@@ -804,12 +812,12 @@ model BugReport {
 /// never stored here because that data changes. Household-scoped so one
 /// household can never see another's cached text.
 model AssistantKbEntry {
-  id          String   @id @default(cuid())
-  question    String
-  normalized  String
-  answer      String
-  kind        String   @default("help")
-  hitCount    Int      @default(0)
+  id         String @id @default(cuid())
+  question   String
+  normalized String
+  answer     String
+  kind       String @default("help")
+  hitCount   Int    @default(0)
 
   householdId String?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
@@ -822,4 +830,41 @@ model AssistantKbEntry {
 
   @@unique([householdId, normalized])
   @@index([householdId])
+}
+
+/// A file (statement PDF/photo, receipt, insurance policy…) uploaded by a
+/// household member and kept beside the record it belongs to. The bytes
+/// live in a private Vercel Blob store; `blobKey` is the blob's pathname
+/// and `blobUrl` its private URL. Files are only ever served back through
+/// the authenticated /api/attachments/[id] route, never a direct blob URL.
+/// Exactly one owner reference (expense / account / statementImport) is set.
+model Attachment {
+  id          String @id @default(cuid())
+  fileName    String
+  contentType String
+  size        Int
+  blobKey     String
+  blobUrl     String
+
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  expenseId String?
+  expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  statementImportId String?
+  statementImport   StatementImport? @relation(fields: [statementImportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([householdId])
+  @@index([expenseId])
+  @@index([accountId])
+  @@index([statementImportId])
 }

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.112.0';
+export const APP_VERSION = '1.113.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.113.0',
+    date: '2026-09-09',
+    changes: [
+      'You can now attach files to a record. Open an expense or an account and use the new "Attachments" panel to add a statement PDF, a receipt, an invoice or a policy document (PDF, image, CSV or text, up to 10 MB each; 250 MB per household). Files are stored privately and only ever opened through Tally after a sign-in check — never a public link.',
+      'Needs a one-time setup: an admin adds a BLOB_READ_WRITE_TOKEN (a private Vercel Blob store). Until then the Attachments panel just says storage isn\'t set up, and nothing else is affected.',
+    ],
+  },
   {
     version: '1.112.0',
     date: '2026-09-09',

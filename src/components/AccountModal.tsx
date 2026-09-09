@@ -3,6 +3,7 @@ import type { AccountItem, AccountType, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
 import { X, Lock, ShieldAlert, Loader2 } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
+import { AttachmentStrip } from './AttachmentStrip';
 
 const ACCOUNT_TYPES: { id: AccountType; label: string }[] = [
   { id: 'CHECKING', label: 'Current' },
@@ -400,6 +401,12 @@ export const AccountModal: React.FC<AccountModalProps> = ({
               style={{ fontSize: '0.82rem' }}
             />
           </div>
+
+          {editingAccount?.id && (
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--ha-line)' }}>
+              <AttachmentStrip ownerType="account" ownerId={editingAccount.id} label="Attachments (statements, policies)" />
+            </div>
+          )}
 
           <div style={{
             display: 'flex',

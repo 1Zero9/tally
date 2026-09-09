@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { ExpenseItem, ExpenseCategory, BillingCycle, CurrencyCode, UserProfile, AccountItem, GoalItem, CustomCategoryItem } from '../types/expense';
 import { getCategoryMeta } from '../data/categories';
 import { CategorySelect } from './CategorySelect';
+import { AttachmentStrip } from './AttachmentStrip';
 import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
@@ -775,6 +776,12 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   style={{ fontSize: '0.82rem' }}
                 />
               </div>
+            </div>
+          )}
+
+          {editingExpense?.id && (
+            <div style={{ borderTop: '1px solid var(--ha-line)', paddingTop: '0.85rem' }}>
+              <AttachmentStrip ownerType="expense" ownerId={editingExpense.id} label="Attachments (receipts, invoices)" />
             </div>
           )}
 
