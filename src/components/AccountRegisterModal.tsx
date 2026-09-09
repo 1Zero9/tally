@@ -4,6 +4,7 @@ import type { AccountItem, TransferItem } from '../types/expense';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { convertCurrency } from '../utils/calculations';
 import { useOverlayClose } from '../hooks/useOverlayClose';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface AccountRegisterModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ interface Row {
  */
 export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOpen, onClose, account, transfers }) => {
   const overlayHandlers = useOverlayClose(onClose);
+  useBodyScrollLock(isOpen);
   const [range, setRange] = useState<Range>('all');
 
   const { rows, movementCount, netIn, netOut } = useMemo(() => {
@@ -109,7 +111,7 @@ export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOp
           </button>
         </div>
 
-        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '70vh', overflowY: 'auto' }}>
+        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '70vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {(['all', 'year', '90', '30'] as Range[]).map((r) => (
               <button key={r} className={`ha-chip${range === r ? ' active' : ''}`} style={{ fontSize: '0.76rem' }} onClick={() => setRange(r)}>

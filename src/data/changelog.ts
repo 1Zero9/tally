@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.118.0';
+export const APP_VERSION = '1.118.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.118.1',
+    date: '2026-09-09',
+    changes: [
+      'Fixed the page scrolling behind the household ledger and per-account register while you scroll inside them. Page scroll is now locked while either is open, and scrolling past the end of the list no longer bleeds through to the page.',
+    ],
+  },
   {
     version: '1.118.0',
     date: '2026-09-09',

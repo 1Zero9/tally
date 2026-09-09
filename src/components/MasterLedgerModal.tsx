@@ -4,6 +4,7 @@ import type { AccountItem, TransferItem, CurrencyCode } from '../types/expense';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { convertCurrency } from '../utils/calculations';
 import { useOverlayClose } from '../hooks/useOverlayClose';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface MasterLedgerModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ interface Row {
  */
 export const MasterLedgerModal: React.FC<MasterLedgerModalProps> = ({ isOpen, onClose, accounts, transfers, currency }) => {
   const overlayHandlers = useOverlayClose(onClose);
+  useBodyScrollLock(isOpen);
   const [range, setRange] = useState<Range>('all');
   const [query, setQuery] = useState('');
 
@@ -122,7 +124,7 @@ export const MasterLedgerModal: React.FC<MasterLedgerModalProps> = ({ isOpen, on
           </button>
         </div>
 
-        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '72vh', overflowY: 'auto' }}>
+        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '72vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
               {(['all', 'year', '90', '30'] as Range[]).map((r) => (
