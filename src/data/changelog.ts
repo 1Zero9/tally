@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.114.0';
+export const APP_VERSION = '1.114.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.114.1',
+    date: '2026-09-09',
+    changes: [
+      'Reworked the Tally assistant launcher: dropped the white disc behind it, made the mascot much larger (104px, 78px on mobile) with just a soft shadow, and gave it a livelier idle motion — a gentle bob and wobble that speeds up while it\'s thinking. Still fully still under reduced-motion settings.',
+    ],
+  },
   {
     version: '1.114.0',
     date: '2026-09-09',

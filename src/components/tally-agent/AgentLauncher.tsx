@@ -9,9 +9,10 @@ interface AgentLauncherProps {
 }
 
 /**
- * The floating Tally mascot, bottom-right. The character sits on a soft disc
- * for contrast and gently pulses (a faster pulse while thinking). All motion
- * is disabled app-wide under prefers-reduced-motion (see globals.css).
+ * The floating Tally mascot, bottom-right — the character itself is the
+ * button, no backing disc. It bobs and wobbles gently on a loop (faster
+ * while thinking). All motion is disabled app-wide under
+ * prefers-reduced-motion (see globals.css).
  */
 export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, hidden }) => (
   <button
@@ -22,7 +23,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, h
     data-hidden={hidden ? 'true' : undefined}
   >
     <span className="ha-agent-launcher-img">
-      <Image src="/tally-agent2.png" alt="" fill sizes="48px" style={{ objectFit: 'contain' }} priority />
+      <Image src="/tally-agent2.png" alt="" fill sizes="104px" style={{ objectFit: 'contain' }} priority />
     </span>
   </button>
 );
