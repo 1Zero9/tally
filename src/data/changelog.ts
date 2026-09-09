@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.4';
+export const APP_VERSION = '1.119.5';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.5',
+    date: '2026-09-09',
+    changes: [
+      'Flattened the statement attachments panel — files inside it are now plain rows with hairline dividers instead of each sitting in its own bordered box, so it isn\'t a box-in-a-box-in-a-box.',
+    ],
+  },
   {
     version: '1.119.4',
     date: '2026-09-09',

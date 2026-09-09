@@ -17,6 +17,9 @@ interface AttachmentStripProps {
   ownerId: string;
   /** heading shown above the list */
   label?: string;
+  /** Drop the per-file card chrome (border + tint) — for use inside an
+   *  already-boxed container so it's not a box-in-a-box. */
+  flat?: boolean;
 }
 
 const ACCEPT = Object.keys(ATTACHMENT_ALLOWED_TYPES).join(',');
@@ -26,7 +29,7 @@ const ACCEPT = Object.keys(ATTACHMENT_ALLOWED_TYPES).join(',');
  * attachments, uploads new ones, deletes. Files open through the
  * authenticated /api/attachments/[id] route (never a direct blob URL).
  */
-export const AttachmentStrip: React.FC<AttachmentStripProps> = ({ ownerType, ownerId, label = 'Attachments' }) => {
+export const AttachmentStrip: React.FC<AttachmentStripProps> = ({ ownerType, ownerId, label = 'Attachments', flat = false }) => {
   const [items, setItems] = useState<AttachmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -122,15 +125,23 @@ export const AttachmentStrip: React.FC<AttachmentStripProps> = ({ ownerType, own
           No files yet. Attach a statement, receipt or policy — PDF, image, CSV or text, up to {ATTACHMENT_MAX_BYTES / (1024 * 1024)} MB.
         </p>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-          {items.map((a) => (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: flat ? 0 : '0.3rem' }}>
+          {items.map((a, i) => (
             <li
               key={a.id}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.4rem 0.6rem', borderRadius: 'var(--ha-radius-sm)',
-                border: '1px solid var(--ha-line)', backgroundColor: 'var(--ha-paper)',
-              }}
+              style={
+                flat
+                  ? {
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.4rem 0.15rem',
+                      borderTop: i === 0 ? 'none' : '1px solid var(--ha-line)',
+                    }
+                  : {
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.4rem 0.6rem', borderRadius: 'var(--ha-radius-sm)',
+                      border: '1px solid var(--ha-line)', backgroundColor: 'var(--ha-paper)',
+                    }
+              }
             >
               <span style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--ha-muted)', flexShrink: 0 }}>
                 {ATTACHMENT_ALLOWED_TYPES[a.contentType] || 'FILE'}

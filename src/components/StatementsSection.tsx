@@ -264,7 +264,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
                   backgroundColor: '#fafaf7',
                 }}
               >
-                <AttachmentStrip ownerType="statementImport" ownerId={imp.id} label="Attachments" />
+                <AttachmentStrip ownerType="statementImport" ownerId={imp.id} label="Attachments" flat />
               </div>
             )}
             </div>
