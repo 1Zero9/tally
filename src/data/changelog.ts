@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.1';
+export const APP_VERSION = '1.119.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.2',
+    date: '2026-09-09',
+    changes: [
+      'Statement review no longer lurches to the bottom after you resolve a whole merchant group. When the group disappears, the list now holds its position on the next group down (the one that takes its place) instead of losing the anchor and scrolling to the end.',
+    ],
+  },
   {
     version: '1.119.1',
     date: '2026-09-09',

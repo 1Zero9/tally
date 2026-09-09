@@ -282,7 +282,17 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   // the acted group was fully cleared out of the list.
   const reviewScrollRef = useRef<HTMLDivElement>(null);
   const groupElsRef = useRef<Map<string, HTMLDivElement>>(new Map());
-  const scrollAnchorRef = useRef<{ key: string; top: number; prevKey: string | null; prevTop: number | null } | null>(null);
+  const scrollAnchorRef = useRef<
+    | {
+        key: string;
+        top: number;
+        nextKey: string | null;
+        nextTop: number | null;
+        prevKey: string | null;
+        prevTop: number | null;
+      }
+    | null
+  >(null);
 
   // Guards against a row (or a group) being resolved twice at once — a fast
   // double-click, or a group "resolve all" batch overlapping a row the user
@@ -295,10 +305,13 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     const container = reviewScrollRef.current;
     const el = groupElsRef.current.get(groupKey);
     if (!container || !el) { scrollAnchorRef.current = null; return; }
+    const next = el.nextElementSibling as HTMLElement | null;
     const prev = el.previousElementSibling as HTMLElement | null;
     scrollAnchorRef.current = {
       key: groupKey,
       top: el.getBoundingClientRect().top,
+      nextKey: next?.dataset.groupKey ?? null,
+      nextTop: next ? next.getBoundingClientRect().top : null,
       prevKey: prev?.dataset.groupKey ?? null,
       prevTop: prev ? prev.getBoundingClientRect().top : null,
     };
@@ -311,15 +324,19 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     const container = reviewScrollRef.current;
     if (!container) return;
 
-    let el = groupElsRef.current.get(a.key) as HTMLElement | undefined;
-    let oldTop = el ? a.top : null;
-    if ((!el || oldTop == null) && a.prevKey && a.prevTop != null) {
-      el = groupElsRef.current.get(a.prevKey) as HTMLElement | undefined;
-      oldTop = el ? a.prevTop : null;
-    }
-    if (!el || oldTop == null) return;
+    // Anchor to the acted group if it survived; otherwise to the group that
+    // took its place below it (so the list doesn't lurch to the bottom when
+    // a whole group is resolved and removed), then the one above it.
+    const pick = (key: string | null, oldTop: number | null): { el: HTMLElement; oldTop: number } | null => {
+      if (!key || oldTop == null) return null;
+      const el = groupElsRef.current.get(key) as HTMLElement | undefined;
+      return el ? { el, oldTop } : null;
+    };
+    const target =
+      pick(a.key, a.top) ?? pick(a.nextKey, a.nextTop) ?? pick(a.prevKey, a.prevTop);
+    if (!target) return;
 
-    const delta = el.getBoundingClientRect().top - oldTop;
+    const delta = target.el.getBoundingClientRect().top - target.oldTop;
     if (Math.abs(delta) > 0.5) container.scrollTop += delta;
   });
 
