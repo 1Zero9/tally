@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.117.0';
+export const APP_VERSION = '1.117.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.117.1',
+    date: '2026-09-09',
+    changes: [
+      'The Expenses list on the Spending page can now be collapsed like every other section, with its open/closed state remembered. It was the only list section that couldn\'t — everything else (Accounts, Income, Bills, Transactions, Plans, Progress) already collapses.',
+    ],
+  },
   {
     version: '1.117.0',
     date: '2026-09-09',

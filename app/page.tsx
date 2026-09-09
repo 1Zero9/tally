@@ -12,6 +12,7 @@ import type { TabId } from '@/src/components/Navbar';
 import { CategoryBreakdownChart } from '@/src/components/CategoryBreakdownChart';
 import { TrendChart } from '@/src/components/TrendChart';
 import { ExpenseList } from '@/src/components/ExpenseList';
+import { CollapsibleSection } from '@/src/components/CollapsibleSection';
 import { IncomeSection } from '@/src/components/IncomeSection';
 import { IncomeModal } from '@/src/components/IncomeModal';
 import { PlannedExpensesSection } from '@/src/components/PlannedExpensesSection';
@@ -995,33 +996,42 @@ export default function TallyPage() {
 
             {/* The expense list is the primary working surface. Filter it by
                 category with the picker in its own toolbar. */}
-            <ExpenseList
-              expenses={liveExpenses}
-              isLoading={isInitialLoading}
-              currency={currency}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              customCategories={customCategories}
-              onToggleActive={handleToggleActive}
-              onTogglePaid={handleTogglePaid}
-              onEditExpense={(item) => {
-                setEditingExpense(item);
-                setInitialCategory(null);
-                setInitialPresetId(null);
-                setIsAddModalOpen(true);
-              }}
-              onDuplicateExpense={handleDuplicateExpense}
-              onDeleteExpense={handleDeleteExpense}
-              onOpenAddModal={() => {
-                setEditingExpense(null);
-                setInitialPresetId(null);
-                setInitialCategory(null);
-                setIsAddModalOpen(true);
-              }}
-              onOpenPresetsModal={() => setIsPresetsModalOpen(true)}
-              onQuickUpdateAmount={handleQuickUpdateAmount}
-              onContactVendor={(item) => setContactVendorExpense(item)}
-            />
+            <CollapsibleSection
+              id="spending-expenses"
+              title={`Expenses (${liveExpenses.length})`}
+              defaultOpen
+              className="ha-card"
+              style={{ marginBottom: '2.5rem' }}
+            >
+              <ExpenseList
+                bare
+                expenses={liveExpenses}
+                isLoading={isInitialLoading}
+                currency={currency}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                customCategories={customCategories}
+                onToggleActive={handleToggleActive}
+                onTogglePaid={handleTogglePaid}
+                onEditExpense={(item) => {
+                  setEditingExpense(item);
+                  setInitialCategory(null);
+                  setInitialPresetId(null);
+                  setIsAddModalOpen(true);
+                }}
+                onDuplicateExpense={handleDuplicateExpense}
+                onDeleteExpense={handleDeleteExpense}
+                onOpenAddModal={() => {
+                  setEditingExpense(null);
+                  setInitialPresetId(null);
+                  setInitialCategory(null);
+                  setIsAddModalOpen(true);
+                }}
+                onOpenPresetsModal={() => setIsPresetsModalOpen(true)}
+                onQuickUpdateAmount={handleQuickUpdateAmount}
+                onContactVendor={(item) => setContactVendorExpense(item)}
+              />
+            </CollapsibleSection>
 
             <section className="ha-card" style={{ padding: '1.5rem', marginBottom: '2.5rem' }} aria-labelledby="spending-analysis-heading">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>

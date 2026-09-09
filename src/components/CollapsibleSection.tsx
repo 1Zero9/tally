@@ -9,6 +9,7 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
 }
 
@@ -22,6 +23,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   defaultOpen = true,
   children,
   className,
+  style,
   bodyStyle,
 }) => {
   const storageKey = `${STORAGE_PREFIX}${id}`;
@@ -51,7 +53,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   };
 
   return (
-    <div id={id} className={className ?? 'ha-card'} style={{ overflow: 'hidden', opacity: hydrated ? 1 : 0.98, scrollMarginTop: '9rem' }}>
+    <div id={id} className={className ?? 'ha-card'} style={{ overflow: 'hidden', opacity: hydrated ? 1 : 0.98, scrollMarginTop: '9rem', ...style }}>
       <button
         type="button"
         onClick={toggle}

@@ -44,6 +44,9 @@ interface ExpenseListProps {
    * list show a real loading state instead of momentarily flashing the
    * "ledger is clean" empty state before data has actually arrived. */
   isLoading?: boolean;
+  /** Render without the outer card + "Expenses" heading — for embedding in
+   * a CollapsibleSection that supplies its own. */
+  bare?: boolean;
 }
 
 export const ExpenseList: React.FC<ExpenseListProps> = ({
@@ -62,6 +65,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   onContactVendor,
   customCategories = [],
   isLoading = false,
+  bare = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'unpaid' | 'overdue'>('all');
@@ -151,12 +155,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   ];
 
   return (
-    <div className="ha-card ha-ledger-card" style={{ marginBottom: '2.5rem' }}>
+    <div className={bare ? 'ha-ledger-card' : 'ha-card ha-ledger-card'} style={bare ? undefined : { marginBottom: '2.5rem' }}>
       <div className="ha-ledger-header">
         <div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
-            Expenses
-          </h3>
+          {!bare && (
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
+              Expenses
+            </h3>
+          )}
           {overdueCount > 0 && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-red)', fontWeight: 600 }}>
               {overdueCount} bill{overdueCount === 1 ? '' : 's'} overdue
