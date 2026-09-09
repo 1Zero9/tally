@@ -1779,3 +1779,75 @@ input:checked + .slider:before {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Old-school accounting ledger — used by the household master ledger
+ * and the per-account register modals.
+ * ------------------------------------------------------------------ */
+
+.ha-ledger-book-page {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(120, 150, 120, 0.06) 27px,
+      rgba(120, 150, 120, 0.06) 28px
+    ),
+    #faf5e8;
+  border: 1px solid #d8ccae;
+  border-radius: 4px;
+}
+
+.ha-ledger-title {
+  font-family: Georgia, 'Times New Roman', 'Iowan Old Style', serif;
+  letter-spacing: 0.01em;
+}
+
+.ha-ledger-book {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  background: #faf5e8;
+}
+
+.ha-ledger-book thead th {
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #5a5240;
+  background: #efe6cf;
+  border-bottom: 3px double #b6a681;
+  border-right: 1px solid #ddd0ac;
+}
+.ha-ledger-book thead th:first-child { border-left: 1px solid #ddd0ac; }
+.ha-ledger-book thead th.num { text-align: right; }
+
+.ha-ledger-book tbody td {
+  padding: 0.42rem 0.7rem;
+  border-bottom: 1px solid #e0d4b4;
+  border-right: 1px solid #e8ddc0;
+  color: #2b2b2b;
+}
+.ha-ledger-book tbody td:first-child { border-left: 1px solid #e8ddc0; }
+.ha-ledger-book tbody tr:nth-child(even) td { background: #eef4e6; }
+.ha-ledger-book tbody tr:nth-child(odd) td  { background: #fbf7ea; }
+.ha-ledger-book tbody tr:last-child td { border-bottom: 2px solid #b6a681; }
+
+.ha-ledger-book .num {
+  text-align: right;
+  white-space: nowrap;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+.ha-ledger-book .col-balance {
+  border-left: 2px solid #b6a681;
+  font-weight: 700;
+}
+.ha-ledger-book .muted { color: #8a8266; }
+.ha-ledger-book .debit  { color: #9c2b20; }   /* red — money out */
+.ha-ledger-book .credit { color: #17171a; }   /* black — money in */
+.ha-ledger-book .neg    { color: #9c2b20; }

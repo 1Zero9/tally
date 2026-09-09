@@ -93,17 +93,17 @@ export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOp
 
   return (
     <div className="modal-overlay" {...overlayHandlers}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '760px', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1.1rem 1.5rem', borderBottom: '1px solid var(--ha-line)' }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '760px', width: '100%', background: '#f6efdd' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1.1rem 1.5rem', borderBottom: '2px solid #cdbf9c' }}>
           <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--ha-ink)' }}>{account.name} — register</h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-              {movementCount} logged movement{movementCount === 1 ? '' : 's'}
-              {' · '}
-              <span style={{ color: 'var(--ha-blue)' }}>{formatCurrency(netIn, account.currency)} in</span>
-              {' / '}
-              <span style={{ color: 'var(--ha-red)' }}>{formatCurrency(netOut, account.currency)} out</span>
-              {account.balance != null && <> · stated balance <strong style={{ color: 'var(--ha-ink)' }}>{formatCurrency(account.balance, account.currency)}</strong></>}
+            <h3 className="ha-ledger-title" style={{ fontSize: '1.3rem', fontWeight: 700, color: '#33302a' }}>{account.name} — Register</h3>
+            <p style={{ fontSize: '0.78rem', color: '#6b6350', marginTop: '3px' }}>
+              {movementCount} entr{movementCount === 1 ? 'y' : 'ies'}
+              {'  ·  '}
+              <span className="ha-ledger-title" style={{ color: '#17171a' }}>{formatCurrency(netIn, account.currency)} received</span>
+              {'  ·  '}
+              <span className="ha-ledger-title" style={{ color: '#9c2b20' }}>{formatCurrency(netOut, account.currency)} paid out</span>
+              {account.balance != null && <>{'  ·  '}balance carried <strong className="ha-ledger-title" style={{ color: '#33302a' }}>{formatCurrency(account.balance, account.currency)}</strong></>}
             </p>
           </div>
           <button onClick={onClose} className="btn btn-ghost" style={{ padding: '0.3rem 0.4rem' }} aria-label="Close">
@@ -111,7 +111,7 @@ export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOp
           </button>
         </div>
 
-        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '70vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+        <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {(['all', 'year', '90', '30'] as Range[]).map((r) => (
               <button key={r} className={`ha-chip${range === r ? ' active' : ''}`} style={{ fontSize: '0.76rem' }} onClick={() => setRange(r)}>
@@ -121,40 +121,37 @@ export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOp
           </div>
 
           {account.balance == null && (
-            <p style={{ fontSize: '0.76rem', color: 'var(--ha-muted)', margin: 0 }}>
+            <p style={{ fontSize: '0.76rem', color: '#8a8266', margin: 0 }}>
               Set a balance on this account (edit it) to see a running balance column.
             </p>
           )}
 
+          <div className="ha-ledger-book-page" style={{ padding: '0.4rem 0.4rem 0.5rem', maxHeight: '64vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           {rows.length === 0 ? (
-            <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', textAlign: 'center', padding: '2rem' }}>
-              No logged movements for this account in this range.
+            <p style={{ fontSize: '0.85rem', color: '#8a8266', textAlign: 'center', padding: '2rem' }}>
+              No entries for this account in this range.
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+              <table className="ha-ledger-book">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--ha-line)', textAlign: 'left', color: 'var(--ha-muted)' }}>
-                    <th style={{ padding: '0.45rem 0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Date</th>
-                    <th style={{ padding: '0.45rem 0.6rem', fontWeight: 600 }}>Description</th>
-                    <th style={{ padding: '0.45rem 0.6rem', fontWeight: 600, textAlign: 'right' }}>Out</th>
-                    <th style={{ padding: '0.45rem 0.6rem', fontWeight: 600, textAlign: 'right' }}>In</th>
-                    {account.balance != null && <th style={{ padding: '0.45rem 0.6rem', fontWeight: 600, textAlign: 'right' }}>Balance</th>}
+                  <tr>
+                    <th style={{ whiteSpace: 'nowrap' }}>Date</th>
+                    <th>Particulars</th>
+                    <th className="num">Paid out</th>
+                    <th className="num">Received</th>
+                    {account.balance != null && <th className="num col-balance">Balance</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r) => (
-                    <tr key={r.id} style={{ borderBottom: '1px solid var(--ha-line)' }}>
-                      <td style={{ padding: '0.45rem 0.6rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{formatDate(r.date)}</td>
-                      <td style={{ padding: '0.45rem 0.6rem', color: 'var(--ha-ink)' }}>{r.description}</td>
-                      <td className="tabular-nums" style={{ padding: '0.45rem 0.6rem', textAlign: 'right', color: r.moneyOut ? 'var(--ha-red)' : 'var(--ha-muted)' }}>
-                        {r.moneyOut ? formatCurrency(r.moneyOut, account.currency) : '—'}
-                      </td>
-                      <td className="tabular-nums" style={{ padding: '0.45rem 0.6rem', textAlign: 'right', color: r.moneyIn ? 'var(--ha-blue)' : 'var(--ha-muted)' }}>
-                        {r.moneyIn ? formatCurrency(r.moneyIn, account.currency) : '—'}
-                      </td>
+                    <tr key={r.id}>
+                      <td className="muted" style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</td>
+                      <td>{r.description}</td>
+                      <td className={r.moneyOut ? 'num debit' : 'num muted'}>{r.moneyOut ? formatCurrency(r.moneyOut, account.currency) : '—'}</td>
+                      <td className={r.moneyIn ? 'num credit' : 'num muted'}>{r.moneyIn ? formatCurrency(r.moneyIn, account.currency) : '—'}</td>
                       {account.balance != null && (
-                        <td className="tabular-nums" style={{ padding: '0.45rem 0.6rem', textAlign: 'right', fontWeight: 600, color: 'var(--ha-ink)' }}>
+                        <td className={`num col-balance${(r.balanceAfter ?? 0) < 0 ? ' neg' : ''}`}>
                           {r.balanceAfter != null ? formatCurrency(r.balanceAfter, account.currency) : '—'}
                         </td>
                       )}
@@ -164,8 +161,9 @@ export const AccountRegisterModal: React.FC<AccountRegisterModalProps> = ({ isOp
               </table>
             </div>
           )}
+          </div>
 
-          <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.72rem', color: '#8a8266', margin: 0, lineHeight: 1.5 }}>
             Only movements Tally has logged appear here — transfers, bills marked paid, and income received. Anything you spent that wasn&apos;t imported won&apos;t show. The running balance is anchored to your stated balance and worked backward, so it&apos;s a guide, not the bank&apos;s figure.
           </p>
         </div>

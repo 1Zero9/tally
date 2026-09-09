@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.118.1';
+export const APP_VERSION = '1.118.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.118.2',
+    date: '2026-09-09',
+    changes: [
+      'Gave the household ledger and per-account register an old-school accounting-book look — manila paper, ruled lines, green-bar alternating rows, monospace figures, a double rule under the column heads, "Paid out" in red and "Received" in black, and a boxed-off Balance column.',
+    ],
+  },
   {
     version: '1.118.1',
     date: '2026-09-09',
