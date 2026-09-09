@@ -13,8 +13,9 @@ interface TallyAgentProps {
   activeTab: TabId;
   onNavigate: (tab: TabId) => void;
   onOpenFeedback: () => void;
-  /** The privacy screen is up — the launcher stays usable above it; this
-   *  only suppresses the occasional attention bubble. */
+  /** The privacy screen is up — the whole agent goes inert: launcher
+   *  hidden, panel forced closed, no nudge. The assistant can surface
+   *  household figures, so it must not be reachable over the blur. */
   blurred?: boolean;
 }
 
@@ -53,14 +54,18 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
   useEffect(() => { blurredRef.current = blurred; }, [blurred]);
 
-  // The launcher sits above the privacy screen and stays usable there —
-  // clicking it never touches the blur. Just don't pop an attention bubble
-  // while the screen is hidden.
+  // Privacy screen went up — hide any bubble and close the panel so the
+  // assistant (which can echo household figures) isn't left open over the
+  // blur. The launcher itself is hidden further down while blurred.
   useEffect(() => {
-    if (blurred) setNudge(null);
-  }, [blurred]);
+    if (blurred) {
+      setNudge(null);
+      if (open) onOpenChange(false);
+    }
+  }, [blurred, open, onOpenChange]);
 
   const requestOpen = () => {
+    if (blurredRef.current) return;
     launcherWasFocused.current = true;
     onOpenChange(true);
   };
@@ -145,7 +150,7 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
     <>
       <AgentLauncher
         status={open ? 'answering' : 'idle'}
-        hidden={open}
+        hidden={open || blurred}
         nudge={nudge}
         onNudgeOpen={() => {
           setNudge(null);
@@ -156,7 +161,7 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
         onClick={requestOpen}
       />
 
-      {open && (
+      {open && !blurred && (
         <>
           <div className="ha-agent-scrim" aria-hidden="true" />
           <AgentPanel

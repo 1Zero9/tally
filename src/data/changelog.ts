@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.6';
+export const APP_VERSION = '1.119.7';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.7',
+    date: '2026-09-09',
+    changes: [
+      'The floating agent\'s whirl now spins around its vertical axis like a twirl instead of sweeping around flat like a clock hand.',
+      'The privacy screen now fully hides the Tally assistant: while the screen is hidden the launcher disappears and any open assistant panel closes, so household figures can\'t be surfaced over the blur.',
+    ],
+  },
   {
     version: '1.119.6',
     date: '2026-09-09',
