@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.111.0';
+export const APP_VERSION = '1.112.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.112.0',
+    date: '2026-09-09',
+    changes: [
+      'The Transactions tab no longer opens as four stacked panels. Statement activity and Money trails now start collapsed, so the tab leads with Statements and the transaction list — expand the other two when you need them.',
+    ],
+  },
   {
     version: '1.111.0',
     date: '2026-09-09',
