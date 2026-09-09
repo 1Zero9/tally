@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.115.1';
+export const APP_VERSION = '1.116.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.116.0',
+    date: '2026-09-09',
+    changes: [
+      'Added a files panel to each imported statement (the paperclip on its row in Transactions → Statements). Use it to attach the original PDF/CSV to a statement you imported before auto-capture existed — it then shows in the Files tab like any other, linked to that import.',
+    ],
+  },
   {
     version: '1.115.1',
     date: '2026-09-09',

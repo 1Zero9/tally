@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FileSpreadsheet, Upload, Trash2, ChevronRight, Edit2, Loader2, Undo2 } from 'lucide-react';
+import { FileSpreadsheet, Upload, Trash2, ChevronRight, Edit2, Loader2, Undo2, Paperclip } from 'lucide-react';
 import type { ExpenseItem, IncomeItem, StatementImportSummary, CurrencyCode, AccountItem, CustomCategoryItem } from '../types/expense';
 import { StatementImportModal } from './StatementImportModal';
 import { CollapsibleSection } from './CollapsibleSection';
+import { AttachmentStrip } from './AttachmentStrip';
 
 interface StatementsSectionProps {
   expenses: ExpenseItem[];
@@ -22,6 +23,7 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewImportId, setReviewImportId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [filesForId, setFilesForId] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState('');
   const [isSavingRename, setIsSavingRename] = useState(false);
 
@@ -156,8 +158,8 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
         <CollapsibleSection id="statements-imports" title={`Imported statements (${imports.length})`} bodyStyle={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {imports.map((imp) => (
+            <div key={imp.id}>
             <div
-              key={imp.id}
               onClick={() => renamingId !== imp.id && setReviewImportId(imp.id)}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
@@ -211,6 +213,14 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
               {renamingId !== imp.id && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                   <button
+                    onClick={(e) => { e.stopPropagation(); setFilesForId(filesForId === imp.id ? null : imp.id); }}
+                    className={`btn btn-ghost${filesForId === imp.id ? ' is-active' : ''}`}
+                    style={{ padding: '0.3rem 0.4rem' }}
+                    title="Files attached to this import"
+                  >
+                    <Paperclip size={13} />
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); setRenameInput(imp.label); setRenamingId(imp.id); }}
                     className="btn btn-ghost"
                     style={{ padding: '0.3rem 0.4rem' }}
@@ -237,6 +247,16 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
                   <ChevronRight size={16} color="var(--ha-muted)" />
                 </div>
               )}
+            </div>
+
+            {filesForId === imp.id && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{ margin: '0.4rem 0 0.2rem', padding: '0.75rem 0.85rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-md)', backgroundColor: '#fafaf7' }}
+              >
+                <AttachmentStrip ownerType="statementImport" ownerId={imp.id} label={`Files for "${imp.label}"`} />
+              </div>
+            )}
             </div>
           ))}
         </div>
