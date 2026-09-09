@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.114.1';
+export const APP_VERSION = '1.115.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.115.0',
+    date: '2026-09-09',
+    changes: [
+      'The Tally assistant launcher can now be dragged anywhere on screen — grab the mascot and drop it wherever it\'s least in the way. It stays clamped on-screen, and where you leave it is remembered in that browser. A quick tap still just opens the assistant.',
+    ],
+  },
   {
     version: '1.114.1',
     date: '2026-09-09',
