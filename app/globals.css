@@ -1504,11 +1504,16 @@ input:checked + .slider:before {
  * Tally Agent — floating launcher + assistant panel
  * ------------------------------------------------------------------ */
 
-.ha-agent-launcher {
+.ha-agent-launcher-wrap {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 90;
+}
+.ha-agent-launcher-wrap[data-hidden='true'] { display: none; }
+
+.ha-agent-launcher {
+  display: block;
   width: 104px;
   height: 104px;
   /* The mascot itself is the button — no disc. A soft drop-shadow on the
@@ -1552,7 +1557,9 @@ input:checked + .slider:before {
   border-radius: 18px;
 }
 .ha-agent-launcher.is-thinking { animation: haAgentFloat 1.4s ease-in-out infinite; }
-.ha-agent-launcher[data-hidden='true'] { display: none; }
+/* One-shot "hey, I'm here" wobble — overrides the idle float for its
+   duration, then reverts. Killed by the global prefers-reduced-motion rule. */
+.ha-agent-launcher.is-nudging { animation: haAgentWobble 0.8s ease-in-out; }
 
 /* Idle "alive" motion — a gentle bob with a bit of wobble and a scale
    breath, so the fifth mark reads as awake without bouncing. */
@@ -1562,6 +1569,85 @@ input:checked + .slider:before {
   50%  { transform: translateY(-2px) rotate(0deg) scale(1); }
   75%  { transform: translateY(-9px) rotate(3deg) scale(1.04); }
   100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+@keyframes haAgentWobble {
+  0%, 100% { transform: rotate(0deg) scale(1.04); }
+  15% { transform: rotate(-16deg) scale(1.08); }
+  32% { transform: rotate(13deg) scale(1.08); }
+  48% { transform: rotate(-9deg) scale(1.06); }
+  64% { transform: rotate(6deg) scale(1.04); }
+  80% { transform: rotate(-3deg) scale(1.04); }
+}
+
+/* The occasional prompt bubble by the launcher. */
+.ha-agent-nudge {
+  position: absolute;
+  max-width: 230px;
+  background: var(--ha-white);
+  border: 1px solid var(--ha-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(24, 43, 34, 0.18);
+  padding: 0.65rem 0.7rem 0.5rem;
+  animation: haNudgeIn 0.2s ease-out;
+}
+.ha-agent-nudge[data-place^='above'] { bottom: calc(100% + 10px); }
+.ha-agent-nudge[data-place^='below'] { top: calc(100% + 10px); }
+.ha-agent-nudge[data-place$='right'] { right: 8px; }
+.ha-agent-nudge[data-place$='left'] { left: 8px; }
+.ha-agent-nudge::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--ha-white);
+  border: 1px solid var(--ha-line);
+  transform: rotate(45deg);
+}
+.ha-agent-nudge[data-place^='above']::after { bottom: -7px; border-top: none; border-left: none; }
+.ha-agent-nudge[data-place^='below']::after { top: -7px; border-bottom: none; border-right: none; }
+.ha-agent-nudge[data-place$='right']::after { right: 28px; }
+.ha-agent-nudge[data-place$='left']::after { left: 28px; }
+.ha-agent-nudge-body {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--ha-ink);
+  padding: 0;
+}
+.ha-agent-nudge-body:hover { color: var(--ha-blue); }
+.ha-agent-nudge-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+}
+.ha-agent-nudge-mute {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.68rem;
+  color: var(--ha-muted);
+  padding: 0;
+}
+.ha-agent-nudge-mute:hover { color: var(--ha-ink); }
+.ha-agent-nudge-x {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ha-muted);
+  padding: 0 0.15rem;
+}
+.ha-agent-nudge-x:hover { color: var(--ha-ink); }
+@keyframes haNudgeIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .ha-agent-scrim {

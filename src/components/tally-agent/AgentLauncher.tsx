@@ -6,6 +6,11 @@ interface AgentLauncherProps {
   onClick: () => void;
   status: AgentStatus;
   hidden?: boolean;
+  /** A one-off prompt to show in a bubble by the launcher, or null. */
+  nudge?: string | null;
+  onNudgeOpen?: () => void;
+  onNudgeDismiss?: () => void;
+  onNudgeDisable?: () => void;
 }
 
 const STORAGE_KEY = LAUNCHER_POS_KEY;
@@ -42,13 +47,23 @@ function clampToViewport(p: Pos): Pos {
 /**
  * The floating Tally mascot — the character itself is the button, no
  * backing disc. It bobs and wobbles gently on a loop (faster while
- * thinking). Drag it anywhere; where you drop it is remembered per
- * browser. All idle motion is disabled app-wide under
+ * thinking), does a one-off wobble when it wants attention, and can pop a
+ * prompt in a bubble beside it. Drag it anywhere; where you drop it is
+ * remembered per browser. All idle motion is disabled app-wide under
  * prefers-reduced-motion (see globals.css).
  */
-export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, hidden }) => {
+export const AgentLauncher: React.FC<AgentLauncherProps> = ({
+  onClick,
+  status,
+  hidden,
+  nudge,
+  onNudgeOpen,
+  onNudgeDismiss,
+  onNudgeDisable,
+}) => {
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [wobbling, setWobbling] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const posRef = useRef<Pos | null>(null);
   const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
@@ -81,6 +96,14 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, h
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [applyPos]);
+
+  // One-shot wobble whenever a fresh nudge arrives.
+  useEffect(() => {
+    if (!nudge) return;
+    setWobbling(true);
+    const t = window.setTimeout(() => setWobbling(false), 850);
+    return () => window.clearTimeout(t);
+  }, [nudge]);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return;
@@ -121,29 +144,59 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onClick, status, h
     }
   }, [onClick]);
 
+  // Where the bubble sits relative to the mascot.
+  let place = 'above-right';
+  if (typeof window !== 'undefined') {
+    const p = pos ?? defaultCornerPos();
+    const size = launcherSize();
+    const vertical = p.top < 160 ? 'below' : 'above';
+    const horizontal = p.left + size / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    place = `${vertical}-${horizontal}`;
+  }
+
   return (
-    <button
-      ref={btnRef}
-      type="button"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      aria-label="Open Tally, your finance assistant (drag to move)"
-      className={`ha-agent-launcher${status === 'thinking' ? ' is-thinking' : ''}`}
+    <div
+      className="ha-agent-launcher-wrap"
       data-hidden={hidden ? 'true' : undefined}
-      data-dragging={dragging ? 'true' : undefined}
       style={pos ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto' } : undefined}
     >
-      <span className="ha-agent-launcher-img">
-        <Image src="/tally-agent2.png" alt="" fill sizes="104px" style={{ objectFit: 'contain' }} priority />
-      </span>
-    </button>
+      {nudge && (
+        <div className="ha-agent-nudge" data-place={place} role="status">
+          <button type="button" className="ha-agent-nudge-body" onClick={onNudgeOpen}>
+            {nudge}
+          </button>
+          <div className="ha-agent-nudge-actions">
+            <button type="button" className="ha-agent-nudge-mute" onClick={onNudgeDisable}>
+              Don&apos;t remind me
+            </button>
+            <button type="button" className="ha-agent-nudge-x" onClick={onNudgeDismiss} aria-label="Dismiss">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button
+        ref={btnRef}
+        type="button"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+        aria-label="Open Tally, your finance assistant (drag to move)"
+        className={`ha-agent-launcher${status === 'thinking' ? ' is-thinking' : ''}${wobbling ? ' is-nudging' : ''}`}
+        data-dragging={dragging ? 'true' : undefined}
+      >
+        <span className="ha-agent-launcher-img">
+          <Image src="/tally-agent2.png" alt="" fill sizes="104px" style={{ objectFit: 'contain' }} priority />
+        </span>
+      </button>
+    </div>
   );
 };

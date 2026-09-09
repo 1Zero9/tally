@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.118.2';
+export const APP_VERSION = '1.119.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.0',
+    date: '2026-09-09',
+    changes: [
+      'The Tally assistant now gives an occasional nudge so it doesn\'t get forgotten: every so often (roughly every 15–25 minutes, at most twice a session) the mascot does a quick wobble and pops a one-line prompt in a bubble — tinted to the tab you\'re on, e.g. "Ask me where your money went this month". It fades on its own, closes on your next click, and has a "Don\'t remind me" that turns it off for good in that browser.',
+    ],
+  },
   {
     version: '1.118.2',
     date: '2026-09-09',
