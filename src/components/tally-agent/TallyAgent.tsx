@@ -13,10 +13,9 @@ interface TallyAgentProps {
   activeTab: TabId;
   onNavigate: (tab: TabId) => void;
   onOpenFeedback: () => void;
-  /** The privacy screen is up — keep the launcher visible above it, but
-   *  don't nudge, and reveal the screen before opening the panel. */
+  /** The privacy screen is up — the launcher stays usable above it; this
+   *  only suppresses the occasional attention bubble. */
   blurred?: boolean;
-  onReveal?: () => void;
 }
 
 const NUDGE_OFF_KEY = 'tally.agentNudgeOff';
@@ -43,7 +42,6 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   onNavigate,
   onOpenFeedback,
   blurred = false,
-  onReveal,
 }) => {
   const launcherWasFocused = useRef(false);
   const [nudge, setNudge] = useState<string | null>(null);
@@ -55,17 +53,14 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
   useEffect(() => { blurredRef.current = blurred; }, [blurred]);
 
-  // Privacy screen went up — hide any bubble and close the panel so live
-  // figures aren't left showing over the blur.
+  // The launcher sits above the privacy screen and stays usable there —
+  // clicking it never touches the blur. Just don't pop an attention bubble
+  // while the screen is hidden.
   useEffect(() => {
-    if (blurred) {
-      setNudge(null);
-      if (open) onOpenChange(false);
-    }
-  }, [blurred, open, onOpenChange]);
+    if (blurred) setNudge(null);
+  }, [blurred]);
 
   const requestOpen = () => {
-    if (blurred) onReveal?.();
     launcherWasFocused.current = true;
     onOpenChange(true);
   };

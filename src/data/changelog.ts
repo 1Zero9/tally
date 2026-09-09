@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.3';
+export const APP_VERSION = '1.119.4';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.4',
+    date: '2026-09-09',
+    changes: [
+      'Clicking the Tally launcher no longer triggers the privacy screen. If you drag the launcher toward the bottom-left it now stays clear of the quick-hide button, so a tap on Tally can\'t land on the panic button underneath. Tally also no longer dismisses the privacy screen when you open it while blurred — the panel just opens on top.',
+    ],
+  },
   {
     version: '1.119.3',
     date: '2026-09-09',

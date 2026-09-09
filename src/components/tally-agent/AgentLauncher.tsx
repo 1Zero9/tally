@@ -34,14 +34,28 @@ function defaultCornerPos(): Pos {
   };
 }
 
+// The quick-hide privacy button lives at the bottom-left and sits above the
+// launcher, so the launcher must never be dropped on top of it — otherwise
+// a tap "on Tally" actually hits the panic button and blurs the screen.
+const PANIC_KEEPOUT = 96;
+
 function clampToViewport(p: Pos): Pos {
   const size = launcherSize();
   const maxLeft = Math.max(EDGE_MARGIN, window.innerWidth - size - EDGE_MARGIN);
   const maxTop = Math.max(EDGE_MARGIN, window.innerHeight - size - EDGE_MARGIN);
-  return {
-    left: Math.min(Math.max(EDGE_MARGIN, p.left), maxLeft),
-    top: Math.min(Math.max(EDGE_MARGIN, p.top), maxTop),
-  };
+  let left = Math.min(Math.max(EDGE_MARGIN, p.left), maxLeft);
+  let top = Math.min(Math.max(EDGE_MARGIN, p.top), maxTop);
+
+  // Keep clear of the bottom-left panic button.
+  const overlapsPanic = left < PANIC_KEEPOUT && top + size > window.innerHeight - PANIC_KEEPOUT;
+  if (overlapsPanic) {
+    const pushedRight = Math.min(PANIC_KEEPOUT, maxLeft);
+    const pushedUp = Math.max(EDGE_MARGIN, window.innerHeight - PANIC_KEEPOUT - size);
+    // Move it whichever way needs the smaller nudge.
+    if (pushedRight - left <= top - pushedUp) left = pushedRight;
+    else top = pushedUp;
+  }
+  return { left, top };
 }
 
 /**

@@ -1413,7 +1413,6 @@ export default function TallyPage() {
         onNavigate={setActiveTab}
         onOpenFeedback={() => setIsFeedbackModalOpen(true)}
         blurred={isPrivacyBlurred}
-        onReveal={revealPrivacyBlur}
       />
 
       {/* Household master ledger */}
