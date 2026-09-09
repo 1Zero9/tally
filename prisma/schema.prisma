@@ -82,9 +82,6 @@ model Household {
   categories            Category[]
   databaseBackups       DatabaseBackup[]
 
-  mapNodes MapNode[]
-  mapEdges MapEdge[]
-
   bugReports BugReport[]
 
   assistantKbEntries AssistantKbEntry[]
@@ -119,8 +116,6 @@ model User {
 
   statementImportsCreated StatementImport[]
   categoriesCreated       Category[]
-
-  mapNodesCreated MapNode[]
 
   bugReportsCreated BugReport[]
 
@@ -322,8 +317,6 @@ model Account {
   goals        Goal[]     @relation("GoalAccount")
 
   statementImports StatementImport[] @relation("StatementImportAccount")
-
-  mapNodes MapNode[] @relation("MapNodeAccount")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -774,61 +767,6 @@ model DatabaseBackup {
   household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
   @@index([householdId])
-}
-
-/// A freeform, user-positioned node on the editable "My map" canvas — either
-/// linked to a real Account (auto-fills name/institution) or a standalone
-/// custom label (e.g. "Car Loan — Credit Union") for things not yet tracked
-/// as a full Account. Position (x, y) is user-dragged and persisted as-is.
-model MapNode {
-  id    String  @id @default(cuid())
-  label String
-  kind  String  @default("CUSTOM") // 'ACCOUNT' | 'CUSTOM'
-  color String?
-  x     Float   @default(0)
-  y     Float   @default(0)
-
-  accountId String?
-  account   Account? @relation("MapNodeAccount", fields: [accountId], references: [id], onDelete: Cascade)
-
-  householdId String?
-  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
-
-  createdById String?
-  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
-
-  edgesFrom MapEdge[] @relation("MapEdgeFrom")
-  edgesTo   MapEdge[] @relation("MapEdgeTo")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([householdId])
-  @@index([accountId])
-}
-
-/// A directional connection drawn by the user between two MapNodes on the
-/// custom map canvas — from -> to gives the arrow direction.
-model MapEdge {
-  id       String  @id @default(cuid())
-  label    String?
-  amount   Float?
-  currency String?
-
-  fromNodeId String
-  fromNode   MapNode @relation("MapEdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
-  toNodeId   String
-  toNode     MapNode @relation("MapEdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
-
-  householdId String?
-  household   Household? @relation(fields: [householdId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([householdId])
-  @@index([fromNodeId])
-  @@index([toNodeId])
 }
 
 /// A user-logged piece of feedback — an idea, a feature request, or a bug —

@@ -201,32 +201,6 @@ export interface AccountItem {
   updatedAt?: string;
 }
 
-export type MapNodeKind = 'ACCOUNT' | 'CUSTOM';
-
-export interface MapNodeItem {
-  id: string;
-  label: string;
-  kind: MapNodeKind;
-  color?: string | null;
-  x: number;
-  y: number;
-  accountId?: string | null;
-  account?: AccountSummary | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface MapEdgeItem {
-  id: string;
-  label?: string | null;
-  amount?: number | null;
-  currency?: CurrencyCode | null;
-  fromNodeId: string;
-  toNodeId: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface TransferItem {
   id: string;
   amount: number;

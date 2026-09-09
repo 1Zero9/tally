@@ -316,23 +316,6 @@ async function main() {
   }
   console.log(`Statement import created — opening ${openingBalance}, closing ${closingBalance.toFixed(2)} (reconciles exactly).`);
 
-  // --- Custom Money Map layout ------------------------------------------
-  const nodeChecking = await prisma.mapNode.create({ data: { label: 'AIB Current', kind: 'ACCOUNT', accountId: checking.id, x: 400, y: 200, color: '#3155D9', householdId, createdById } });
-  const nodeSavings = await prisma.mapNode.create({ data: { label: 'AIB Savings', kind: 'ACCOUNT', accountId: savings.id, x: 700, y: 100, color: '#0E7490', householdId, createdById } });
-  const nodeRevolut = await prisma.mapNode.create({ data: { label: 'Revolut', kind: 'ACCOUNT', accountId: revolut.id, x: 700, y: 300, color: '#8A5CF6', householdId, createdById } });
-  const nodeIncome = await prisma.mapNode.create({ data: { label: 'Income', kind: 'CUSTOM', x: 100, y: 200, color: '#0E7490', householdId, createdById } });
-  const nodeBills = await prisma.mapNode.create({ data: { label: 'Bills & Spending', kind: 'CUSTOM', x: 400, y: 400, color: '#B45309', householdId, createdById } });
-
-  await prisma.mapEdge.createMany({
-    data: [
-      { fromNodeId: nodeIncome.id, toNodeId: nodeChecking.id, label: 'Salary', amount: 7150, currency: 'EUR', householdId },
-      { fromNodeId: nodeChecking.id, toNodeId: nodeSavings.id, label: 'Savings sweep', amount: 500, currency: 'EUR', householdId },
-      { fromNodeId: nodeChecking.id, toNodeId: nodeRevolut.id, label: 'Top-up', amount: 150, currency: 'EUR', householdId },
-      { fromNodeId: nodeChecking.id, toNodeId: nodeBills.id, label: 'Bills', amount: 2600, currency: 'EUR', householdId },
-    ],
-  });
-  console.log('Custom Money Map layout created.');
-
   console.log('\nDemo Household ready.');
   console.log('Household ID:', household.id);
   console.log('Sign in as:', DEMO_USER_EMAIL);

@@ -21,8 +21,6 @@ import { BigTicketSection } from '@/src/components/BigTicketSection';
 import { InsuranceSection } from '@/src/components/InsuranceSection';
 import { PlannedExpensesSection } from '@/src/components/PlannedExpensesSection';
 import { UpcomingRenewals } from '@/src/components/UpcomingRenewals';
-import { OptimizationInsights } from '@/src/components/OptimizationInsights';
-import { MoneyFlowInsights } from '@/src/components/MoneyFlowInsights';
 import { ReportsSection } from '@/src/components/ReportsSection';
 import { AdminSection } from '@/src/components/AdminSection';
 import { LoginScreen } from '@/src/components/LoginScreen';
@@ -38,13 +36,11 @@ import { FeedbackModal } from '@/src/components/FeedbackModal';
 import { SettingsModal } from '@/src/components/SettingsModal';
 import { OverviewDashboard } from '@/src/components/OverviewDashboard';
 import { BudgetsSection } from '@/src/components/BudgetsSection';
-import { AssistantBox } from '@/src/components/AssistantBox';
 import { TallyAgent } from '@/src/components/tally-agent/TallyAgent';
 import { TallyLogo } from '@/src/components/TallyLogo';
 import { AccountsSection } from '@/src/components/AccountsSection';
 import { AccountModal } from '@/src/components/AccountModal';
 import { MoneyMap } from '@/src/components/MoneyMap';
-import { CustomMoneyMap } from '@/src/components/CustomMoneyMap';
 import { TransfersSection } from '@/src/components/TransfersSection';
 import { MoneyTrailsSection } from '@/src/components/MoneyTrailsSection';
 import { StatementActivitySection } from '@/src/components/StatementActivitySection';
@@ -84,7 +80,6 @@ export default function TallyPage() {
   const [currency, setCurrency] = useState<CurrencyCode>('EUR');
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [moneyMapView, setMoneyMapView] = useState<'auto' | 'custom'>('auto');
   const { feedback, dismissFeedback, runMutation, showFeedback } = useActionFeedback();
   // True only until the very first fetchDatabaseData() completes — not on
   // every later mutation-triggered refetch — so ExpenseList can show a
@@ -903,24 +898,20 @@ export default function TallyPage() {
           </div>
         )}
 
-        {/* Ask Bar — the "Google box" for this household's spending. Only on
-            Overview: every other tab is a task page that shouldn't have to
-            scroll past a greeting to get to its own content. The desktop
-            nav's "Ask Tally" icon button still opens the same assistant
-            from anywhere. */}
+        {/* Overview greeting. Questions about spending or how to use Tally
+            go through the floating Tally Agent (bottom-right on every
+            screen, and the "Ask Tally" button in the top bar). */}
         {activeTab === 'overview' && (
-          <div className={`ha-ask-wrap${hasData ? '' : ' is-empty'}`} style={{ padding: hasData ? '0.5rem 0 2rem' : '3rem 0 2.5rem' }}>
+          <div style={{ padding: hasData ? '0.5rem 0 1.5rem' : '2.5rem 0 2rem' }}>
             <h2 className="ha-greeting" style={{
               textAlign: 'center',
               fontFamily: 'var(--ha-font-display)',
               fontSize: '1.5rem',
               fontWeight: 700,
               color: 'var(--ha-ink)',
-              marginBottom: '1.25rem',
             }}>
               {timeGreeting}, {firstName}
             </h2>
-            <AssistantBox currency={currency} hasData={hasData} />
           </div>
         )}
 
@@ -1266,16 +1257,6 @@ export default function TallyPage() {
           </>
         )}
 
-        {activeTab === 'insights' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-            <MoneyFlowInsights />
-            <OptimizationInsights
-              expenses={liveExpenses}
-              currency={currency}
-            />
-          </div>
-        )}
-
         {activeTab === 'reports' && (
           <ReportsSection
             currency={currency}
@@ -1301,39 +1282,14 @@ export default function TallyPage() {
         )}
 
         {activeTab === 'moneymap' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div className="ha-segmented" style={{ display: 'flex', gap: '2px', backgroundColor: 'var(--ha-line)', padding: '2px', borderRadius: 'var(--ha-radius-sm)' }}>
-                <button
-                  onClick={() => setMoneyMapView('auto')}
-                  className={`ha-chip${moneyMapView === 'auto' ? ' active' : ''}`}
-                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-                >
-                  Auto map
-                </button>
-                <button
-                  onClick={() => setMoneyMapView('custom')}
-                  className={`ha-chip${moneyMapView === 'custom' ? ' active' : ''}`}
-                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-                >
-                  My map
-                </button>
-              </div>
-            </div>
-
-            {moneyMapView === 'auto' ? (
-              <MoneyMap
-                incomes={incomes}
-                expenses={liveExpenses}
-                accounts={accounts}
-                transfers={transfers}
-                currency={currency}
-                customCategories={customCategories}
-              />
-            ) : (
-              <CustomMoneyMap accounts={accounts} currency={currency} />
-            )}
-          </div>
+          <MoneyMap
+            incomes={incomes}
+            expenses={liveExpenses}
+            accounts={accounts}
+            transfers={transfers}
+            currency={currency}
+            customCategories={customCategories}
+          />
         )}
 
         {activeTab === 'flow' && (

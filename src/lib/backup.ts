@@ -3,8 +3,11 @@ import { Prisma } from '@prisma/client';
 
 // A snapshot's payloadJson holds one plain array per table. Schema version 4
 // (see DatabaseBackup.schemaVersion) — version 1 only had the first five;
-// version 2 added statementImports…mapEdges; version 3 added moneyTrails;
-// version 4 adds projects + projectItems + projectItemLinks.
+// version 2 added statementImports…budgets (and the since-removed map
+// tables); version 3 added moneyTrails; version 4 adds projects +
+// projectItems + projectItemLinks. Backups from v2/v3/v4 may still carry
+// `mapNodes` / `mapEdges` arrays — they are simply ignored on restore now
+// that the "My map" feature is gone.
 export interface BackupPayload {
   accounts?: Record<string, unknown>[];
   goals?: Record<string, unknown>[];
@@ -16,8 +19,6 @@ export interface BackupPayload {
   merchantAliases?: Record<string, unknown>[];
   categories?: Record<string, unknown>[];
   budgets?: Record<string, unknown>[];
-  mapNodes?: Record<string, unknown>[];
-  mapEdges?: Record<string, unknown>[];
   moneyTrails?: Record<string, unknown>[];
   projects?: Record<string, unknown>[];
   projectItems?: Record<string, unknown>[];
@@ -29,7 +30,7 @@ export const CURRENT_BACKUP_SCHEMA_VERSION = 4;
 /**
  * Snapshots every household-scoped financial/organizational table (Account,
  * Goal, Expense, Income, Transfer, StatementImport, StatementTransaction,
- * MerchantAlias, Category, Budget, MapNode, MapEdge, MoneyTrail, Project,
+ * MerchantAlias, Category, Budget, MoneyTrail, Project,
  * ProjectItem, ProjectItemLink) into a single
  * DatabaseBackup row. Deliberately excludes AuditLog (an append-only
  * historical trail — restoring it would fabricate history, not recover it)
@@ -59,8 +60,6 @@ export async function createHouseholdSnapshot(
     merchantAliases,
     categories,
     budgets,
-    mapNodes,
-    mapEdges,
     moneyTrails,
     projects,
     projectItems,
@@ -76,8 +75,6 @@ export async function createHouseholdSnapshot(
     prisma.merchantAlias.findMany({ where: { householdId } }),
     prisma.category.findMany({ where: { householdId } }),
     prisma.budget.findMany({ where: { householdId } }),
-    prisma.mapNode.findMany({ where: { householdId } }),
-    prisma.mapEdge.findMany({ where: { householdId } }),
     prisma.moneyTrail.findMany({ where: { householdId } }),
     prisma.project.findMany({ where: { householdId } }),
     prisma.projectItem.findMany({ where: { project: { householdId } } }),
@@ -95,8 +92,6 @@ export async function createHouseholdSnapshot(
     merchantAliases,
     categories,
     budgets,
-    mapNodes,
-    mapEdges,
     moneyTrails,
     projects,
     projectItems,
@@ -105,7 +100,7 @@ export async function createHouseholdSnapshot(
   const recordCount =
     accounts.length + goals.length + expenses.length + incomes.length + transfers.length +
     statementImports.length + statementTransactions.length + merchantAliases.length +
-    categories.length + budgets.length + mapNodes.length + mapEdges.length + moneyTrails.length +
+    categories.length + budgets.length + moneyTrails.length +
     projects.length + projectItems.length + projectItemLinks.length;
 
   return prisma.databaseBackup.create({

@@ -172,10 +172,8 @@ For costs you know are coming but aren't required yet — like college fees, a f
 
 A visual diagram of your money's journey, with two modes:
 
-- **Actual journey** (default once you've logged transfers in Flow): built from your real dated Transfer records. Three columns — money in (external sources) → your accounts → money out (external destinations) — plus a distinct violet path for direct account-to-account transfers. Filter by **All time / 90 days / 30 days**.
-- **Projected**: the original monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you've logged any real transfers, or to see a "typical month" projection alongside the real history.
-
-There's also **My map**, your own freeform, editable canvas — add any object (an account, a loan, anything not yet tracked), connect objects with a directional arrow, and drag them around to sketch out exactly how your money moves.
+- **Actual journey** (default once you've logged transfers in Transactions): built from your real dated Transfer records. Three columns — money in (external sources) → your accounts → money out (external destinations) — plus a distinct violet path for direct account-to-account transfers. Filter by **All time / 90 days / 30 days**.
+- **Projected**: the monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you've logged any real transfers, or to see a "typical month" projection alongside the real history.
 
 Hover any connection to see the exact amount. Account circles are colored blue when net-positive and red when net-negative or a loan.
 

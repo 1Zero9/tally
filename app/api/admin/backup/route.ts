@@ -165,14 +165,12 @@ export async function PUT(request: Request) {
     const result = await prisma.$transaction(async (tx) => {
       // Delete this household's rows across every backed-up table before
       // recreating, children first — explicitly, rather than relying on
-      // schema cascades (MapNode/MapEdge and StatementTransaction/
-      // StatementImport ARE onDelete: Cascade from Account/StatementImport
-      // respectively; deleting them ourselves here means we control exactly
-      // what happens and then restore them from the snapshot, instead of an
-      // uncontrolled cascade silently wiping the custom Money Map or
-      // statement history as a side effect of deleting accounts).
-      await tx.mapEdge.deleteMany({ where: { householdId } });
-      await tx.mapNode.deleteMany({ where: { householdId } });
+      // schema cascades (StatementTransaction/StatementImport ARE
+      // onDelete: Cascade from Account/StatementImport respectively;
+      // deleting them ourselves here means we control exactly what happens
+      // and then restore them from the snapshot, instead of an uncontrolled
+      // cascade silently wiping statement history as a side effect of
+      // deleting accounts).
       await tx.statementTransaction.deleteMany({ where: { householdId } });
       await tx.statementImport.deleteMany({ where: { householdId } });
       await tx.merchantAlias.deleteMany({ where: { householdId } });
@@ -459,46 +457,8 @@ export async function PUT(request: Request) {
         if (typeof item.id === 'string') budgetIdMap.set(item.id, created.id);
       }
 
-      const mapNodeIdMap = new Map<string, string>();
-      for (const item of payload.mapNodes || []) {
-        const oldAccountId = typeof item.accountId === 'string' ? item.accountId : null;
-        const created = await tx.mapNode.create({
-          data: {
-            label: str(item.label, 'Untitled') as string,
-            kind: str(item.kind, 'CUSTOM') as string,
-            color: str(item.color),
-            x: num(item.x, 0),
-            y: num(item.y, 0),
-            accountId: oldAccountId ? accountIdMap.get(oldAccountId) || null : null,
-            householdId,
-            createdById,
-          },
-        });
-        if (typeof item.id === 'string') mapNodeIdMap.set(item.id, created.id);
-      }
-
-      let mapEdgeCount = 0;
-      for (const item of payload.mapEdges || []) {
-        const oldFromNode = typeof item.fromNodeId === 'string' ? item.fromNodeId : null;
-        const oldToNode = typeof item.toNodeId === 'string' ? item.toNodeId : null;
-        const newFromNode = oldFromNode ? mapNodeIdMap.get(oldFromNode) : undefined;
-        const newToNode = oldToNode ? mapNodeIdMap.get(oldToNode) : undefined;
-        // fromNodeId/toNodeId are required — an edge whose endpoint didn't
-        // survive restore (shouldn't happen with a consistent snapshot) is
-        // skipped rather than creating a dangling/invalid edge.
-        if (!newFromNode || !newToNode) continue;
-        await tx.mapEdge.create({
-          data: {
-            label: str(item.label),
-            amount: numOrNull(item.amount),
-            currency: str(item.currency),
-            fromNodeId: newFromNode,
-            toNodeId: newToNode,
-            householdId,
-          },
-        });
-        mapEdgeCount += 1;
-      }
+      // "My map" (MapNode / MapEdge) was removed; older snapshots may still
+      // carry those arrays — they are ignored on restore.
 
       const merchantAliasIdMap = new Map<string, string>();
       for (const item of payload.merchantAliases || []) {
@@ -559,8 +519,6 @@ export async function PUT(request: Request) {
         projectItemLinks: projectLinkCount,
         categories: categoryIdMap.size,
         budgets: budgetIdMap.size,
-        mapNodes: mapNodeIdMap.size,
-        mapEdges: mapEdgeCount,
         statementImports: statementImportIdMap.size,
         statementTransactions: statementTransactionCount,
         merchantAliases: merchantAliasIdMap.size,

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.107.0';
+export const APP_VERSION = '1.108.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.108.0',
+    date: '2026-09-09',
+    changes: [
+      'Trimmed the app back. Removed the "Opportunities" tab — its Money-flow analysis and "What could we save?" views were an exact duplicate of Reports → Insights, which is now their only home.',
+      'Removed the Overview "Ask Tally" search box. The floating Tally assistant (bottom-right on every screen, and the "Ask Tally" button in the top bar) already does the same thing, so Overview is now just your greeting and the dashboard.',
+      'Removed the Money Map "My map" freeform canvas. The Money Map is now the auto-generated view of your real and projected flows, with no mode switch.',
+    ],
+  },
   {
     version: '1.107.0',
     date: '2026-09-09',

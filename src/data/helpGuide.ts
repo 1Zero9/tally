@@ -54,7 +54,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'The Spending page opens on your Expenses list: search, choose a category, filter by status, or change the sort order without scrolling past charts first. Use the View menu for specialist workspaces such as utilities, AI subscriptions, education, loans, or insurance.',
       'Paid/Unpaid on each expense tracks the current payment cycle. Expand a row to see its details and Active/Paused control; Edit, update amount, contact vendor, duplicate, and delete are grouped under the three-dot More menu.',
       'Below the expense list, "Understand your spending" keeps the optional category breakdown, spending history, and category limits together in one tabbed area.',
-      'Mark a subscription\'s usage as low/medium/high — low-usage items are flagged as cancellation candidates in Opportunities. Pause a subscription instead of deleting it to keep its history and see it counted in your "already saving" total.',
+      'Mark a subscription\'s usage as low/medium/high — low-usage items are flagged as cancellation candidates in Reports → Insights. Pause a subscription instead of deleting it to keep its history and see it counted in your "already saving" total.',
       'The built-in set is broad on purpose — Utilities, Housing, Transport & Motoring, Health & Medical, Eating Out & Takeaway, Personal Care & Clothing, Travel & Holidays, Banking & Fees, Pets, and more — so you rarely need a custom one. When adding an expense (or categorising a statement row), a "Suggest: …" link appears under the category picker when the name points at an obvious category — one click applies it.',
       'Still nothing that fits? Pick "+ Create new category…" at the bottom of the category dropdown, give it a name, and it\'s ready to use everywhere — for everyone in the household, with an automatically assigned colour. Manage them under Settings → Categories: rename, recolour, delete, or merge a near-duplicate into another (which moves all its bills across). The manager flags a custom category that looks close to an existing one, and marks any that aren\'t used by a bill.',
       'Switch to the "Income" tab to record salary, freelance or rental income and see your money in vs money out. Link each income source to the account it lands in so Money Map and money-flow analysis can use it.',
@@ -177,21 +177,12 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     id: 'moneymap',
     title: 'Money Map',
     body: [
-      'A visual diagram of your money\'s journey, with two modes. "Actual journey" (default once you\'ve logged transfers in Transactions) is built from your real dated Transfer records — three columns (money in → your accounts → money out) plus a distinct path for direct account-to-account transfers. Filter by All time / 90 days / 30 days.',
-      '"Projected" is the original monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you\'ve logged any real transfers, or to see a "typical month" projection alongside the real history.',
-      '"My map" is your own freeform, editable canvas — add any object (an account, a loan, anything not yet tracked), connect objects with a directional arrow, and drag them around to sketch out exactly how your money moves.',
+      'A visual diagram of your money\'s journey. "Actual journey" (default once you\'ve logged transfers in Transactions) is built from your real dated Transfer records — three columns (money in → your accounts → money out) plus a distinct path for direct account-to-account transfers. Filter by All time / 90 days / 30 days.',
+      '"Projected" is the monthly-equivalent view, built from your recurring Expenses/Income linked to accounts — useful before you\'ve logged any real transfers, or to see a "typical month" projection alongside the real history.',
       'Hover any connection to see the exact amount. Account circles are colored blue when net-positive and red when net-negative or a loan.',
     ],
     screenshots: [
       { src: '/guide/money-map.png', alt: 'Money Map diagram showing accounts connected by flows of money in and out', caption: 'Money Map\'s Actual journey view — built from your real logged transfers, not a projection.' },
-    ],
-  },
-  {
-    id: 'insights',
-    title: 'Opportunities',
-    body: [
-      'Money flow analysis (AI): click "Analyze my money flow" for an on-demand AI review of your accounts, transfers, and goals — flagging idle cash sitting in low-interest accounts, direct-debit timing risk (bills landing before income arrives), account consolidation opportunities, and concrete savings suggestions. This is opt-in per click, not automatic, and only ever uses your own household\'s data.',
-      'What could we save? — a rule-based (non-AI) breakdown of savings opportunities: switching monthly subscriptions to annual billing, rarely-used subscriptions worth cancelling, and a running total of what you\'re already saving from paused subscriptions. Toggle the horizon between 1 month, 1 year, 3 years, and 5 years.',
     ],
   },
   {
@@ -200,6 +191,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
     body: [
       'The "Reports" tab has five views — Trends, Category & Vendor, Category trend, Timeline, and Insights — each covering a period you choose (1/3/6/12 months, or all time).',
       'Every report is built from the household\'s full real transfer ledger, including ad-hoc transfers not tied to a tracked bill or income, so nothing real gets missed. A transfer between two of your own accounts never counts as spend or income, the same rule Transactions and Spending use. Spend with no linked bill shows up under "Uncategorized" rather than being dropped.',
+      'The Insights view has two parts. Money flow analysis (AI): click "Analyze my money flow" for an on-demand AI review of your accounts, transfers, and goals — flagging idle cash in low-interest accounts, direct-debit timing risk (bills landing before income arrives), consolidation opportunities, and concrete savings suggestions. It is opt-in per click and only ever uses your own household\'s data. What could we save? — a rule-based (non-AI) breakdown: switching monthly subscriptions to annual billing, rarely-used subscriptions worth cancelling, and a running total of what you\'re already saving from paused subscriptions, with a 1-month / 1-year / 3-year / 5-year horizon toggle.',
       'Every table has an "Export CSV" button. For a clean PDF, use your browser\'s Print (Save as PDF) from the Reports tab — it prints just the report, without navigation or buttons.',
     ],
     screenshots: [
