@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.2';
+export const APP_VERSION = '1.119.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.3',
+    date: '2026-09-09',
+    changes: [
+      'The files panel on an imported statement (the paperclip) now attaches directly under that statement\'s row as one connected block, instead of floating below as a separate card, so it clearly belongs to it.',
+    ],
+  },
   {
     version: '1.119.2',
     date: '2026-09-09',

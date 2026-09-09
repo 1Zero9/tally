@@ -157,13 +157,18 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
       {imports.length > 0 && (
         <CollapsibleSection id="statements-imports" title={`Imported statements (${imports.length})`} bodyStyle={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {imports.map((imp) => (
+          {imports.map((imp) => {
+            const filesOpen = filesForId === imp.id;
+            return (
             <div key={imp.id}>
             <div
               onClick={() => renamingId !== imp.id && setReviewImportId(imp.id)}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
-                padding: '0.65rem 0.85rem', borderRadius: 'var(--ha-radius-md)', border: '1px solid var(--ha-line)',
+                padding: '0.65rem 0.85rem',
+                borderRadius: filesOpen ? 'var(--ha-radius-md) var(--ha-radius-md) 0 0' : 'var(--ha-radius-md)',
+                border: '1px solid var(--ha-line)',
+                borderBottom: filesOpen ? 'none' : '1px solid var(--ha-line)',
                 cursor: renamingId === imp.id ? 'default' : 'pointer',
               }}
             >
@@ -249,16 +254,22 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
               )}
             </div>
 
-            {filesForId === imp.id && (
+            {filesOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                style={{ margin: '0.4rem 0 0.2rem', padding: '0.75rem 0.85rem', border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-md)', backgroundColor: '#fafaf7' }}
+                style={{
+                  padding: '0.7rem 0.85rem 0.75rem 2.35rem',
+                  border: '1px solid var(--ha-line)',
+                  borderRadius: '0 0 var(--ha-radius-md) var(--ha-radius-md)',
+                  backgroundColor: '#fafaf7',
+                }}
               >
-                <AttachmentStrip ownerType="statementImport" ownerId={imp.id} label={`Files for "${imp.label}"`} />
+                <AttachmentStrip ownerType="statementImport" ownerId={imp.id} label="Attachments" />
               </div>
             )}
             </div>
-          ))}
+            );
+          })}
         </div>
         </CollapsibleSection>
       )}
