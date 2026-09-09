@@ -3,7 +3,7 @@ import type { GoalItem, ExpenseItem, AccountItem, TransferItem, CurrencyCode } f
 import { formatCurrency } from '../utils/formatters';
 import { convertCurrency, getMonthlyEquivalent } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
-import { Edit2, Trash2, Plus, Target, TrendingDown, TrendingUp, PiggyBank } from 'lucide-react';
+import { Edit2, Trash2, Plus, Target, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface ProgressSectionProps {
   goals: GoalItem[];
@@ -142,68 +142,11 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({
         <Stat label="Goals on track" value={activeGoals.length ? `${onTrackCount} of ${activeGoals.length}` : '—'} />
       </div>
 
-      {/* Savings */}
-      <CollapsibleSection id="progress-savings" title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><PiggyBank size={15} /> Savings ({savings.length})</span>}>
-        {savings.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
-            No savings accounts yet. Add one in Accounts — Savings, Credit Union, Investment, Shares or State Savings — and its balance shows here.
-          </div>
-        ) : (
-          <div>
-            {SAVINGS_TYPE_ORDER.filter((t) => savings.some((a) => a.type === t)).map((t) => {
-              const group = savings.filter((a) => a.type === t);
-              const subtotal = group.reduce((s, a) => s + convertCurrency(a.balance || 0, a.currency, currency), 0);
-              const multiGroup = savings.some((a) => a.type !== t);
-              return (
-                <div key={t}>
-                  {multiGroup && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '0.7rem 1.25rem 0.35rem', gap: '1rem' }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ha-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        {TYPE_LABEL[t]} · {group.length}
-                      </span>
-                      <span className="tabular-nums" style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--ha-ink)' }}>{formatCurrency(subtotal, currency)}</span>
-                    </div>
-                  )}
-                  {group.map((a) => {
-                    const bal = a.balance || 0;
-                    const inCcy = convertCurrency(bal, a.currency, currency);
-                    const share = totalSavings > 0 ? Math.round((inCcy / totalSavings) * 100) : 0;
-                    return (
-                      <div key={a.id} style={{ borderBottom: '1px solid var(--ha-line)', padding: '0.85rem 1.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
-                          <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ha-ink)' }}>{a.name}</span>
-                              {!multiGroup && <span className="ha-badge ha-badge-neutral" style={{ fontSize: '0.7rem' }}>{TYPE_LABEL[a.type] || a.type}</span>}
-                              {a.institution && <span style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>{a.institution}</span>}
-                            </div>
-                            {a.balanceAsOf && (
-                              <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '2px' }}>as of {a.balanceAsOf} — entered manually</div>
-                            )}
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div className="tabular-nums" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ha-ink)' }}>{formatCurrency(bal, a.currency)}</div>
-                            {totalSavings > 0 && savings.length > 1 && (
-                              <div style={{ fontSize: '0.72rem', color: 'var(--ha-muted)' }}>{share}% of savings</div>
-                            )}
-                          </div>
-                        </div>
-                        {totalSavings > 0 && savings.length > 1 && <Bar pct={share} color="var(--ha-lime)" />}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-            {savings.length > 1 && (
-              <div style={{ padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
-                <span>Total savings</span>
-                <span className="tabular-nums">{formatCurrency(totalSavings, currency)}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </CollapsibleSection>
+      {savings.length > 0 && (
+        <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', margin: '-0.5rem 0 0' }}>
+          {savings.length} savings account{savings.length === 1 ? '' : 's'} totalling {formatCurrency(totalSavings, currency)} — see <strong>Accounts</strong> for the breakdown by type.
+        </p>
+      )}
 
       {/* Debts */}
       <CollapsibleSection id="progress-debts" title={<span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><TrendingDown size={15} /> Loans &amp; cards ({debts.length})</span>}>

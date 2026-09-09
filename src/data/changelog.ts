@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.110.0';
+export const APP_VERSION = '1.111.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.111.0',
+    date: '2026-09-09',
+    changes: [
+      'Savings accounts were listed in full on both Accounts and Progress. Progress now just notes the savings total (still in its overview strip) and points to Accounts; the breakdown by type — Savings, Credit Union, Investment, Shares, State Savings — moved to Accounts as a compact "Savings by type" summary above the list.',
+    ],
+  },
   {
     version: '1.110.0',
     date: '2026-09-09',

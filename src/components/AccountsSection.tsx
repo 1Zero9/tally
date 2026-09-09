@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import type { AccountItem } from '../types/expense';
-import { Edit2, Trash2, Plus, Landmark, Eye, EyeOff, Copy, Check, ShieldAlert, Link as LinkIcon } from 'lucide-react';
+import type { AccountItem, CurrencyCode } from '../types/expense';
+import { Edit2, Trash2, Plus, Landmark, Eye, EyeOff, Copy, Check, ShieldAlert, Link as LinkIcon, PiggyBank } from 'lucide-react';
 import { hasTextSelection } from '../utils/dom';
+import { convertCurrency } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 const LIABILITY_TYPES = new Set(['CREDIT_CARD', 'LOAN']);
+// Savings vehicles, in the order the summary groups them.
+const SAVINGS_TYPE_ORDER = ['SAVINGS', 'CREDIT_UNION', 'INVESTMENT', 'SHARES', 'STATE_SAVINGS'] as const;
 
 const TYPE_LABELS: Record<string, string> = {
   CHECKING: 'Current',
@@ -34,6 +37,7 @@ const SENSITIVE_FIELDS: { key: string; hasKey: keyof AccountItem; label: string 
 
 interface AccountsSectionProps {
   accounts: AccountItem[];
+  currency: CurrencyCode;
   encryptionConfigured: boolean;
   onEditAccount: (account: AccountItem) => void;
   onDeleteAccount: (id: string) => void;
@@ -42,12 +46,16 @@ interface AccountsSectionProps {
 
 export const AccountsSection: React.FC<AccountsSectionProps> = ({
   accounts,
+  currency,
   encryptionConfigured,
   onEditAccount,
   onDeleteAccount,
   onOpenAddModal,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const savingsAccounts = accounts.filter((a) => SAVINGS_TYPE_ORDER.includes(a.type as typeof SAVINGS_TYPE_ORDER[number]) && a.balance != null);
+  const savingsTotal = savingsAccounts.reduce((s, a) => s + convertCurrency(a.balance || 0, a.currency, currency), 0);
   const [revealed, setRevealed] = useState<Record<string, string>>({});
   const [revealingKey, setRevealingKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -133,6 +141,31 @@ export const AccountsSection: React.FC<AccountsSectionProps> = ({
           </div>
         )}
       </div>
+
+      {savingsAccounts.length >= 2 && (
+        <div className="ha-card" style={{ padding: '1.1rem 1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
+            <PiggyBank size={15} color="var(--ha-blue)" />
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Savings by type</h4>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {SAVINGS_TYPE_ORDER.filter((t) => savingsAccounts.some((a) => a.type === t)).map((t) => {
+              const group = savingsAccounts.filter((a) => a.type === t);
+              const subtotal = group.reduce((s, a) => s + convertCurrency(a.balance || 0, a.currency, currency), 0);
+              return (
+                <div key={t} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--ha-muted)' }}>{TYPE_LABELS[t]} · {group.length}</span>
+                  <span className="tabular-nums" style={{ fontWeight: 600, color: 'var(--ha-ink)' }}>{formatCurrency(subtotal, currency)}</span>
+                </div>
+              );
+            })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, color: 'var(--ha-ink)', borderTop: '1px solid var(--ha-line)', paddingTop: '0.4rem', marginTop: '0.2rem' }}>
+              <span>Total savings</span>
+              <span className="tabular-nums">{formatCurrency(savingsTotal, currency)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CollapsibleSection id="accounts-ledger" title={`Accounts (${accounts.length})`}>
         {accounts.length === 0 ? (
