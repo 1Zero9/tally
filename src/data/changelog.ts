@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.116.0';
+export const APP_VERSION = '1.116.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.116.1',
+    date: '2026-09-09',
+    changes: [
+      'Reverted the assistant panel to always open as the right-side drawer (bottom sheet on mobile). Having it follow the draggable launcher into other corners was more disorienting than helpful — the launcher still drags anywhere, the panel just opens in its usual place.',
+    ],
+  },
   {
     version: '1.116.0',
     date: '2026-09-09',

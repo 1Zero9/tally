@@ -7,7 +7,6 @@ import { AgentWelcome } from './AgentWelcome';
 import { AgentConversation } from './AgentConversation';
 import { AgentComposer } from './AgentComposer';
 import { useTallyAgent } from './useTallyAgent';
-import { LAUNCHER_POS_KEY, LAUNCHER_SIZE_DESKTOP } from './types';
 
 interface AgentPanelProps {
   firstName: string;
@@ -26,43 +25,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
 }) => {
   const { messages, status, ask, reset, noteFeedbackLogged, isBusy } = useTallyAgent({ area });
   const [raising, setRaising] = useState<FeedbackType | null>(null);
-  const [anchor, setAnchor] = useState<React.CSSProperties>();
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // Open from the corner the (draggable) launcher currently sits in, so the
-  // panel feels connected to where you clicked. Mobile keeps its CSS bottom
-  // sheet (no inline anchor).
-  useEffect(() => {
-    const compute = () => {
-      if (window.matchMedia('(max-width: 640px)').matches) {
-        setAnchor(undefined);
-        return;
-      }
-      let lp: { left: number; top: number } | null = null;
-      try {
-        const raw = localStorage.getItem(LAUNCHER_POS_KEY);
-        if (raw) {
-          const p = JSON.parse(raw);
-          if (typeof p?.left === 'number' && typeof p?.top === 'number') lp = p;
-        }
-      } catch { /* default corner */ }
-
-      const s = LAUNCHER_SIZE_DESKTOP;
-      const cx = lp ? lp.left + s / 2 : window.innerWidth - s / 2 - 16;
-      const cy = lp ? lp.top + s / 2 : window.innerHeight - s / 2 - 16;
-      const onLeft = cx < window.innerWidth / 2;
-      const onTop = cy < window.innerHeight / 2;
-      setAnchor({
-        left: onLeft ? '1.25rem' : 'auto',
-        right: onLeft ? 'auto' : 'max(1.25rem, env(safe-area-inset-right))',
-        top: onTop ? '1.25rem' : 'auto',
-        bottom: onTop ? 'auto' : 'max(1.25rem, env(safe-area-inset-bottom))',
-      });
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,7 +60,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       role="dialog"
       aria-label="Tally assistant"
       ref={panelRef}
-      style={anchor}
     >
       <AgentHeader onClose={onClose} onMinimise={onClose} />
 
