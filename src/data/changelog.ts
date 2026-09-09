@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.117.1';
+export const APP_VERSION = '1.117.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.117.2',
+    date: '2026-09-09',
+    changes: [
+      'Money Map no longer squashes its account column when you have several accounts — node spacing now scales with the number of accounts so circles stop overlapping and their amounts stop hiding behind the next one. Account labels also wrap in a wider box, so "Bank of Ireland (Main)" and "Bank of Ireland (Credit Card)" are no longer both cut to "Bank of Irel…".',
+    ],
+  },
   {
     version: '1.117.1',
     date: '2026-09-09',

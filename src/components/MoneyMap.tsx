@@ -59,8 +59,16 @@ function layoutColumn<T extends { id: string; label: string; sublabel?: string; 
   return items.map((item, i) => ({ ...item, x, y: gap * (i + 1) }));
 }
 
+// Vertical space each node occupies (circle + amount label + gap). The
+// fullest column gets exactly this between node centres.
+const ROW_H = 100;
+// Label box — wider than the circle so a name like
+// "Bank of Ireland (Credit Card)" can wrap and stay distinguishable.
+const LABEL_W = 96;
+const LABEL_H = 66;
+
 function truncateLabel(label: string): string {
-  return label.length > 14 ? `${label.slice(0, 12)}…` : label;
+  return label.length > 42 ? `${label.slice(0, 40)}…` : label;
 }
 
 type Period = 'all' | '30' | '90';
@@ -145,7 +153,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
     }));
 
     const maxRows = Math.max(externalInList.length, accountList.length, externalOutList.length, 1);
-    const height = Math.max(maxRows * 78, 220);
+    const height = Math.max((maxRows + 1) * ROW_H, 260);
 
     const leftNodes = layoutColumn(externalInList, 90, height);
     const midNodes = layoutColumn(accountList, 430, height) as AccountFlowNode[];
@@ -222,7 +230,7 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
     }));
 
     const maxRows = Math.max(incomeItems.length, accountList.length, categoryList.length, 1);
-    const height = Math.max(maxRows * 78, 220);
+    const height = Math.max((maxRows + 1) * ROW_H, 260);
 
     const leftNodes = layoutColumn(incomeItems, 90, height);
     const midNodes = layoutColumn(accountList, 430, height) as AccountFlowNode[];
@@ -401,8 +409,8 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
               {data.leftNodes.map((n) => (
                 <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
                   <circle r={NODE_R} fill="#eaf7f0" stroke={COLOR_IN} strokeWidth="2" />
-                  <foreignObject x={-NODE_R} y={-NODE_R} width={NODE_R * 2} height={NODE_R * 2}>
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: '#1f7a4d', textAlign: 'center', padding: '2px' }}>
+                  <foreignObject x={-LABEL_W / 2} y={-LABEL_H / 2} width={LABEL_W} height={LABEL_H}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.58rem', fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#1f7a4d', textAlign: 'center', padding: '2px' }}>
                       {truncateLabel(n.label)}
                     </div>
                   </foreignObject>
@@ -419,8 +427,8 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
                 return (
                   <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
                     <circle r={NODE_R} fill={bgColor} stroke={ringColor} strokeWidth="2.5" />
-                    <foreignObject x={-NODE_R} y={-NODE_R} width={NODE_R * 2} height={NODE_R * 2}>
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: ringColor, textAlign: 'center', padding: '2px' }}>
+                    <foreignObject x={-LABEL_W / 2} y={-LABEL_H / 2} width={LABEL_W} height={LABEL_H}>
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.58rem', fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: ringColor, textAlign: 'center', padding: '2px' }}>
                         {truncateLabel(n.label)}
                       </div>
                     </foreignObject>
@@ -434,8 +442,8 @@ export const MoneyMap: React.FC<MoneyMapProps> = ({ incomes, expenses, accounts,
               {data.rightNodes.map((n) => (
                 <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
                   <circle r={NODE_R} fill="#fbeceb" stroke={COLOR_OUT} strokeWidth="2" />
-                  <foreignObject x={-NODE_R} y={-NODE_R} width={NODE_R * 2} height={NODE_R * 2}>
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: '#a8332c', textAlign: 'center', padding: '2px' }}>
+                  <foreignObject x={-LABEL_W / 2} y={-LABEL_H / 2} width={LABEL_W} height={LABEL_H}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.58rem', fontWeight: 700, lineHeight: 1.12, wordBreak: 'break-word', color: '#a8332c', textAlign: 'center', padding: '2px' }}>
                       {truncateLabel(n.label)}
                     </div>
                   </foreignObject>
