@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { AccountItem, AccountType, CurrencyCode } from '../types/expense';
 import { CURRENCIES } from '../utils/currencies';
-import { X, Lock, ShieldAlert, Loader2 } from 'lucide-react';
+import { X, Lock, ShieldAlert, Loader2, Paperclip } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
 import { AttachmentStrip } from './AttachmentStrip';
 
@@ -402,11 +402,15 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             />
           </div>
 
-          {editingAccount?.id && (
-            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--ha-line)' }}>
+          <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--ha-line)' }}>
+            {editingAccount?.id ? (
               <AttachmentStrip ownerType="account" ownerId={editingAccount.id} label="Attachments (statements, policies)" />
-            </div>
-          )}
+            ) : (
+              <p style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--ha-muted)', margin: 0 }}>
+                <Paperclip size={13} /> Attachments — save this account first, then reopen it to attach statements or policy documents.
+              </p>
+            )}
+          </div>
 
           <div style={{
             display: 'flex',

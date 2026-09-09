@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.113.1';
+export const APP_VERSION = '1.113.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.113.2',
+    date: '2026-09-09',
+    changes: [
+      'The Attachments panel is now visible when adding a new expense or account too — as a short "save first, then reopen to attach" hint — so it\'s not a hidden feature you only find on records that already exist.',
+    ],
+  },
   {
     version: '1.113.1',
     date: '2026-09-09',

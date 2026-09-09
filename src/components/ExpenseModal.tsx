@@ -6,7 +6,7 @@ import { AttachmentStrip } from './AttachmentStrip';
 import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
 import { formatCurrency } from '../utils/formatters';
-import { X, ArrowRightLeft, Loader2, ChevronDown } from 'lucide-react';
+import { X, ArrowRightLeft, Loader2, ChevronDown, Paperclip } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
 
 const PAYMENT_METHODS = [
@@ -779,11 +779,15 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </div>
           )}
 
-          {editingExpense?.id && (
-            <div style={{ borderTop: '1px solid var(--ha-line)', paddingTop: '0.85rem' }}>
+          <div style={{ borderTop: '1px solid var(--ha-line)', paddingTop: '0.85rem' }}>
+            {editingExpense?.id ? (
               <AttachmentStrip ownerType="expense" ownerId={editingExpense.id} label="Attachments (receipts, invoices)" />
-            </div>
-          )}
+            ) : (
+              <p style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--ha-muted)', margin: 0 }}>
+                <Paperclip size={13} /> Attachments — save this expense first, then reopen it to attach receipts or invoices.
+              </p>
+            )}
+          </div>
 
           {/* Actions */}
           <div style={{
