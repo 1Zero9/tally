@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.108.0';
+export const APP_VERSION = '1.109.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.109.0',
+    date: '2026-09-09',
+    changes: [
+      'Collapsed the five separate spending sub-pages (AI & tech, Utilities, Education, Mortgage & loans, Insurance) into one Spending page. They were just the expense list filtered by category, with a worse row layout — now you pick the category in the list\'s own filter, and it shows that category\'s total monthly commitment at the top. Nothing is lost; there are five fewer places to look.',
+    ],
+  },
   {
     version: '1.108.0',
     date: '2026-09-09',

@@ -131,6 +131,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const pausedCount = expenses.filter((e) => !e.isActive).length;
   const isFiltered = !!searchQuery.trim() || !!selectedCategory || statusFilter !== 'all';
 
+  // When narrowed to one category, show that category's monthly commitment —
+  // the one useful thing the old per-category spending pages had.
+  const selectedCategoryMonthly = selectedCategory
+    ? filteredItems
+        .filter((e) => e.isActive)
+        .reduce((sum, e) => sum + getMonthlyEquivalent(convertCurrency(e.amount, e.currency, currency), e.billingCycle), 0)
+    : 0;
+  const selectedCategoryName = selectedCategory
+    ? getCategoryMeta(selectedCategory, customCategories).name
+    : '';
+
   const STATUS_FILTERS: { id: typeof statusFilter; label: string; count: number }[] = [
     { id: 'all', label: 'All', count: expenses.length },
     { id: 'active', label: 'Active', count: activeCount },
@@ -149,6 +160,11 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           {overdueCount > 0 && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-red)', fontWeight: 600 }}>
               {overdueCount} bill{overdueCount === 1 ? '' : 's'} overdue
+            </p>
+          )}
+          {selectedCategory && (
+            <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
+              {selectedCategoryName}: <strong className="tabular-nums" style={{ color: 'var(--ha-ink)' }}>{formatCurrency(selectedCategoryMonthly, currency)}</strong>/month across {filteredItems.filter((e) => e.isActive).length} active
             </p>
           )}
           {isFiltered && (

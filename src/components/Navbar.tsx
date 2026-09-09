@@ -4,9 +4,8 @@ import { Plus, Search, Settings, HelpCircle, LogOut, ShieldCheck, Menu, X, Chevr
 import { TallyLogo } from './TallyLogo';
 import { APP_VERSION, MOBILE_APP_VERSION } from '../data/changelog';
 
-export type TabId = 'overview' | 'all' | 'ai-tech' | 'utilities' | 'education' | 'big-ticket' | 'insurance' | 'income' | 'calendar' | 'reports' | 'accounts' | 'moneymap' | 'flow' | 'goals' | 'planned' | 'admin';
+export type TabId = 'overview' | 'all' | 'income' | 'calendar' | 'reports' | 'accounts' | 'moneymap' | 'flow' | 'goals' | 'planned' | 'admin';
 
-export const SPENDING_TABS: TabId[] = ['all', 'ai-tech', 'utilities', 'education', 'big-ticket', 'insurance'];
 
 const PRIMARY_NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -217,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             a single direct click either side of it. */}
         <nav className="desktop-only ha-navbar-nav" aria-label="Main navigation">
           {PRIMARY_NAV_ITEMS.map((item) => {
-            const isActive = item.id === 'all' ? SPENDING_TABS.includes(activeTab) : activeTab === item.id;
+            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
@@ -299,7 +298,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <div style={{ padding: '0.75rem 0.5rem', display: 'flex', flexDirection: 'column' }}>
               {PRIMARY_NAV_ITEMS.map((item) => {
-                const isActive = item.id === 'all' ? SPENDING_TABS.includes(activeTab) : activeTab === item.id;
+                const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}

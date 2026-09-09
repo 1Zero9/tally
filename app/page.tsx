@@ -7,18 +7,13 @@ import { loadCurrency, saveCurrency } from '@/src/services/storage';
 import { updateLiveRates } from '@/src/utils/currencies';
 import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/calculations';
 import { formatCurrency } from '@/src/utils/formatters';
-import { Navbar, SPENDING_TABS } from '@/src/components/Navbar';
+import { Navbar } from '@/src/components/Navbar';
 import type { TabId } from '@/src/components/Navbar';
 import { CategoryBreakdownChart } from '@/src/components/CategoryBreakdownChart';
 import { TrendChart } from '@/src/components/TrendChart';
 import { ExpenseList } from '@/src/components/ExpenseList';
 import { IncomeSection } from '@/src/components/IncomeSection';
 import { IncomeModal } from '@/src/components/IncomeModal';
-import { AiTechSection } from '@/src/components/AiTechSection';
-import { UtilitiesSection } from '@/src/components/UtilitiesSection';
-import { EducationSection } from '@/src/components/EducationSection';
-import { BigTicketSection } from '@/src/components/BigTicketSection';
-import { InsuranceSection } from '@/src/components/InsuranceSection';
 import { PlannedExpensesSection } from '@/src/components/PlannedExpensesSection';
 import { UpcomingRenewals } from '@/src/components/UpcomingRenewals';
 import { ReportsSection } from '@/src/components/ReportsSection';
@@ -86,14 +81,6 @@ export default function TallyPage() {
   // real loading state on initial load without flashing on every save.
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  const SPENDING_VIEWS: { id: TabId; label: string }[] = [
-    { id: 'all', label: 'All expenses' },
-    { id: 'ai-tech', label: 'AI & technology' },
-    { id: 'utilities', label: 'Utilities & household bills' },
-    { id: 'education', label: 'Education & activities' },
-    { id: 'big-ticket', label: 'Mortgage & loans' },
-    { id: 'insurance', label: 'Insurance & motor' },
-  ];
   const [spendingAnalysisView, setSpendingAnalysisView] = useState<'categories' | 'history' | 'limits'>('categories');
 
   // Users & Auth
@@ -835,12 +822,7 @@ export default function TallyPage() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          if (tab === 'ai-tech') setSelectedCategory('ai-tech');
-          else if (tab === 'utilities') setSelectedCategory('utilities');
-          else if (tab === 'education') setSelectedCategory('education');
-          else if (tab === 'big-ticket') setSelectedCategory('big-ticket');
-          else if (tab === 'insurance') setSelectedCategory('insurance');
-          else setSelectedCategory(null);
+          if (tab !== 'all') setSelectedCategory(null);
         }}
         onOpenAddModal={() => {
           setEditingExpense(null);
@@ -938,15 +920,8 @@ export default function TallyPage() {
               setIsAddModalOpen(true);
             }}
             onFilterCategory={(cat) => {
-              if (cat === 'ai-tech') setActiveTab('ai-tech');
-              else if (cat === 'utilities') setActiveTab('utilities');
-              else if (cat === 'education') setActiveTab('education');
-              else if (cat === 'big-ticket') setActiveTab('big-ticket');
-              else if (cat === 'insurance') setActiveTab('insurance');
-              else {
-                setSelectedCategory(cat);
-                setActiveTab('all');
-              }
+              setSelectedCategory(cat);
+              setActiveTab('all');
             }}
             onOpenAddIncome={() => {
               setEditingIncome(null);
@@ -963,27 +938,6 @@ export default function TallyPage() {
             onRevealSensitive={revealSensitive}
             onViewAccounts={() => setActiveTab('accounts')}
           />
-        )}
-
-        {/* Specialist spending views are alternate workspaces, not category
-            filters. A labelled select makes that distinction explicit. */}
-        {SPENDING_TABS.includes(activeTab) && activeTab !== 'all' && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
-            <label className="ha-ledger-select-wrap" style={{ width: 'min(100%, 310px)' }}>
-              <span>View</span>
-              <select
-                aria-label="Spending view"
-                value={activeTab}
-                onChange={(e) => {
-                  setActiveTab(e.target.value as TabId);
-                  setSelectedCategory(null);
-                }}
-                className="ha-ledger-select"
-              >
-                {SPENDING_VIEWS.map((view) => <option key={view.id} value={view.id}>{view.label}</option>)}
-              </select>
-            </label>
-          </div>
         )}
 
         {/* Tab View Routing */}
@@ -1015,23 +969,10 @@ export default function TallyPage() {
                   </button>
                 </div>
               </div>
-              <label className="ha-ledger-select-wrap" style={{ width: 'min(100%, 310px)', marginTop: '1.25rem' }}>
-                <span>View</span>
-                <select
-                  aria-label="Spending view"
-                  value={activeTab}
-                  onChange={(e) => {
-                    setActiveTab(e.target.value as TabId);
-                    setSelectedCategory(null);
-                  }}
-                  className="ha-ledger-select"
-                >
-                  {SPENDING_VIEWS.map((view) => <option key={view.id} value={view.id}>{view.label}</option>)}
-                </select>
-              </label>
             </div>
 
-            {/* The expense list is the primary working surface. */}
+            {/* The expense list is the primary working surface. Filter it by
+                category with the picker in its own toolbar. */}
             <ExpenseList
               expenses={liveExpenses}
               isLoading={isInitialLoading}
@@ -1122,117 +1063,6 @@ export default function TallyPage() {
               onRevealSensitive={revealSensitive}
             />
           </>
-        )}
-
-        {activeTab === 'utilities' && (
-          <UtilitiesSection
-            expenses={liveExpenses}
-            currency={currency}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={() => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory('utilities');
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddPreset={(presetId) => {
-              setEditingExpense(null);
-              setInitialPresetId(presetId);
-              setIsAddModalOpen(true);
-            }}
-          />
-        )}
-
-        {activeTab === 'big-ticket' && (
-          <BigTicketSection
-            expenses={liveExpenses}
-            currency={currency}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={() => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory('big-ticket');
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddPreset={(presetId) => {
-              setEditingExpense(null);
-              setInitialPresetId(presetId);
-              setIsAddModalOpen(true);
-            }}
-          />
-        )}
-
-        {activeTab === 'insurance' && (
-          <InsuranceSection
-            expenses={liveExpenses}
-            currency={currency}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={() => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory('insurance');
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddPreset={(presetId) => {
-              setEditingExpense(null);
-              setInitialPresetId(presetId);
-              setIsAddModalOpen(true);
-            }}
-          />
-        )}
-
-        {activeTab === 'education' && (
-          <EducationSection
-            expenses={liveExpenses}
-            currency={currency}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={(cat) => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory(cat || 'education');
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddPreset={(presetId) => {
-              setEditingExpense(null);
-              setInitialPresetId(presetId);
-              setIsAddModalOpen(true);
-            }}
-          />
-        )}
-
-        {activeTab === 'ai-tech' && (
-          <AiTechSection
-            expenses={liveExpenses}
-            currency={currency}
-            onToggleActive={handleToggleActive}
-            onEditExpense={(item) => {
-              setEditingExpense(item);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddPreset={(presetId) => {
-              setEditingExpense(null);
-              setInitialPresetId(presetId);
-              setIsAddModalOpen(true);
-            }}
-            onOpenAddModal={() => {
-              setEditingExpense(null);
-              setInitialPresetId(null);
-              setInitialCategory('ai-tech');
-              setIsAddModalOpen(true);
-            }}
-          />
         )}
 
         {activeTab === 'calendar' && (
