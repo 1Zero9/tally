@@ -19,7 +19,7 @@ interface TallyAgentProps {
 }
 
 const NUDGE_OFF_KEY = 'tally.agentNudgeOff';
-const NUDGE_FIRST_MIN = 90_000; // don't nudge for the first 90s
+const NUDGE_FIRST_MIN = 8_000;
 const NUDGE_GAP_MIN = 14 * 60_000;
 const NUDGE_GAP_MAX = 26 * 60_000;
 const NUDGE_MAX_PER_SESSION = 2;
@@ -30,7 +30,7 @@ const rand = (min: number, max: number) => min + Math.random() * (max - min);
 /**
  * The Tally Agent — the fifth tally mark, come alive. A subtle floating
  * launcher on every screen; clicking it opens a right-side assistant panel
- * (a near-full sheet on mobile). Every so often it gives a small wobble and
+ * (a near-full sheet on mobile). Every so often it gives a playful whirl and
  * pops a one-line prompt in a bubble, so it doesn't get forgotten —
  * capped, dismissable, and switch-off-able.
  */
@@ -90,8 +90,11 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
 
     const fire = () => {
       if (shown >= NUDGE_MAX_PER_SESSION) return;
+      try {
+        if (localStorage.getItem(NUDGE_OFF_KEY) === '1') return;
+      } catch { /* storage blocked */ }
       if (openRef.current || blurredRef.current || document.hidden) {
-        scheduleTimer = window.setTimeout(fire, 90_000);
+        scheduleTimer = window.setTimeout(fire, 10_000);
         return;
       }
       shown += 1;
@@ -102,7 +105,7 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
       }
     };
 
-    scheduleTimer = window.setTimeout(fire, NUDGE_FIRST_MIN + rand(0, 60_000));
+    scheduleTimer = window.setTimeout(fire, NUDGE_FIRST_MIN + rand(0, 4_000));
 
     return () => {
       window.clearTimeout(scheduleTimer);

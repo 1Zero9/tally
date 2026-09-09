@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.5';
+export const APP_VERSION = '1.119.6';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.6',
+    date: '2026-09-09',
+    changes: [
+      'The floating agent now gives a playful full whirl during its idle animation and when a speech bubble appears. Motion pauses during dragging and respects reduced-motion preferences.',
+      'The first speech bubble appears after 8–12 seconds instead of 90–150 seconds, with a faster entrance. Muting reminders also cancels future prompts in the current session.',
+    ],
+  },
   {
     version: '1.119.5',
     date: '2026-09-09',

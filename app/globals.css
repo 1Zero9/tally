@@ -1541,6 +1541,29 @@ input:checked + .slider:before {
   height: 100%;
   pointer-events: none;
   user-select: none;
+  animation: haAgentIdleWhirl 9s ease-in-out infinite;
+}
+.ha-agent-launcher:hover .ha-agent-launcher-img,
+.ha-agent-launcher:focus-visible .ha-agent-launcher-img {
+  animation-play-state: paused;
+}
+.ha-agent-launcher.is-nudging .ha-agent-launcher-img {
+  animation: haAgentWhirl 1s ease-in-out;
+}
+.ha-agent-launcher[data-dragging='true'] .ha-agent-launcher-img {
+  animation: none;
+}
+@keyframes haAgentIdleWhirl {
+  0%, 76% { transform: rotate(0deg) scale(1); }
+  80% { transform: rotate(-18deg) scale(0.94); }
+  92% { transform: rotate(365deg) scale(1.06); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes haAgentWhirl {
+  0% { transform: rotate(0deg) scale(1); }
+  18% { transform: rotate(-20deg) scale(0.92); }
+  80% { transform: rotate(368deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 .ha-agent-launcher:hover {
   /* pause the float so the hover pop reads cleanly */
@@ -1588,7 +1611,7 @@ input:checked + .slider:before {
   border-radius: 14px;
   box-shadow: 0 12px 30px rgba(24, 43, 34, 0.18);
   padding: 0.65rem 0.7rem 0.5rem;
-  animation: haNudgeIn 0.2s ease-out;
+  animation: haNudgeIn 0.12s ease-out;
 }
 .ha-agent-nudge[data-place^='above'] { bottom: calc(100% + 10px); }
 .ha-agent-nudge[data-place^='below'] { top: calc(100% + 10px); }

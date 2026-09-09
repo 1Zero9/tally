@@ -61,7 +61,7 @@ function clampToViewport(p: Pos): Pos {
 /**
  * The floating Tally mascot — the character itself is the button, no
  * backing disc. It bobs and wobbles gently on a loop (faster while
- * thinking), does a one-off wobble when it wants attention, and can pop a
+ * thinking), whirls when it wants attention, and can pop a
  * prompt in a bubble beside it. Drag it anywhere; where you drop it is
  * remembered per browser. All idle motion is disabled app-wide under
  * prefers-reduced-motion (see globals.css).
@@ -115,7 +115,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
   useEffect(() => {
     if (!nudge) return;
     setWobbling(true);
-    const t = window.setTimeout(() => setWobbling(false), 850);
+    const t = window.setTimeout(() => setWobbling(false), 1100);
     return () => window.clearTimeout(t);
   }, [nudge]);
 
