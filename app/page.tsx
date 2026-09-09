@@ -26,7 +26,6 @@ import { CategoryManagerModal } from '@/src/components/CategoryManagerModal';
 import { ShareWorkspaceModal } from '@/src/components/ShareWorkspaceModal';
 import { ContactVendorModal } from '@/src/components/ContactVendorModal';
 import { HelpGuideModal } from '@/src/components/HelpGuideModal';
-import { HowItWorksModal } from '@/src/components/HowItWorksModal';
 import { FeedbackModal } from '@/src/components/FeedbackModal';
 import { SettingsModal } from '@/src/components/SettingsModal';
 import { OverviewDashboard } from '@/src/components/OverviewDashboard';
@@ -94,7 +93,6 @@ export default function TallyPage() {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isAgentOpen, setIsAgentOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -836,7 +834,6 @@ export default function TallyPage() {
         }}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenHelpModal={() => setIsHelpModalOpen(true)}
-        onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
         onOpenFeedback={() => setIsFeedbackModalOpen(true)}
         onFocusAsk={handleFocusAsk}
         onLogout={handleLogout}
@@ -1525,7 +1522,6 @@ export default function TallyPage() {
       />
 
       {/* Help Guide Modal */}
-      <HowItWorksModal isOpen={isHowItWorksOpen} onClose={() => setIsHowItWorksOpen(false)} />
 
       <HelpGuideModal
         isOpen={isHelpModalOpen}

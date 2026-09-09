@@ -16,6 +16,18 @@ export interface HelpGuideSection {
 
 export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
   {
+    id: 'how-tally-works',
+    title: 'How Tally works',
+    body: [
+      'Three kinds of record. Expense — money spent (a bill, a subscription, a one-off cost); counts toward spend, budgets and category totals. Income — money arriving; counts toward "money in". Transfer — money moving between accounts; on its own it is neither spend nor income.',
+      'Internal vs external transfers. A transfer whose From and To are both your own accounts is internal — just moving money around, never spend. This covers sweeping to savings, topping up Revolut, and paying a credit card (shown as "Card payment"). A transfer with one side set to External is real money entering or leaving the household. Paying down a card or loan is a transfer into that account, never an expense — the spending already happened when you used the card.',
+      'Bill vs one-off. A bill is recurring (mobile, electricity, a subscription) and shows in the Bills renewal schedule. A one-off is a single incidental cost and shows in Spending only. From a statement: use "Add as expense" for a one-off, "Add as bill" for a subscription.',
+      'Statements — record once. Every real movement appears on two statements: the account it left and the account it arrived in. Record it once, then Ignore the matching row when you process the other statement. A card payment shows as −€X on your current account and +€X on the card — that is one Card payment transfer, not two entries.',
+      'Lenses never change totals. Money Trails, Home Projects, Progress, Money Map and Reports all read the ledger. They never add or change a number — they are just different views of what you have already recorded. Deleting a trail or a project never touches an expense or transfer.',
+      'Everything from a statement is undoable. Per row inside the import review, or across all imports from the Statement activity list in Transactions. Undo removes any bill, transfer or income the row created and sends it back to "needs review".',
+    ],
+  },
+  {
     id: 'signin',
     title: 'Signing in',
     body: [

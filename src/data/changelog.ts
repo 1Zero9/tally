@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.109.0';
+export const APP_VERSION = '1.110.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.110.0',
+    date: '2026-09-09',
+    changes: [
+      'Merged the "How Tally works" cheat sheet into the Help guide (and the Tally assistant) as its own top section, and removed it as a separate avatar-menu item. The mental model — three kinds of record, internal vs external transfers, lenses never change totals — is now searchable alongside the rest of the help, and the assistant can answer from it directly.',
+    ],
+  },
   {
     version: '1.109.0',
     date: '2026-09-09',
