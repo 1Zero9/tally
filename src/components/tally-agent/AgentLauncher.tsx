@@ -19,6 +19,7 @@ const CORNER_INSET = 16; // matches the CSS default right/bottom of 1rem
 const DRAG_THRESHOLD = 4; // px moved before it counts as a drag, not a tap
 const SPIN_FRAMES = Array.from({ length: 8 }, (_, i) => `/tally-${String(i + 1).padStart(2, '0')}.png`);
 const SPIN_INTERVAL_MS = 60_000;
+const SPIN_INTRO_MS = 1_200; // greet with one spin shortly after the page settles
 const FRAME_MS = 120;
 
 type Pos = { left: number; top: number };
@@ -83,6 +84,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
   const [frame, setFrame] = useState(0);
   const [framesReady, setFramesReady] = useState(false);
   const loadedFrames = useRef(new Set<number>());
+  const greetedRef = useRef(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const posRef = useRef<Pos | null>(null);
   const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
@@ -116,8 +118,10 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
     return () => window.removeEventListener('resize', onResize);
   }, [applyPos]);
 
-  // Play the original eight frames once a minute. Keep every image mounted
-  // and wait for them all to load so the first spin never flashes blank.
+  // Play the original eight frames: once shortly after they've loaded, so
+  // Tally greets you on page load, then once a minute after that. Every
+  // image stays mounted and we wait for them all to load so no spin
+  // flashes blank.
   useEffect(() => {
     setFrame(0);
     if (hidden || dragging || !framesReady) return;
@@ -142,11 +146,16 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
       };
       animation = window.requestAnimationFrame(tick);
     };
+    // Greet once per page load — not every time the panel closes.
+    const greet = greetedRef.current
+      ? undefined
+      : window.setTimeout(() => { greetedRef.current = true; play(); }, SPIN_INTRO_MS);
     const timer = window.setInterval(play, SPIN_INTERVAL_MS);
     const onVisibility = () => { if (document.hidden) stop(); };
     reducedMotion.addEventListener('change', stop);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
+      if (greet !== undefined) window.clearTimeout(greet);
       window.clearInterval(timer);
       window.cancelAnimationFrame(animation);
       reducedMotion.removeEventListener('change', stop);
@@ -250,7 +259,6 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
               alt=""
               fill
               sizes="104px"
-              unoptimized
               loading="eager"
               draggable={false}
               style={{ objectFit: 'contain', opacity: frame === index ? 1 : 0 }}

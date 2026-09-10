@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.8';
+export const APP_VERSION = '1.119.9';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.9',
+    date: '2026-09-10',
+    changes: [
+      'The Tally Agent now does its spin once shortly after the page loads, as well as on the once-a-minute loop.',
+      'The eight spin frames are served through the image optimiser now instead of as full-size PNGs, cutting the launcher\'s image download from ~2 MB to a few KB.',
+    ],
+  },
   {
     version: '1.119.8',
     date: '2026-09-10',
