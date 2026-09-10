@@ -1113,6 +1113,7 @@ export default function TallyPage() {
                 setEditingExpense(item);
                 setIsAddModalOpen(true);
               }}
+              onDeleteExpense={handleDeleteExpense}
             />
           </>
         )}

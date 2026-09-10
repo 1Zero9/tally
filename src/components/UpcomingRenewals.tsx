@@ -2,19 +2,21 @@ import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode } from '../types/expense';
 import { getDaysUntilRenewal, convertCurrency } from '../utils/calculations';
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
-import { Edit2, Search } from 'lucide-react';
+import { Edit2, Trash2, Search } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface UpcomingRenewalsProps {
   expenses: ExpenseItem[];
   currency: CurrencyCode;
   onEditExpense: (expense: ExpenseItem) => void;
+  onDeleteExpense: (id: string) => void;
 }
 
 export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
   expenses,
   currency,
   onEditExpense,
+  onDeleteExpense,
 }) => {
   const [query, setQuery] = useState('');
 
@@ -243,9 +245,18 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
                   onClick={() => onEditExpense(item)}
                   className="btn btn-ghost"
                   style={{ padding: '0.35rem 0.45rem' }}
-                  title="Edit record"
+                  title="Edit bill"
                 >
                   <Edit2 size={14} />
+                </button>
+                <button
+                  onClick={() => onDeleteExpense(item.id)}
+                  className="btn btn-ghost"
+                  style={{ padding: '0.35rem 0.45rem', color: 'var(--ha-red)' }}
+                  title="Delete bill"
+                  aria-label={`Delete ${item.name}`}
+                >
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>

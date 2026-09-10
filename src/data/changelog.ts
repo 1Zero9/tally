@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.1';
+export const APP_VERSION = '1.121.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.2',
+    date: '2026-09-10',
+    changes: [
+      'The Bills tab schedule rows now have a delete button next to edit, so a bill can be removed without going to the Spending list.',
+    ],
+  },
   {
     version: '1.121.1',
     date: '2026-09-10',
