@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.6';
+export const APP_VERSION = '1.121.7';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.7',
+    date: '2026-09-10',
+    changes: [
+      'Statement imports now show the real date range they cover — taken from the transactions themselves, not the name you typed — in the review header and the Statements list, alongside the statement period if one was read off a PDF/photo.',
+      'Fixed the balance-reconciliation check for credit-card and loan statements: their stated balance is money owed, so a purchase raises it and a payment lowers it — the opposite of a current account. It was previously reporting a large false "unaccounted for" figure on those.',
+    ],
+  },
   {
     version: '1.121.6',
     date: '2026-09-10',

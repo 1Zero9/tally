@@ -187,7 +187,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [label, setLabel] = useState('');
   const [accountId, setAccountId] = useState('');
-  const [importAccount, setImportAccount] = useState<{ id: string; name: string; institution?: string | null } | null>(null);
+  const [importAccount, setImportAccount] = useState<{ id: string; name: string; type?: string | null; institution?: string | null } | null>(null);
+  const [importPeriod, setImportPeriod] = useState<string | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<string[][]>([]);
   const [dateCol, setDateCol] = useState<number | null>(null);
@@ -366,6 +367,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setSubmitError('');
     setImportId(null);
     setImportLabel('');
+    setImportPeriod(null);
     setImportBalances(null);
     setIsRenamingImport(false);
     setRenameLabelInput('');
@@ -466,6 +468,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
             setImportId(initialImportId);
             setImportLabel(data.import?.label || 'Statement import');
             setImportAccount(data.import?.account || null);
+            setImportPeriod(data.import?.statementPeriod ?? null);
             setImportBalances({
               openingBalance: data.import?.openingBalance ?? null,
               closingBalance: data.import?.closingBalance ?? null,
@@ -802,6 +805,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       setImportId(data.import.id);
       setImportLabel(data.import.label);
       setImportAccount(accounts.find((a) => a.id === accountId) || null);
+      setImportPeriod(data.import.statementPeriod ?? accountInfo?.statementPeriod ?? null);
       setImportBalances({
         openingBalance: data.import.openingBalance ?? null,
         closingBalance: data.import.closingBalance ?? null,
@@ -1178,9 +1182,22 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const reconciliation = (() => {
     if (!importBalances || importBalances.openingBalance == null || importBalances.closingBalance == null) return null;
     const loggedTotal = transactions.reduce((sum, t) => sum + (t.direction === 'CREDIT' ? t.amount : -t.amount), 0);
-    const expectedTotal = importBalances.closingBalance - importBalances.openingBalance;
+    // On a liability account (credit card, loan) the stated balance is what
+    // you *owe*: a purchase (DEBIT) raises it and a payment (CREDIT) lowers
+    // it — the opposite of a current account — so the expected balance
+    // change is the negative of the logged (credits − debits) total.
+    const isLiability = importAccount?.type === 'CREDIT_CARD' || importAccount?.type === 'LOAN';
+    const rawChange = importBalances.closingBalance - importBalances.openingBalance;
+    const expectedTotal = isLiability ? -rawChange : rawChange;
     const difference = expectedTotal - loggedTotal;
     return { loggedTotal, expectedTotal, difference, reconciled: Math.abs(difference) < 0.01 };
+  })();
+
+  // The actual span the loaded rows cover — the reliable "when", straight
+  // off the transactions rather than the free-text label.
+  const coveredRange = (() => {
+    const dates = transactions.map((t) => t.date).filter(Boolean).sort();
+    return dates.length ? { from: dates[0], to: dates[dates.length - 1] } : null;
   })();
 
   // Sorting is applied to the flat list before grouping, so both which
@@ -1273,6 +1290,12 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
               {step === 'map' && (aiRows ? `${aiRows.length} transaction${aiRows.length === 1 ? '' : 's'} found — check the details below before importing.` : `${rows.length} rows found — tell us which columns are which.`)}
               {step === 'review' && (importAccount ? `${importAccount.name}${importAccount.institution ? ` — ${importAccount.institution}` : ''} · Confirm matches, link forgotten payments, or ignore what you don't need.` : 'Confirm matches, link forgotten payments, or ignore what you don\'t need.')}
             </p>
+            {step === 'review' && (coveredRange || importPeriod) && (
+              <p style={{ fontSize: '0.74rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
+                {coveredRange && <>Covers {formatDate(coveredRange.from)} – {formatDate(coveredRange.to)}</>}
+                {importPeriod && <>{coveredRange ? ' · ' : ''}Statement period: {importPeriod}</>}
+              </p>
+            )}
           </div>
           <button onClick={requestClose} className="btn btn-ghost" style={{ padding: '0.35rem' }}>
             <X size={18} />

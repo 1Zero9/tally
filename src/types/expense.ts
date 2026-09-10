@@ -376,6 +376,10 @@ export interface StatementImportSummary {
   openingBalance?: number | null;
   closingBalance?: number | null;
   statementPeriod?: string | null;
+  /** The earliest / latest transaction date in the import — the real span
+   *  it covers, computed from the rows, not the user's label. */
+  coversFrom?: string | null;
+  coversTo?: string | null;
 }
 
 export interface IncomeSummary {

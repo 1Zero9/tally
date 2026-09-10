@@ -4,6 +4,7 @@ import type { ExpenseItem, IncomeItem, StatementImportSummary, CurrencyCode, Acc
 import { StatementImportModal } from './StatementImportModal';
 import { CollapsibleSection } from './CollapsibleSection';
 import { AttachmentStrip } from './AttachmentStrip';
+import { formatDate } from '../utils/formatters';
 
 interface StatementsSectionProps {
   expenses: ExpenseItem[];
@@ -211,6 +212,16 @@ export const StatementsSection: React.FC<StatementsSectionProps> = ({ expenses, 
                         {imp.unmatched > 0 && <span style={{ color: 'var(--ha-red)', fontWeight: 600 }}> • {imp.unmatched} need review</span>}
                         {imp.duplicate > 0 && <span> • {imp.duplicate} duplicate{imp.duplicate === 1 ? '' : 's'} skipped</span>}
                       </div>
+                      {(imp.coversFrom || imp.statementPeriod) && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--ha-muted)' }}>
+                          {imp.coversFrom && imp.coversTo && (
+                            <span>Covers {formatDate(imp.coversFrom)} – {formatDate(imp.coversTo)}</span>
+                          )}
+                          {imp.statementPeriod && (
+                            <span>{imp.coversFrom ? ' · ' : ''}Statement period: {imp.statementPeriod}</span>
+                          )}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

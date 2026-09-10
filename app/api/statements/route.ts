@@ -28,18 +28,25 @@ export async function GET() {
       include: {
         createdBy: { select: { id: true, name: true, role: true } },
         account: { select: { id: true, name: true, type: true, institution: true } },
-        transactions: { select: { status: true } },
+        transactions: { select: { status: true, date: true } },
       },
     });
 
-    const results = imports.map(({ transactions, ...rest }) => ({
-      ...rest,
-      total: transactions.length,
-      matched: transactions.filter((t) => t.status === 'MATCHED').length,
-      unmatched: transactions.filter((t) => t.status === 'UNMATCHED').length,
-      ignored: transactions.filter((t) => t.status === 'IGNORED').length,
-      duplicate: transactions.filter((t) => t.status === 'DUPLICATE').length,
-    }));
+    const results = imports.map(({ transactions, ...rest }) => {
+      // The real span the import covers, straight off the rows — always
+      // present (CSV and PDF alike) and independent of the free-text label.
+      const dates = transactions.map((t) => t.date).filter(Boolean).sort();
+      return {
+        ...rest,
+        total: transactions.length,
+        matched: transactions.filter((t) => t.status === 'MATCHED').length,
+        unmatched: transactions.filter((t) => t.status === 'UNMATCHED').length,
+        ignored: transactions.filter((t) => t.status === 'IGNORED').length,
+        duplicate: transactions.filter((t) => t.status === 'DUPLICATE').length,
+        coversFrom: dates[0] ?? null,
+        coversTo: dates[dates.length - 1] ?? null,
+      };
+    });
 
     return NextResponse.json({ status: 'ok', imports: results });
   } catch (error: unknown) {
