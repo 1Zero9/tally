@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2, GitMerge, Check } from 'lucide-react';
+import { X, Loader2, GitMerge, Check, Search } from 'lucide-react';
 import type { CustomCategoryItem, ExpenseItem } from '../types/expense';
 import type { DuplicateGroup } from '../utils/duplicateExpenses';
 import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
@@ -38,6 +38,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const setKeep = (groupKey: string, id: string) =>
     setKeepBy((prev) => ({ ...prev, [groupKey]: id }));
@@ -68,23 +69,56 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
     }
   };
 
-  const visibleGroups = groups.filter((g) => !doneKeys.has(g.key));
-  const allDone = visibleGroups.length === 0;
+  const q = query.trim().toLowerCase();
+  const pending = groups.filter((g) => !doneKeys.has(g.key));
+  const visibleGroups = q
+    ? pending.filter((g) => {
+        const s = g.items[0];
+        return s.name.toLowerCase().includes(q) || (s.vendor?.toLowerCase().includes(q) ?? false);
+      })
+    : pending;
+  const allDone = pending.length === 0;
 
   return (
     <div className="modal-overlay" {...overlayHandlers}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--ha-line)' }}>
           <div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Merge duplicate bills</h3>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Merge duplicates</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-              Keep one record per bill. Payments, matched statement rows, receipts and links move to the one you keep; the rest are deleted.
+              Records that look like the same bill added more than once. Pick one to keep — its payments, matched statement rows, receipts and links move onto it; the rest are deleted.
             </p>
           </div>
           <button onClick={onClose} className="btn btn-ghost" style={{ padding: '0.35rem' }} aria-label="Close">
             <X size={18} />
           </button>
         </div>
+
+        {!allDone && pending.length > 3 && (
+          <div style={{ padding: '0.85rem 1.5rem 0' }}>
+            <div className="ha-ledger-search">
+              <Search size={15} color="var(--ha-muted)" style={{ position: 'absolute', left: '0.75rem', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Search these"
+                aria-label="Search duplicates"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="ha-input"
+                style={{ paddingLeft: '2.2rem', paddingRight: query ? '2rem' : '0.85rem', width: '100%', fontSize: '0.85rem' }}
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  style={{ position: 'absolute', right: '0.6rem', background: 'none', border: 'none', color: 'var(--ha-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div style={{ padding: '1rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem', maxHeight: '65vh', overflowY: 'auto' }}>
           {error && (
@@ -98,6 +132,10 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
               <Check size={22} style={{ color: 'var(--ha-blue)', marginBottom: '0.5rem' }} />
               <div>All duplicates merged.</div>
               <button onClick={onClose} className="btn btn-primary" style={{ fontSize: '0.8rem', marginTop: '1rem' }}>Done</button>
+            </div>
+          ) : visibleGroups.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '1.5rem 1rem', color: 'var(--ha-muted)', fontSize: '0.85rem' }}>
+              None of the {pending.length} groups match &ldquo;{query.trim()}&rdquo;.
             </div>
           ) : (
             visibleGroups.map((group) => {

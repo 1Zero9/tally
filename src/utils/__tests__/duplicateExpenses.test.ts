@@ -58,4 +58,21 @@ describe('groupPossibleDuplicates', () => {
     ]);
     expect(groups).toHaveLength(0);
   });
+
+  it('does not flag same-price one-offs on different days as duplicates', () => {
+    const groups = groupPossibleDuplicates([
+      base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-02', statementImportId: 'jul' }),
+      base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-09', statementImportId: 'jul' }),
+      base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-08-01', statementImportId: 'aug' }),
+    ]);
+    expect(groups).toHaveLength(0);
+  });
+
+  it('does flag a same-date one-off pulled from two overlapping imports', () => {
+    const groups = groupPossibleDuplicates([
+      base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-02', statementImportId: 'jul-a' }),
+      base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-02', statementImportId: 'jul-b' }),
+    ]);
+    expect(groups).toHaveLength(1);
+  });
 });

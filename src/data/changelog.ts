@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.2';
+export const APP_VERSION = '1.121.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.3',
+    date: '2026-09-10',
+    changes: [
+      'Duplicate detection no longer flags one-off expenses that just happen to share a price — three €4.50 coffees on different days are three purchases, not a duplicate. A one-off only counts as a duplicate when the date matches too (the same charge pulled from two overlapping statement imports). Recurring bills are unchanged.',
+      'The merge dialog is retitled "Merge duplicates", explains itself better, gains a search box when there are several groups, and its launch button now stands out.',
+    ],
+  },
   {
     version: '1.121.2',
     date: '2026-09-10',

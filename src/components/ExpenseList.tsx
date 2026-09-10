@@ -256,12 +256,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           )}
           {duplicateCount > 0 && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span>{duplicateGroups.length} possible duplicate {duplicateGroups.length === 1 ? 'bill' : 'bills'} ({duplicateCount} records)</span>
+              <span>{duplicateGroups.length} possible {duplicateGroups.length === 1 ? 'duplicate' : 'duplicates'} ({duplicateCount} records)</span>
               <button
                 type="button"
                 onClick={() => setShowMergeModal(true)}
-                className="btn btn-secondary"
-                style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', minHeight: 0 }}
+                className="btn"
+                style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem', minHeight: 0, backgroundColor: 'var(--ha-lime)', color: 'var(--ha-ink)', border: '1px solid var(--ha-lime)' }}
               >
                 Review &amp; merge
               </button>
