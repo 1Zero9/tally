@@ -1582,12 +1582,13 @@ input:checked + .slider:before {
 /* The occasional prompt bubble by the launcher. */
 .ha-agent-nudge {
   position: absolute;
-  max-width: 230px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 2rem));
   background: var(--ha-white);
   border: 1px solid var(--ha-line);
   border-radius: 14px;
   box-shadow: 0 12px 30px rgba(24, 43, 34, 0.18);
-  padding: 0.65rem 0.7rem 0.5rem;
+  padding: 0.7rem 0.85rem 0.55rem;
   animation: haNudgeIn 0.12s ease-out;
 }
 .ha-agent-nudge[data-place^='above'] { bottom: calc(100% + 10px); }

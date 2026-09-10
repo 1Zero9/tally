@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.10';
+export const APP_VERSION = '1.119.11';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.11',
+    date: '2026-09-10',
+    changes: [
+      'Widened the Tally Agent speech bubble so longer prompts like the welcome message aren\'t cramped — it now sizes to its text up to a wider cap, still clamped to the screen on mobile.',
+    ],
+  },
   {
     version: '1.119.10',
     date: '2026-09-10',
