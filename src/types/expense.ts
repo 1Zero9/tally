@@ -152,6 +152,8 @@ export interface IncomeItem {
   lastReceivedAt?: string | null;
   depositAccountId?: string | null;
   depositAccount?: AccountSummary | null;
+  /** Set when this record was created from a statement-import credit row. */
+  statementImportId?: string | null;
   createdById?: string | null;
   createdBy?: {
     id: string;

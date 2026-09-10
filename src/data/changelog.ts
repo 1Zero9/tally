@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.9';
+export const APP_VERSION = '1.122.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.122.0',
+    date: '2026-09-10',
+    changes: [
+      'Income now gets the same duplicate handling bills have. The Income tab flags repeated records with a "Review & merge" button (the received-payment history moves to the record you keep), and "Add as income" on a statement row you already track now offers "Link to it" instead of quietly making a second copy.',
+      'The Merge dialog is now shared between bills and income.',
+    ],
+  },
   {
     version: '1.121.9',
     date: '2026-09-10',

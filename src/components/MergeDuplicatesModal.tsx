@@ -1,33 +1,33 @@
 import React, { useState } from 'react';
 import { X, Loader2, GitMerge, Check, Search } from 'lucide-react';
-import type { CustomCategoryItem, ExpenseItem } from '../types/expense';
-import type { DuplicateGroup } from '../utils/duplicateExpenses';
-import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
-import { getCategoryMeta } from '../data/categories';
+import type { MergeGroup, MergeCandidate } from '../utils/duplicateExpenses';
+import { formatCurrency } from '../utils/formatters';
 import { useOverlayClose } from '../hooks/useOverlayClose';
 
 interface MergeDuplicatesModalProps {
-  groups: DuplicateGroup[];
-  customCategories?: CustomCategoryItem[];
+  groups: MergeGroup[];
+  /** POST { keepId, mergeIds } here to merge a group. */
+  endpoint: string;
+  /** "bill" | "income" — used in the copy. */
+  noun: string;
   onClose: () => void;
   /** Called after a successful merge so the parent can refetch. */
   onMerged: () => void;
 }
 
-/** The record most worth keeping — one tied to a goal or a tracked
- *  contract, otherwise the oldest. */
-function pickKeeper(items: ExpenseItem[]): string {
-  const curated = items.find((e) => e.linkedGoalId || e.contractEndDate);
+/** The record most worth keeping — a curated one (tied to a goal etc.),
+ *  otherwise the oldest. */
+function pickKeeper(items: MergeCandidate[]): string {
+  const curated = items.find((i) => i.curated);
   if (curated) return curated.id;
-  const oldest = [...items].sort((a, b) =>
-    (a.createdAt || '').localeCompare(b.createdAt || '')
-  )[0];
+  const oldest = [...items].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))[0];
   return (oldest || items[0]).id;
 }
 
 export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
   groups,
-  customCategories = [],
+  endpoint,
+  noun,
   onClose,
   onMerged,
 }) => {
@@ -43,14 +43,14 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
   const setKeep = (groupKey: string, id: string) =>
     setKeepBy((prev) => ({ ...prev, [groupKey]: id }));
 
-  const mergeGroup = async (group: DuplicateGroup) => {
+  const mergeGroup = async (group: MergeGroup) => {
     const keepId = keepBy[group.key] || pickKeeper(group.items);
     const mergeIds = group.items.map((i) => i.id).filter((id) => id !== keepId);
     if (mergeIds.length === 0) return;
     setBusyKey(group.key);
     setError(null);
     try {
-      const res = await fetch('/api/expenses/merge', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keepId, mergeIds }),
@@ -72,10 +72,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
   const q = query.trim().toLowerCase();
   const pending = groups.filter((g) => !doneKeys.has(g.key));
   const visibleGroups = q
-    ? pending.filter((g) => {
-        const s = g.items[0];
-        return s.name.toLowerCase().includes(q) || (s.vendor?.toLowerCase().includes(q) ?? false);
-      })
+    ? pending.filter((g) => g.items[0].name.toLowerCase().includes(q))
     : pending;
   const allDone = pending.length === 0;
 
@@ -86,7 +83,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Merge duplicates</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-              Records that look like the same bill added more than once. Pick one to keep — its payments, matched statement rows, receipts and links move onto it; the rest are deleted.
+              Records that look like the same {noun} added more than once. Pick one to keep — everything linked to it moves onto it; the rest are deleted.
             </p>
           </div>
           <button onClick={onClose} className="btn btn-ghost" style={{ padding: '0.35rem' }} aria-label="Close">
@@ -140,18 +137,17 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
           ) : (
             visibleGroups.map((group) => {
               const sample = group.items[0];
-              const cat = getCategoryMeta(sample.category, customCategories);
               const keepId = keepBy[group.key] || pickKeeper(group.items);
               const busy = busyKey === group.key;
               return (
                 <div key={group.key} style={{ flexShrink: 0, border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-md)', overflow: 'hidden' }}>
                   <div style={{ padding: '0.6rem 0.85rem', backgroundColor: '#fafaf7', borderBottom: '1px solid var(--ha-line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, color: 'var(--ha-ink)', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <span style={{ width: '9px', height: '9px', borderRadius: '2px', backgroundColor: sample.color || cat.color, display: 'inline-block' }} />
+                      <span style={{ width: '9px', height: '9px', borderRadius: '2px', backgroundColor: sample.colour || 'var(--ha-muted)', display: 'inline-block' }} />
                       {sample.name}
                     </span>
                     <span className="tabular-nums" style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
-                      {formatCurrency(sample.amount, sample.currency)}{formatBillingCycle(sample.billingCycle)} · {group.items.length} copies
+                      {formatCurrency(sample.amount, sample.currency)}{sample.cycleSuffix} · {group.items.length} copies
                     </span>
                   </div>
 
@@ -173,19 +169,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
                             {item.id === keepId ? 'Keep this one' : 'Merge in'}
                           </span>
                           <br />
-                          <span style={{ color: 'var(--ha-muted)' }}>
-                            Due {formatDate(item.nextRenewalDate)}
-                            {' · '}
-                            {item.statementImport?.label
-                              ? `From “${item.statementImport.label}”`
-                              : item.statementImportId
-                                ? 'From a statement import'
-                                : 'Added manually'}
-                            {item.createdBy?.name ? ` · ${item.createdBy.name.split(' ')[0]}` : ''}
-                            {item.linkedGoalId ? ' · linked to a goal' : ''}
-                            {item.contractEndDate ? ' · has a contract end date' : ''}
-                            {!item.isActive ? ' · paused' : ''}
-                          </span>
+                          <span style={{ color: 'var(--ha-muted)' }}>{item.subline}</span>
                         </span>
                       </label>
                     ))}

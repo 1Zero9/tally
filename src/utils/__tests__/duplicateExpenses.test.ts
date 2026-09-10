@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { groupPossibleDuplicates } from '../duplicateExpenses';
-import type { ExpenseItem } from '../../types/expense';
+import { groupPossibleDuplicates, groupPossibleDuplicateIncomes } from '../duplicateExpenses';
+import type { ExpenseItem, IncomeItem } from '../../types/expense';
 
 const base = (over: Partial<ExpenseItem>): ExpenseItem => ({
   id: Math.random().toString(36).slice(2),
@@ -74,5 +74,37 @@ describe('groupPossibleDuplicates', () => {
       base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-02', statementImportId: 'jul-b' }),
     ]);
     expect(groups).toHaveLength(1);
+  });
+});
+
+const income = (over: Partial<IncomeItem>): IncomeItem => ({
+  id: Math.random().toString(36).slice(2),
+  name: 'Acme Corp Salary',
+  amount: 3200,
+  currency: 'EUR',
+  frequency: 'monthly',
+  category: 'salary',
+  isActive: true,
+  nextPayDate: '2026-10-28',
+  ...over,
+});
+
+describe('groupPossibleDuplicateIncomes', () => {
+  it('groups income with a matching merchant + amount + frequency', () => {
+    const groups = groupPossibleDuplicateIncomes([
+      income({ nextPayDate: '2026-08-28', statementImportId: 'aug' }),
+      income({ nextPayDate: '2026-09-28', statementImportId: 'sep' }),
+      income({ nextPayDate: '2026-10-28', statementImportId: 'oct' }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].items).toHaveLength(3);
+  });
+
+  it('keeps different amounts apart', () => {
+    const groups = groupPossibleDuplicateIncomes([
+      income({ amount: 3200 }),
+      income({ amount: 3400 }),
+    ]);
+    expect(groups).toHaveLength(0);
   });
 });

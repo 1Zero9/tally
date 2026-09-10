@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 import { getErrorMessage } from '@/src/lib/errors';
 import { requireHouseholdUser } from '@/src/lib/auth';
-import { buildAliasPattern, sanitizeImportedText, findDuplicateRecurringExpense } from '@/src/lib/statementMatching';
+import { buildAliasPattern, sanitizeImportedText, findDuplicateRecurringExpense, findDuplicateIncome } from '@/src/lib/statementMatching';
 import { getCategoryMeta, isBuiltinCategory } from '@/src/data/categories';
 import { advanceByCycle } from '@/src/lib/billing';
 import type { BillingCycle, ExpenseCategory } from '@/src/types/expense';
@@ -363,6 +363,21 @@ export async function POST(
 
       const parsedAmount = Number(body.amount);
       const amount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : tx.amount;
+
+      if (body.allowDuplicate !== true) {
+        const existing = await prisma.income.findMany({
+          where: { householdId: auth.user.householdId, isActive: true },
+          select: { id: true, name: true, amount: true, currency: true, frequency: true, isActive: true },
+        });
+        const dup = findDuplicateIncome({ name, amount, currency: tx.currency }, existing);
+        if (dup) {
+          return NextResponse.json({
+            status: 'error',
+            duplicateOf: dup,
+            message: `You already track income "${dup.name}". Link this credit to it, or add anyway.`,
+          }, { status: 409 });
+        }
+      }
 
       const statementImport = await prisma.statementImport.findUnique({ where: { id: tx.importId } });
 

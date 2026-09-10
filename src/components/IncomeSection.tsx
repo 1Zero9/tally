@@ -5,6 +5,8 @@ import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatt
 import { Edit2, Trash2, Plus, Wallet, User, CheckCircle2 } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SensitiveValue } from './SensitiveValue';
+import { groupPossibleDuplicateIncomes, type MergeGroup } from '../utils/duplicateExpenses';
+import { MergeDuplicatesModal } from './MergeDuplicatesModal';
 
 const CATEGORY_LABELS: Record<string, string> = {
   salary: 'Salary / wages',
@@ -25,6 +27,8 @@ interface IncomeSectionProps {
   onOpenAddModal: () => void;
   isSensitiveRevealed: (id: string) => boolean;
   onRevealSensitive: (id: string) => void;
+  /** Called after duplicate income records are merged, so the parent can refetch. */
+  onMerged?: () => void;
 }
 
 export const IncomeSection: React.FC<IncomeSectionProps> = ({
@@ -38,10 +42,33 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
   onOpenAddModal,
   isSensitiveRevealed,
   onRevealSensitive,
+  onMerged,
 }) => {
   const [markingReceivedId, setMarkingReceivedId] = useState<string | null>(null);
   const [receivedAmountInput, setReceivedAmountInput] = useState('');
   const [receivedDateInput, setReceivedDateInput] = useState('');
+  const [showMergeModal, setShowMergeModal] = useState(false);
+
+  const duplicateGroups = groupPossibleDuplicateIncomes(incomes);
+  const duplicateCount = duplicateGroups.reduce((n, g) => n + g.items.length, 0);
+  const mergeGroups: MergeGroup[] = duplicateGroups.map((g) => ({
+    key: g.key,
+    items: g.items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      amount: i.amount,
+      currency: i.currency,
+      cycleSuffix: formatBillingCycle(i.frequency),
+      subline: [
+        i.nextPayDate ? `Next pay ${formatDate(i.nextPayDate)}` : null,
+        i.statementImportId ? 'From a statement import' : 'Added manually',
+        i.createdBy?.name ? i.createdBy.name.split(' ')[0] : null,
+        i.lastReceivedAt ? `last received ${formatDate(i.lastReceivedAt)}` : null,
+        !i.isActive ? 'paused' : null,
+      ].filter(Boolean).join(' · '),
+      createdAt: i.createdAt,
+    })),
+  }));
 
   const startMarkingReceived = (item: IncomeItem) => {
     setMarkingReceivedId(item.id);
@@ -76,6 +103,19 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
             <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '600px', marginTop: '0.25rem' }}>
               Salary, freelance, rental and any other regular income.
             </p>
+            {duplicateGroups.length > 0 && (
+              <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                <span>{duplicateGroups.length} possible {duplicateGroups.length === 1 ? 'duplicate' : 'duplicates'} ({duplicateCount} records)</span>
+                <button
+                  type="button"
+                  onClick={() => setShowMergeModal(true)}
+                  className="btn"
+                  style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem', minHeight: 0, backgroundColor: 'var(--ha-lime)', color: 'var(--ha-ink)', border: '1px solid var(--ha-lime)' }}
+                >
+                  Review &amp; merge
+                </button>
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -286,6 +326,16 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({
           </div>
         )}
       </CollapsibleSection>
+
+      {showMergeModal && (
+        <MergeDuplicatesModal
+          groups={mergeGroups}
+          endpoint="/api/income/merge"
+          noun="income"
+          onClose={() => setShowMergeModal(false)}
+          onMerged={() => onMerged?.()}
+        />
+      )}
     </div>
   );
 };

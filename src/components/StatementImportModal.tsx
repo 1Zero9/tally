@@ -236,10 +236,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [addingBillTxId, setAddingBillTxId] = useState<string | null>(null);
   const [billCycleInput, setBillCycleInput] = useState<Record<string, string>>({});
   const [billAmountInput, setBillAmountInput] = useState<Record<string, string>>({});
-  // Set when "Add as bill" hit an existing matching bill — the row shows a
-  // "link to it vs add a separate one" choice instead of a blunt confirm.
-  const [billDupPrompt, setBillDupPrompt] = useState<
-    { txId: string; duplicateOf: { id: string; name: string; amount: number }; extra: Record<string, unknown> } | null
+  // Set when "Add as bill" / "Add as income" hit an existing matching
+  // record — the row shows a "link to it vs add a separate one" choice
+  // instead of a blunt confirm.
+  const [dupPrompt, setDupPrompt] = useState<
+    { txId: string; action: 'add_bill' | 'add_income'; duplicateOf: { id: string; name: string; amount: number }; extra: Record<string, unknown> } | null
   >(null);
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
@@ -395,6 +396,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     setAddingBillTxId(null);
     setBillCycleInput({});
     setBillAmountInput({});
+    setDupPrompt(null);
     setRenamingTxId(null);
     setNicknameInput({});
     setRenamingGroupKey(null);
@@ -852,6 +854,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         setLoggingTransferTxId(null);
         setAddingIncomeTxId(null);
         setAddingBillTxId(null);
+        setDupPrompt(null);
         setRenamingTxId(null);
         // 'reset' can delete an import-created bill/transfer (and un-mark a
         // linked income), so the rest of the app needs a refresh too. When
@@ -863,12 +866,13 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         }
         return true;
       }
-      // Adding a recurring bill that already exists — show an inline choice
-      // on the row (link to the existing bill, or add a separate one)
+      // Adding a bill/income that already exists — show an inline choice on
+      // the row (link to the existing record, or add a separate one)
       // rather than a blunt confirm whose default is "add anyway".
-      if (data.duplicateOf && action === 'add_bill' && !opts?.silent) {
+      if (data.duplicateOf && (action === 'add_bill' || action === 'add_income') && !opts?.silent) {
         setAddingBillTxId(null);
-        setBillDupPrompt({ txId, duplicateOf: data.duplicateOf, extra: extra ?? {} });
+        setAddingIncomeTxId(null);
+        setDupPrompt({ txId, action, duplicateOf: data.duplicateOf, extra: extra ?? {} });
         return false;
       }
       // Surface a real failure instead of the row just silently not moving —
@@ -2461,42 +2465,47 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                 </div>
                               )}
 
-                              {billDupPrompt?.txId === tx.id ? (
+                              {dupPrompt?.txId === tx.id ? (() => {
+                                const isIncome = dupPrompt.action === 'add_income';
+                                const linkAction = isIncome ? 'link_income' : 'link_expense';
+                                const linkExtra = isIncome ? { incomeId: dupPrompt.duplicateOf.id } : { expenseId: dupPrompt.duplicateOf.id };
+                                return (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--ha-radius-sm)', backgroundColor: 'var(--ha-lime-tint)', border: '1px solid var(--ha-lime)' }}>
                                   <span style={{ fontSize: '0.75rem', color: 'var(--ha-ink)' }}>
-                                    You already track a bill like this — <strong>{billDupPrompt.duplicateOf.name}</strong> ({formatCurrency(billDupPrompt.duplicateOf.amount, householdCurrency)}). Linking this charge to it keeps your totals right.
+                                    You already track {isIncome ? 'income' : 'a bill'} like this — <strong>{dupPrompt.duplicateOf.name}</strong> ({formatCurrency(dupPrompt.duplicateOf.amount, householdCurrency)}). Linking this {isIncome ? 'credit' : 'charge'} to it keeps your totals right.
                                   </span>
                                   <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                                     <button
                                       disabled={isBusy}
                                       onClick={async () => {
-                                        const prompt = billDupPrompt;
-                                        setBillDupPrompt(null);
-                                        await resolveTx(prompt.txId, 'link_expense', { expenseId: prompt.duplicateOf.id });
+                                        const prompt = dupPrompt;
+                                        setDupPrompt(null);
+                                        await resolveTx(prompt.txId, linkAction, linkExtra);
                                       }}
                                       className="btn btn-primary"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
                                     >
-                                      {isBusy ? <Loader2 size={12} className="spin" /> : <Link2 size={12} />} Link to {billDupPrompt.duplicateOf.name}
+                                      {isBusy ? <Loader2 size={12} className="spin" /> : <Link2 size={12} />} Link to {dupPrompt.duplicateOf.name}
                                     </button>
                                     <button
                                       disabled={isBusy}
                                       onClick={async () => {
-                                        const prompt = billDupPrompt;
-                                        setBillDupPrompt(null);
-                                        await resolveTx(prompt.txId, 'add_bill', { ...prompt.extra, allowDuplicate: true });
+                                        const prompt = dupPrompt;
+                                        setDupPrompt(null);
+                                        await resolveTx(prompt.txId, prompt.action, { ...prompt.extra, allowDuplicate: true });
                                       }}
                                       className="btn btn-ghost"
                                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}
                                     >
-                                      Add as a separate bill
+                                      Add as a separate {isIncome ? 'income' : 'bill'}
                                     </button>
-                                    <button onClick={() => setBillDupPrompt(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                    <button onClick={() => setDupPrompt(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
                                       Cancel
                                     </button>
                                   </div>
                                 </div>
-                              ) : linkingTxId === tx.id ? (
+                                );
+                              })() : linkingTxId === tx.id ? (
                                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                                   <select
                                     className="ha-input"

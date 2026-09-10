@@ -3,7 +3,7 @@ import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/exp
 import { getCategoryMeta, getOrderedCategories } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
-import { groupPossibleDuplicates } from '../utils/duplicateExpenses';
+import { groupPossibleDuplicates, type MergeGroup } from '../utils/duplicateExpenses';
 import { MergeDuplicatesModal } from './MergeDuplicatesModal';
 import { hasTextSelection } from '../utils/dom';
 import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal, Loader2 } from 'lucide-react';
@@ -137,6 +137,30 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const duplicateIds = new Set(duplicateGroups.flatMap((g) => g.items.map((i) => i.id)));
   const isPossibleDuplicate = (e: ExpenseItem) => duplicateIds.has(e.id);
   const duplicateCount = duplicateIds.size;
+
+  const mergeGroups: MergeGroup[] = duplicateGroups.map((g) => ({
+    key: g.key,
+    items: g.items.map((e) => ({
+      id: e.id,
+      name: e.name,
+      amount: e.amount,
+      currency: e.currency,
+      cycleSuffix: formatBillingCycle(e.billingCycle),
+      colour: e.color || getCategoryMeta(e.category, customCategories).color,
+      subline: [
+        `Due ${formatDate(e.nextRenewalDate)}`,
+        e.statementImport?.label
+          ? `From “${e.statementImport.label}”`
+          : e.statementImportId ? 'From a statement import' : 'Added manually',
+        e.createdBy?.name ? e.createdBy.name.split(' ')[0] : null,
+        e.linkedGoalId ? 'linked to a goal' : null,
+        e.contractEndDate ? 'has a contract end date' : null,
+        !e.isActive ? 'paused' : null,
+      ].filter(Boolean).join(' · '),
+      createdAt: e.createdAt,
+      curated: !!(e.linkedGoalId || e.contractEndDate),
+    })),
+  }));
 
   // Filter items
   const filteredItems = expenses.filter((item) => {
@@ -775,8 +799,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
       {showMergeModal && (
         <MergeDuplicatesModal
-          groups={duplicateGroups}
-          customCategories={customCategories}
+          groups={mergeGroups}
+          endpoint="/api/expenses/merge"
+          noun="bill"
           onClose={() => setShowMergeModal(false)}
           onMerged={() => onMerged?.()}
         />

@@ -550,3 +550,26 @@ export function findDuplicateRecurringExpense(
   }
   return null;
 }
+
+/**
+ * Income equivalent of findDuplicateRecurringExpense — same scoring, used
+ * by "Add as income" so a second copy of the same salary/rental isn't
+ * created from another month's statement.
+ */
+export function findDuplicateIncome(
+  candidate: { name: string; amount: number; currency: string },
+  existing: { id: string; name: string; amount: number; currency: string; frequency: string; isActive: boolean }[]
+): { id: string; name: string; amount: number } | null {
+  return findDuplicateRecurringExpense(
+    candidate,
+    existing.map((e) => ({
+      id: e.id,
+      name: e.name,
+      vendor: null,
+      amount: e.amount,
+      currency: e.currency,
+      billingCycle: e.frequency,
+      isActive: e.isActive,
+    }))
+  );
+}

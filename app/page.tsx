@@ -1091,6 +1091,7 @@ export default function TallyPage() {
               }}
               isSensitiveRevealed={isSensitiveRevealed}
               onRevealSensitive={revealSensitive}
+              onMerged={fetchDatabaseData}
             />
           </>
         )}

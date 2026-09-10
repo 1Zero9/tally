@@ -1,4 +1,4 @@
-import type { ExpenseItem } from '../types/expense';
+import type { CurrencyCode, ExpenseItem, IncomeItem } from '../types/expense';
 import { normalizeDescription } from '../lib/statementMatching';
 
 /**
@@ -47,18 +47,58 @@ export interface DuplicateGroup {
  * bills can simply choose not to merge them.
  */
 export function groupPossibleDuplicates(expenses: ExpenseItem[]): DuplicateGroup[] {
-  const byKey = new Map<string, ExpenseItem[]>();
-  for (const e of expenses) {
-    const k = duplicateKey(e);
-    const arr = byKey.get(k);
-    if (arr) arr.push(e);
-    else byKey.set(k, [e]);
-  }
+  return groupBy(expenses, duplicateKey);
+}
 
-  const groups: DuplicateGroup[] = [];
-  for (const [key, items] of byKey) {
-    if (items.length < 2) continue;
-    groups.push({ key, items });
+/** Income equivalent of duplicateKey — same fingerprint idea, keyed on
+ *  frequency (and pay date for a one-off). */
+export const duplicateIncomeKey = (i: IncomeItem) => {
+  const base = `${merchantFingerprint(i.name)}|${i.amount}|${i.frequency}|${i.currency}`;
+  return i.frequency === 'once' ? `${base}|${i.nextPayDate ?? ''}` : base;
+};
+
+export interface DuplicateIncomeGroup {
+  key: string;
+  items: IncomeItem[];
+}
+
+export function groupPossibleDuplicateIncomes(incomes: IncomeItem[]): DuplicateIncomeGroup[] {
+  return groupBy(incomes, duplicateIncomeKey);
+}
+
+function groupBy<T>(items: T[], keyOf: (t: T) => string): { key: string; items: T[] }[] {
+  const byKey = new Map<string, T[]>();
+  for (const it of items) {
+    const k = keyOf(it);
+    const arr = byKey.get(k);
+    if (arr) arr.push(it);
+    else byKey.set(k, [it]);
   }
-  return groups;
+  return [...byKey.entries()].filter(([, v]) => v.length >= 2).map(([key, items]) => ({ key, items }));
+}
+
+/**
+ * The shape the merge dialog works on — an expense or income row flattened
+ * to just what the dialog needs to render and pick a keeper. Each caller
+ * maps its own records to this.
+ */
+export interface MergeCandidate {
+  id: string;
+  name: string;
+  amount: number;
+  currency: CurrencyCode;
+  /** e.g. "/month" — from formatBillingCycle */
+  cycleSuffix: string;
+  /** dot colour for the group header; a muted default is used if omitted */
+  colour?: string;
+  /** one-line "Due 3 Oct 2026 · From … · Stephen · paused" style summary */
+  subline: string;
+  createdAt?: string;
+  /** prefer this record as the one to keep (e.g. it's tied to a goal) */
+  curated?: boolean;
+}
+
+export interface MergeGroup {
+  key: string;
+  items: MergeCandidate[];
 }
