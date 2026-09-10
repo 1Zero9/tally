@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.4';
+export const APP_VERSION = '1.121.5';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.5',
+    date: '2026-09-10',
+    changes: [
+      'Updated the in-app Help guide (which also feeds the Tally Agent) and the technical overview to match recent changes: the new Reports → Committed view, the "add a bill once, link every month after" rule, the possible-duplicate flag and Review & merge, statement rows naming their source import, the Bills tab search and delete, and the privacy screen hiding the assistant. Also corrected some older stale references (the removed editable Money Map, the old budgets location).',
+    ],
+  },
   {
     version: '1.121.4',
     date: '2026-09-10',
