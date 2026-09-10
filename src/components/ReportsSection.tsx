@@ -11,19 +11,21 @@ import {
   type TrendBucket,
 } from '../utils/reports';
 import { getOrderedCategories } from '../data/categories';
+import { convertCurrency, getMonthlyContribution, getAnnualEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { exportReportCSV } from '../utils/reportExport';
 import { OptimizationInsights } from './OptimizationInsights';
 import { MoneyFlowInsights } from './MoneyFlowInsights';
-import { TrendingUp, Store, Clock, Sparkles, Download, BarChart3 } from 'lucide-react';
+import { TrendingUp, Store, Clock, Sparkles, Download, BarChart3, Wallet, ChevronRight } from 'lucide-react';
 
 const SPENDING_COLOR = '#176b52';
 const INCOME_COLOR = '#8A5CF6';
 
-type ReportType = 'trends' | 'category-vendor' | 'category-trend' | 'timeline' | 'insights';
+type ReportType = 'trends' | 'category-vendor' | 'committed' | 'category-trend' | 'timeline' | 'insights';
 
 const REPORT_TYPES: { id: ReportType; label: string; icon: React.ReactNode }[] = [
   { id: 'trends', label: 'Trends', icon: <TrendingUp size={14} /> },
   { id: 'category-vendor', label: 'Category & Vendor', icon: <Store size={14} /> },
+  { id: 'committed', label: 'Committed', icon: <Wallet size={14} /> },
   { id: 'category-trend', label: 'Category trend', icon: <BarChart3 size={14} /> },
   { id: 'timeline', label: 'Timeline', icon: <Clock size={14} /> },
   { id: 'insights', label: 'Insights', icon: <Sparkles size={14} /> },
@@ -124,7 +126,7 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         </div>
       </div>
 
-      {reportType !== 'insights' && (
+      {reportType !== 'insights' && reportType !== 'committed' && (
         <div className="ha-print-hide" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.85rem' }}>
           <div className="ha-ledger-status" role="group" aria-label="Report period">
             {PERIODS.map((p) => (
@@ -141,7 +143,9 @@ export const ReportsSection: React.FC<ReportsSectionProps> = ({
         </div>
       )}
 
-      {loading ? (
+      {reportType === 'committed' ? (
+        <CommittedReport expenses={expenses} currency={currency} customCategories={customCategories} />
+      ) : loading ? (
         <div className="ha-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.82rem' }}>
           Loading report…
         </div>
@@ -303,6 +307,152 @@ const CategoryVendorReport: React.FC<{
     />
   </div>
 );
+
+/**
+ * Where the household's committed money goes — its active bills and
+ * expenses grouped by category, biggest first, each category expandable to
+ * the individual items inside it. Built from the tracked Expense list (not
+ * the transaction ledger), so it reflects what you're signed up to spend
+ * regardless of whether payments have been imported. Moved here from the
+ * bottom of the Spending page.
+ */
+const CommittedReport: React.FC<{
+  expenses: ExpenseItem[];
+  currency: CurrencyCode;
+  customCategories: CustomCategoryItem[];
+}> = ({ expenses, currency, customCategories }) => {
+  const [basis, setBasis] = useState<'monthly' | 'annual'>('monthly');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggle = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  // A category's cost on the chosen basis. Monthly uses the steady-state
+  // contribution (a one-off only counts in its own month); annual uses the
+  // yearly-equivalent for recurring items and the full amount for one-offs.
+  const contributionFor = (e: ExpenseItem): number => {
+    if (basis === 'annual') {
+      const yearly =
+        e.billingCycle === 'once'
+          ? getEffectiveAmount(e)
+          : getAnnualEquivalent(getEffectiveAmount(e), e.billingCycle);
+      return convertCurrency(yearly, e.currency, currency);
+    }
+    return convertCurrency(getMonthlyContribution(e), e.currency, currency);
+  };
+
+  const active = expenses.filter((e) => e.isActive);
+  const rows = getOrderedCategories(customCategories)
+    .map((cat) => {
+      const items = active
+        .filter((e) => e.category === cat.id)
+        .map((e) => ({ id: e.id, name: e.name, amount: contributionFor(e) }))
+        .filter((it) => it.amount > 0)
+        .sort((a, b) => b.amount - a.amount);
+      return {
+        key: cat.id,
+        name: cat.meta.name,
+        color: cat.meta.color,
+        items,
+        total: items.reduce((sum, it) => sum + it.amount, 0),
+      };
+    })
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const grand = rows.reduce((sum, r) => sum + r.total, 0);
+  const pctOf = (v: number) => (grand > 0 ? Math.round((v / grand) * 1000) / 10 : 0);
+
+  const handleExport = () =>
+    exportReportCSV(
+      `tally-committed-by-category-${new Date().toISOString().split('T')[0]}.csv`,
+      ['Category', basis === 'annual' ? 'Annual' : 'Monthly', 'Percentage'],
+      rows.map((r) => [r.name, r.total.toFixed(2), `${pctOf(r.total)}%`])
+    );
+
+  if (rows.length === 0) {
+    return (
+      <div className="ha-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.82rem' }}>
+        No active bills or expenses yet. Add some on the Spending page and they&apos;ll break down by category here.
+      </div>
+    );
+  }
+
+  return (
+    <div className="ha-card" style={{ padding: '1.1rem 1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.9rem' }}>
+        <div className="ha-ledger-status" role="group" aria-label="Basis">
+          <button onClick={() => setBasis('monthly')} className={basis === 'monthly' ? 'is-active' : ''} aria-pressed={basis === 'monthly'}>
+            <span>Monthly</span>
+          </button>
+          <button onClick={() => setBasis('annual')} className={basis === 'annual' ? 'is-active' : ''} aria-pressed={basis === 'annual'}>
+            <span>Annual</span>
+          </button>
+        </div>
+        <ExportButton onClick={handleExport} />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+        {rows.map((r) => {
+          const pct = pctOf(r.total);
+          const isOpen = expanded.has(r.key);
+          return (
+            <div key={r.key}>
+              <button
+                type="button"
+                onClick={() => toggle(r.key)}
+                aria-expanded={isOpen}
+                style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', marginBottom: '3px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, color: 'var(--ha-ink)' }}>
+                    <ChevronRight
+                      size={12}
+                      style={{ color: 'var(--ha-muted)', transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}
+                    />
+                    <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: r.color, display: 'inline-block' }} />
+                    {r.name}
+                    <span style={{ color: 'var(--ha-muted)', fontWeight: 400 }}>· {r.items.length}</span>
+                  </span>
+                  <span className="tabular-nums" style={{ color: 'var(--ha-muted)' }}>
+                    {formatCurrency(r.total, currency)} ({pct}%)
+                  </span>
+                </div>
+              </button>
+              <div style={{ height: '6px', backgroundColor: 'var(--ha-line)', borderRadius: 'var(--ha-radius-sm)', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', backgroundColor: r.color }} />
+              </div>
+              {isOpen && (
+                <div style={{ margin: '0.4rem 0 0.2rem 1.15rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {r.items.map((it) => (
+                    <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--ha-muted)' }}>
+                      <span>{it.name}</span>
+                      <span className="tabular-nums">{formatCurrency(it.amount, currency)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.9rem', paddingTop: '0.6rem', borderTop: '1px solid var(--ha-line)', fontSize: '0.82rem', fontWeight: 700, color: 'var(--ha-ink)' }}>
+        <span>Total</span>
+        <span className="tabular-nums">{formatCurrency(grand, currency)} / {basis === 'annual' ? 'year' : 'month'}</span>
+      </div>
+
+      <p style={{ fontSize: '0.72rem', color: 'var(--ha-muted)', marginTop: '0.6rem', lineHeight: 1.5 }}>
+        Your active bills and expenses{basis === 'annual' ? ', as a yearly cost' : ' at their steady monthly rate'}. Paused items are excluded; {basis === 'annual' ? 'one-offs count once' : 'a one-off counts only in the month it falls'}.
+      </p>
+    </div>
+  );
+};
 
 const CategoryTrendReport: React.FC<{
   transactions: ReportTransaction[];

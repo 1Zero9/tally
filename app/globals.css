@@ -802,34 +802,6 @@ input:checked + .slider:before {
 }
 
 /* Spending overview and ledger */
-.ha-spending-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 1.1rem;
-}
-
-.ha-spending-legend-item {
-  display: inline-grid;
-  grid-template-columns: auto auto auto auto;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--ha-muted);
-  font-size: 0.76rem;
-}
-
-.ha-spending-legend-name {
-  color: var(--ha-ink);
-  font-weight: 650;
-}
-
-.ha-spending-legend-amount {
-  color: var(--ha-muted);
-}
-
-.ha-spending-legend-percent {
-  color: #7d8881;
-}
-
 .ha-ledger-card {
   position: relative;
 }
@@ -1438,15 +1410,6 @@ input:checked + .slider:before {
 
   .ha-ledger-status button {
     flex: 0 0 auto;
-  }
-
-  .ha-spending-legend {
-    gap: 0.4rem 0.8rem;
-  }
-
-  .ha-spending-legend-item {
-    width: 100%;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
   }
 
   .ha-stat-row > div {

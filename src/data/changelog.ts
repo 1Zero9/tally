@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.13';
+export const APP_VERSION = '1.120.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.0',
+    date: '2026-09-10',
+    changes: [
+      'New Reports view — "Committed": your active bills and expenses broken down by category, biggest first, with a bar and share for each. Click a category to expand the individual items inside it, and toggle between a monthly and an annual basis.',
+      'This replaces the "By category" breakdown that was buried at the bottom of the Spending page. The Spending page\'s "Understand your spending" section now keeps just "Over time" and "Category limits", and points to Reports → Committed for the category breakdown.',
+    ],
+  },
   {
     version: '1.119.13',
     date: '2026-09-10',

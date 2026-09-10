@@ -9,7 +9,6 @@ import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/ca
 import { formatCurrency } from '@/src/utils/formatters';
 import { Navbar } from '@/src/components/Navbar';
 import type { TabId } from '@/src/components/Navbar';
-import { CategoryBreakdownChart } from '@/src/components/CategoryBreakdownChart';
 import { TrendChart } from '@/src/components/TrendChart';
 import { ExpenseList } from '@/src/components/ExpenseList';
 import { CollapsibleSection } from '@/src/components/CollapsibleSection';
@@ -84,7 +83,7 @@ export default function TallyPage() {
   // real loading state on initial load without flashing on every save.
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  const [spendingAnalysisView, setSpendingAnalysisView] = useState<'categories' | 'history' | 'limits'>('categories');
+  const [spendingAnalysisView, setSpendingAnalysisView] = useState<'history' | 'limits'>('history');
 
   // Users & Auth
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -1039,11 +1038,10 @@ export default function TallyPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                 <div>
                   <h2 id="spending-analysis-heading" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)' }}>Understand your spending</h2>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', marginTop: '0.2rem' }}>Optional summaries and category limits.</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', marginTop: '0.2rem' }}>Spending over time and category limits. For the full breakdown of committed spend by category, see Reports → Committed.</p>
                 </div>
                 <div className="ha-page-tabs" style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto' }} role="tablist" aria-label="Spending analysis">
                   {([
-                    ['categories', 'By category'],
                     ['history', 'Over time'],
                     ['limits', 'Category limits'],
                   ] as const).map(([id, label]) => (
@@ -1053,9 +1051,6 @@ export default function TallyPage() {
                   ))}
                 </div>
               </div>
-              {spendingAnalysisView === 'categories' && (
-                <CategoryBreakdownChart expenses={liveExpenses} currency={currency} customCategories={customCategories} bare />
-              )}
               {spendingAnalysisView === 'history' && (
                 hasData
                   ? <TrendChart currency={currency} metric="spending" title="Spending over time" subtitle="Built from bills marked paid and logged transfers — grows as you go" bare />
