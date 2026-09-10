@@ -143,6 +143,7 @@ export default function TallyPage() {
         // of leaving it to bounce confusingly on some later action.
         try {
           localStorage.removeItem('tally_user');
+          localStorage.removeItem('tally.lastActivityAt');
         } catch {}
         fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
         setIsAuthenticated(false);
@@ -349,6 +350,7 @@ export default function TallyPage() {
     if (!window.confirm('Log out of Tally?')) return;
     try {
       localStorage.removeItem('tally_user');
+      localStorage.removeItem('tally.lastActivityAt');
     } catch {}
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -361,6 +363,7 @@ export default function TallyPage() {
     if (!window.confirm('Sign out of every device, including this one? You will need to sign in again with a fresh code.')) return;
     try {
       localStorage.removeItem('tally_user');
+      localStorage.removeItem('tally.lastActivityAt');
     } catch {}
     try {
       await fetch('/api/auth/sessions', { method: 'DELETE' });
@@ -375,6 +378,7 @@ export default function TallyPage() {
   const handleIdleLogout = useCallback(() => {
     try {
       localStorage.removeItem('tally_user');
+      localStorage.removeItem('tally.lastActivityAt');
     } catch {}
     fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setIdleLogoutNotice("You were signed out after a while of inactivity. Sign in again to continue.");

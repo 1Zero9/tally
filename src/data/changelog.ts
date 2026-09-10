@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.122.0';
+export const APP_VERSION = '1.122.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.122.1',
+    date: '2026-09-10',
+    changes: [
+      'Idle sign-out now counts time the app spent closed or backgrounded. Reopening the installed app (or a tab restored from a session cookie) after more than 30 minutes of no activity signs you out on open, instead of silently restarting the idle clock. Activity is shared across tabs.',
+    ],
+  },
   {
     version: '1.122.0',
     date: '2026-09-10',
@@ -1434,9 +1441,16 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
 ];
 
-export const MOBILE_APP_VERSION = '1.3.0';
+export const MOBILE_APP_VERSION = '1.3.1';
 
 export const MOBILE_CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.3.1',
+    date: '2026-09-10',
+    changes: [
+      'The installed app now signs you out on open if it sat closed for more than 30 minutes without activity, rather than keeping you logged in where the idle timer had simply stopped while the app was in the background.',
+    ],
+  },
   {
     version: '1.3.0',
     date: '2026-09-08',
