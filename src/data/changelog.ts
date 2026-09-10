@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.1';
+export const APP_VERSION = '1.120.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.2',
+    date: '2026-09-10',
+    changes: [
+      'The "Possible duplicate" flag now only fires when the matching records came from more than one source (different statement imports, or a mix of imported and manually added), so two genuinely parallel identical bills entered together — like two phone lines on the same plan — aren\'t flagged.',
+    ],
+  },
   {
     version: '1.120.1',
     date: '2026-09-10',

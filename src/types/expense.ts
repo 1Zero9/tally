@@ -126,6 +126,10 @@ export interface ExpenseItem {
     name: string;
     role: UserRole;
   };
+  /** The statement import that created this record, if any — null for
+   *  manually-added expenses. Used to tell import-made duplicates apart
+   *  from genuinely-parallel identical bills entered together. */
+  statementImportId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

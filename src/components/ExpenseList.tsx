@@ -89,18 +89,28 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   }, [searchQuery, selectedCategory, statusFilter, sortBy]);
 
   // Possible duplicates: records sharing a normalised name + amount +
-  // billing cycle + currency with at least one other. Running "Add as
-  // bill" / "Add as expense" on the same statement line across several
-  // months' imports spins up a fresh record each time instead of matching
-  // the existing one, silently inflating every spending total.
+  // billing cycle + currency with at least one other, *and* coming from
+  // more than one origin (different statement imports, or a mix of
+  // imported and manual). Running "Add as bill" / "Add as expense" on the
+  // same line across several months' imports spins up a fresh record each
+  // time instead of matching the existing one, silently inflating every
+  // spending total. Requiring multiple origins keeps two genuinely
+  // parallel identical bills entered together (e.g. two phone lines) from
+  // being flagged.
   const dupKey = (e: ExpenseItem) =>
     `${e.name.trim().toLowerCase()}|${e.amount}|${e.billingCycle}|${e.currency}`;
-  const dupKeyCounts = expenses.reduce<Record<string, number>>((acc, e) => {
+  const dupOrigin = (e: ExpenseItem) => e.statementImportId ?? 'manual';
+  const dupGroups = expenses.reduce<Record<string, { count: number; origins: Set<string> }>>((acc, e) => {
     const k = dupKey(e);
-    acc[k] = (acc[k] || 0) + 1;
+    const g = acc[k] || (acc[k] = { count: 0, origins: new Set<string>() });
+    g.count += 1;
+    g.origins.add(dupOrigin(e));
     return acc;
   }, {});
-  const isPossibleDuplicate = (e: ExpenseItem) => (dupKeyCounts[dupKey(e)] || 0) > 1;
+  const isPossibleDuplicate = (e: ExpenseItem) => {
+    const g = dupGroups[dupKey(e)];
+    return !!g && g.count > 1 && g.origins.size > 1;
+  };
   const duplicateCount = expenses.filter(isPossibleDuplicate).length;
 
   // Filter items
