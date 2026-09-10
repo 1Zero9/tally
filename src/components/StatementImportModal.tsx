@@ -23,7 +23,7 @@ import {
   Search,
 } from 'lucide-react';
 import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, formatBillingCycle } from '../utils/formatters';
 import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, buildAliasPattern, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
 import { uploadAttachment } from '../lib/attachments';
 import type { StatementAccountInfo } from '../lib/ai';
@@ -2514,7 +2514,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                     onChange={(e) => setSelectedExpenseId((prev) => ({ ...prev, [tx.id]: e.target.value }))}
                                   >
                                     <option value="">— Choose a bill —</option>
-                                    {expenses.map((ex) => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                                    {expenses
+                                      .filter((ex) => ex.isActive && ex.isBill !== false && ex.billingCycle !== 'once')
+                                      .sort((a, b) => a.name.localeCompare(b.name))
+                                      .map((ex) => (
+                                        <option key={ex.id} value={ex.id}>
+                                          {ex.name} — {formatCurrency(ex.amount, ex.currency)}{formatBillingCycle(ex.billingCycle)}
+                                        </option>
+                                      ))}
                                   </select>
                                   <button
                                     disabled={!selectedExpenseId[tx.id] || isBusy}

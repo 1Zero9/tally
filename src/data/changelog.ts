@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.122.2';
+export const APP_VERSION = '1.122.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.122.3',
+    date: '2026-09-10',
+    changes: [
+      'Statement review — "Link to a bill" now lists only active recurring bills (not every one-off expense), sorted by name and showing each one\'s amount and cycle.',
+    ],
+  },
   {
     version: '1.122.2',
     date: '2026-09-10',
