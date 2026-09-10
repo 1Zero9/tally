@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.7';
+export const APP_VERSION = '1.119.8';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.8',
+    date: '2026-09-10',
+    changes: [
+      'The Tally Agent now plays the eight supplied spin frames once every minute, ending with a short wave before returning to its resting pose. This replaces the CSS whirl with the actual character animation.',
+      'Frames load ahead of playback; the spin stops when the agent is hidden or dragged, skips background tabs, and respects reduced-motion preferences.',
+    ],
+  },
   {
     version: '1.119.7',
     date: '2026-09-09',

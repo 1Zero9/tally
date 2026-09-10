@@ -17,6 +17,9 @@ const STORAGE_KEY = LAUNCHER_POS_KEY;
 const EDGE_MARGIN = 12;
 const CORNER_INSET = 16; // matches the CSS default right/bottom of 1rem
 const DRAG_THRESHOLD = 4; // px moved before it counts as a drag, not a tap
+const SPIN_FRAMES = Array.from({ length: 8 }, (_, i) => `/tally-${String(i + 1).padStart(2, '0')}.png`);
+const SPIN_INTERVAL_MS = 60_000;
+const FRAME_MS = 120;
 
 type Pos = { left: number; top: number };
 
@@ -61,7 +64,7 @@ function clampToViewport(p: Pos): Pos {
 /**
  * The floating Tally mascot — the character itself is the button, no
  * backing disc. It bobs and wobbles gently on a loop (faster while
- * thinking), whirls when it wants attention, and can pop a
+ * thinking), plays an eight-frame spin every minute, and can pop a
  * prompt in a bubble beside it. Drag it anywhere; where you drop it is
  * remembered per browser. All idle motion is disabled app-wide under
  * prefers-reduced-motion (see globals.css).
@@ -77,7 +80,9 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
 }) => {
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [wobbling, setWobbling] = useState(false);
+  const [frame, setFrame] = useState(0);
+  const [framesReady, setFramesReady] = useState(false);
+  const loadedFrames = useRef(new Set<number>());
   const btnRef = useRef<HTMLButtonElement>(null);
   const posRef = useRef<Pos | null>(null);
   const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
@@ -111,13 +116,43 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
     return () => window.removeEventListener('resize', onResize);
   }, [applyPos]);
 
-  // One-shot wobble whenever a fresh nudge arrives.
+  // Play the original eight frames once a minute. Keep every image mounted
+  // and wait for them all to load so the first spin never flashes blank.
   useEffect(() => {
-    if (!nudge) return;
-    setWobbling(true);
-    const t = window.setTimeout(() => setWobbling(false), 1100);
-    return () => window.clearTimeout(t);
-  }, [nudge]);
+    setFrame(0);
+    if (hidden || dragging || !framesReady) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let animation = 0;
+    const stop = () => {
+      window.cancelAnimationFrame(animation);
+      setFrame(0);
+    };
+    const play = () => {
+      if (document.hidden || reducedMotion.matches || drag.current) return;
+      const start = performance.now();
+      const tick = (now: number) => {
+        const elapsed = now - start;
+        // Hold the final wave briefly before returning to the resting pose.
+        if (elapsed >= SPIN_FRAMES.length * FRAME_MS + 300) {
+          setFrame(0);
+          return;
+        }
+        setFrame(Math.min(SPIN_FRAMES.length - 1, Math.floor(elapsed / FRAME_MS)));
+        animation = window.requestAnimationFrame(tick);
+      };
+      animation = window.requestAnimationFrame(tick);
+    };
+    const timer = window.setInterval(play, SPIN_INTERVAL_MS);
+    const onVisibility = () => { if (document.hidden) stop(); };
+    reducedMotion.addEventListener('change', stop);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(timer);
+      window.cancelAnimationFrame(animation);
+      reducedMotion.removeEventListener('change', stop);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [hidden, dragging, framesReady]);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return;
@@ -204,11 +239,27 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({
           }
         }}
         aria-label="Open Tally, your finance assistant (drag to move)"
-        className={`ha-agent-launcher${status === 'thinking' ? ' is-thinking' : ''}${wobbling ? ' is-nudging' : ''}`}
+        className={`ha-agent-launcher${status === 'thinking' ? ' is-thinking' : ''}`}
         data-dragging={dragging ? 'true' : undefined}
       >
         <span className="ha-agent-launcher-img">
-          <Image src="/tally-agent2.png" alt="" fill sizes="104px" style={{ objectFit: 'contain' }} priority />
+          {SPIN_FRAMES.map((src, index) => (
+            <Image
+              key={src}
+              src={src}
+              alt=""
+              fill
+              sizes="104px"
+              unoptimized
+              loading="eager"
+              draggable={false}
+              style={{ objectFit: 'contain', opacity: frame === index ? 1 : 0 }}
+              onLoad={() => {
+                loadedFrames.current.add(index);
+                if (loadedFrames.current.size === SPIN_FRAMES.length) setFramesReady(true);
+              }}
+            />
+          ))}
         </span>
       </button>
     </div>

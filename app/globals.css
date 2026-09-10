@@ -1541,33 +1541,6 @@ input:checked + .slider:before {
   height: 100%;
   pointer-events: none;
   user-select: none;
-  animation: haAgentIdleWhirl 9s ease-in-out infinite;
-}
-.ha-agent-launcher:hover .ha-agent-launcher-img,
-.ha-agent-launcher:focus-visible .ha-agent-launcher-img {
-  animation-play-state: paused;
-}
-.ha-agent-launcher.is-nudging .ha-agent-launcher-img {
-  animation: haAgentWhirl 1s ease-in-out;
-}
-.ha-agent-launcher[data-dragging='true'] .ha-agent-launcher-img {
-  animation: none;
-}
-/* Spin around the vertical axis (rotateY, with perspective) so it reads as
-   the character twirling on the spot — a whirl — not a flat clock-hand
-   sweep around its centre. A small wind-up and a slight overshoot past a
-   full turn give it some life before it settles. */
-@keyframes haAgentIdleWhirl {
-  0%, 74% { transform: perspective(520px) rotateY(0deg) scale(1); }
-  80% { transform: perspective(520px) rotateY(-26deg) scale(0.95); }
-  93% { transform: perspective(520px) rotateY(392deg) scale(1.06); }
-  100% { transform: perspective(520px) rotateY(360deg) scale(1); }
-}
-@keyframes haAgentWhirl {
-  0% { transform: perspective(520px) rotateY(0deg) scale(1); }
-  16% { transform: perspective(520px) rotateY(-30deg) scale(0.92); }
-  80% { transform: perspective(520px) rotateY(384deg) scale(1.08); }
-  100% { transform: perspective(520px) rotateY(360deg) scale(1); }
 }
 .ha-agent-launcher:hover {
   /* pause the float so the hover pop reads cleanly */
