@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.11';
+export const APP_VERSION = '1.119.12';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.12',
+    date: '2026-09-10',
+    changes: [
+      'Filtering the Spending list by category now shows a real total again: recurring expenses report their monthly figure and one-off expenses report their combined total, instead of one-off-only categories reading "£0.00/month".',
+      'Reports → Category & Vendor: spend logged straight from a statement (with no linked expense) now falls back to the category the import inferred for that merchant, instead of every such transaction landing under "Uncategorized".',
+    ],
+  },
   {
     version: '1.119.11',
     date: '2026-09-10',

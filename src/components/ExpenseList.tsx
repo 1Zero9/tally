@@ -135,13 +135,18 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const pausedCount = expenses.filter((e) => !e.isActive).length;
   const isFiltered = !!searchQuery.trim() || !!selectedCategory || statusFilter !== 'all';
 
-  // When narrowed to one category, show that category's monthly commitment —
-  // the one useful thing the old per-category spending pages had.
-  const selectedCategoryMonthly = selectedCategory
-    ? filteredItems
-        .filter((e) => e.isActive)
-        .reduce((sum, e) => sum + getMonthlyEquivalent(convertCurrency(e.amount, e.currency, currency), e.billingCycle), 0)
-    : 0;
+  // When narrowed to one category, summarise what it's costing. Split the
+  // two kinds of spend rather than force everything through a monthly
+  // rate: recurring expenses have a steady per-month figure, one-offs
+  // don't (getMonthlyEquivalent returns 0 for them) — so a category made
+  // up of one-off expenses would otherwise read as a bogus "£0.00/month".
+  const categoryActive = selectedCategory ? filteredItems.filter((e) => e.isActive) : [];
+  const categoryRecurringMonthly = categoryActive
+    .filter((e) => e.billingCycle !== 'once')
+    .reduce((sum, e) => sum + getMonthlyEquivalent(convertCurrency(e.amount, e.currency, currency), e.billingCycle), 0);
+  const categoryOneOffTotal = categoryActive
+    .filter((e) => e.billingCycle === 'once')
+    .reduce((sum, e) => sum + convertCurrency(getEffectiveAmount(e), e.currency, currency), 0);
   const selectedCategoryName = selectedCategory
     ? getCategoryMeta(selectedCategory, customCategories).name
     : '';
@@ -170,7 +175,22 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           )}
           {selectedCategory && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
-              {selectedCategoryName}: <strong className="tabular-nums" style={{ color: 'var(--ha-ink)' }}>{formatCurrency(selectedCategoryMonthly, currency)}</strong>/month across {filteredItems.filter((e) => e.isActive).length} active
+              {selectedCategoryName}:{' '}
+              {categoryRecurringMonthly > 0 && (
+                <>
+                  <strong className="tabular-nums" style={{ color: 'var(--ha-ink)' }}>{formatCurrency(categoryRecurringMonthly, currency)}</strong>/month
+                </>
+              )}
+              {categoryRecurringMonthly > 0 && categoryOneOffTotal > 0 && ' + '}
+              {categoryOneOffTotal > 0 && (
+                <>
+                  <strong className="tabular-nums" style={{ color: 'var(--ha-ink)' }}>{formatCurrency(categoryOneOffTotal, currency)}</strong> one-off
+                </>
+              )}
+              {categoryRecurringMonthly === 0 && categoryOneOffTotal === 0 && (
+                <strong className="tabular-nums" style={{ color: 'var(--ha-ink)' }}>{formatCurrency(0, currency)}</strong>
+              )}
+              {' '}across {categoryActive.length} active
             </p>
           )}
           {isFiltered && (

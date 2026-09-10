@@ -45,6 +45,15 @@ export async function GET(request: Request) {
         toAccount: { select: { id: true, name: true } },
         linkedExpense: { select: { name: true, vendor: true, category: true } },
         linkedIncome: { select: { name: true } },
+        // For spend logged straight off a statement (no linked Expense), fall
+        // back to the category the import inferred for that merchant, so it
+        // isn't all dumped into "Uncategorized" in the category reports.
+        statementTransactions: {
+          select: {
+            suggestedCategory: true,
+            matchedExpense: { select: { category: true } },
+          },
+        },
       },
       orderBy: { date: 'desc' },
     });
@@ -66,7 +75,11 @@ export async function GET(request: Request) {
         currency: t.currency,
         direction,
         label,
-        category: t.linkedExpense?.category || null,
+        category:
+          t.linkedExpense?.category ||
+          t.statementTransactions[0]?.matchedExpense?.category ||
+          t.statementTransactions[0]?.suggestedCategory ||
+          null,
         fromAccount: t.fromAccount,
         toAccount: t.toAccount,
       };
