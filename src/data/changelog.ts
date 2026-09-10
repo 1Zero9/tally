@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.12';
+export const APP_VERSION = '1.119.13';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.13',
+    date: '2026-09-10',
+    changes: [
+      'Reports → Category & Vendor: money out via an unlinked transfer now groups under its own "Transfers out" row instead of "Uncategorized", so the category breakdown reads honestly — every tracked bill and expense already carries a category; this bucket is money movement, not spend that failed to categorise.',
+    ],
+  },
   {
     version: '1.119.12',
     date: '2026-09-10',

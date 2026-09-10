@@ -102,9 +102,12 @@ function ranked(totals: Map<string, { name: string; total: number }>): ReportRan
 }
 
 /**
- * Real spend for the period, ranked by category. Transactions with no
- * linked expense (so no category) are grouped under "Uncategorized" rather
- * than dropped, so the ranking still accounts for the whole spend total.
+ * Real spend for the period, ranked by category. Every tracked bill/expense
+ * carries a category, so anything that reaches here without one is money
+ * out via an unlinked transfer (an ad-hoc "Log as transfer", or spend
+ * logged straight off a statement). Those are grouped under "Transfers
+ * out" — a movement of money, not an expense we failed to categorise —
+ * rather than dropped, so the ranking still accounts for the whole total.
  */
 export function groupSpendByCategory(
   transactions: ReportTransaction[],
@@ -116,8 +119,8 @@ export function groupSpendByCategory(
   for (const t of transactions) {
     if (!isRealSpend(t)) continue;
     const converted = convertCurrency(t.amount, t.currency || 'EUR', targetCurrency);
-    const key = t.category || 'uncategorized';
-    const name = t.category ? getCategoryMeta(t.category, customCategories).name : 'Uncategorized';
+    const key = t.category || 'transfers-out';
+    const name = t.category ? getCategoryMeta(t.category, customCategories).name : 'Transfers out';
     const existing = totals.get(key) || { name, total: 0 };
     existing.total += converted;
     totals.set(key, existing);

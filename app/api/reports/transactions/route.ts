@@ -46,8 +46,9 @@ export async function GET(request: Request) {
         linkedExpense: { select: { name: true, vendor: true, category: true } },
         linkedIncome: { select: { name: true } },
         // For spend logged straight off a statement (no linked Expense), fall
-        // back to the category the import inferred for that merchant, so it
-        // isn't all dumped into "Uncategorized" in the category reports.
+        // back to the category the import inferred for that merchant, so a
+        // recognised merchant lands in its real category rather than the
+        // report's catch-all "Transfers out" bucket.
         statementTransactions: {
           select: {
             suggestedCategory: true,

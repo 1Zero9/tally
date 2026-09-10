@@ -55,7 +55,7 @@ describe('bucketTransactionsByMonth', () => {
 });
 
 describe('groupSpendByCategory', () => {
-  it('ranks categories descending and groups uncategorized spend', () => {
+  it('ranks categories descending and groups category-less spend as transfers out', () => {
     const transactions = [
       tx({ amount: 60, direction: 'out', category: 'utilities' }),
       tx({ amount: 40, direction: 'out', category: 'utilities' }),
@@ -65,7 +65,7 @@ describe('groupSpendByCategory', () => {
     const rows = groupSpendByCategory(transactions, 'EUR');
     expect(rows[0].key).toBe('utilities');
     expect(rows[0].total).toBe(100);
-    expect(rows.find((r) => r.key === 'uncategorized')?.total).toBe(50);
+    expect(rows.find((r) => r.key === 'transfers-out')?.total).toBe(50);
     const totalPct = rows.reduce((sum, r) => sum + r.percentage, 0);
     expect(Math.round(totalPct)).toBe(100);
   });
