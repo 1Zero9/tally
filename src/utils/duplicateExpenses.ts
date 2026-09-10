@@ -14,20 +14,18 @@ export const duplicateKey = (e: ExpenseItem) => {
   return e.billingCycle === 'once' ? `${base}|${e.nextRenewalDate}` : base;
 };
 
-/** Where a record came from — a specific import, or manual entry. */
-const originOf = (e: ExpenseItem) => e.statementImportId ?? 'manual';
-
 export interface DuplicateGroup {
   key: string;
   items: ExpenseItem[];
 }
 
 /**
- * Groups of records that share name + amount + billing cycle + currency
- * *and* came from more than one source (different statement imports, or a
- * mix of imported and manual). Requiring multiple sources keeps two
- * genuinely parallel identical bills entered together — like two phone
- * lines on the same plan — from being treated as duplicates.
+ * Groups of records that share the same fingerprint (see duplicateKey):
+ * a recurring bill by name + amount + cycle + currency, a one-off by
+ * those *and* its date. Two or more with a matching fingerprint is a
+ * possible duplicate worth reviewing — the "Review & merge" flow is
+ * non-destructive, so a household with two genuinely parallel identical
+ * bills can simply choose not to merge them.
  */
 export function groupPossibleDuplicates(expenses: ExpenseItem[]): DuplicateGroup[] {
   const byKey = new Map<string, ExpenseItem[]>();
@@ -41,7 +39,6 @@ export function groupPossibleDuplicates(expenses: ExpenseItem[]): DuplicateGroup
   const groups: DuplicateGroup[] = [];
   for (const [key, items] of byKey) {
     if (items.length < 2) continue;
-    if (new Set(items.map(originOf)).size < 2) continue;
     groups.push({ key, items });
   }
   return groups;

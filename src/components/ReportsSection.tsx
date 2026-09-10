@@ -349,11 +349,23 @@ const CommittedReport: React.FC<{
   const active = expenses.filter((e) => e.isActive);
   const rows = getOrderedCategories(customCategories)
     .map((cat) => {
-      const items = active
-        .filter((e) => e.category === cat.id)
-        .map((e) => ({ id: e.id, name: e.name, amount: contributionFor(e) }))
-        .filter((it) => it.amount > 0)
-        .sort((a, b) => b.amount - a.amount);
+      // One line per distinct bill/expense name — several records with the
+      // same name (usually accidental duplicates) collapse into one row
+      // showing the count and their combined amount, with the most recent
+      // payment date so the real one is easy to spot.
+      const byName = new Map<string, { name: string; amount: number; count: number; lastPaid: string | null }>();
+      for (const e of active) {
+        if (e.category !== cat.id) continue;
+        const amount = contributionFor(e);
+        if (amount <= 0) continue;
+        const nameKey = e.name.trim().toLowerCase();
+        const g = byName.get(nameKey) ?? { name: e.name, amount: 0, count: 0, lastPaid: null };
+        g.amount += amount;
+        g.count += 1;
+        if (e.lastPaidAt && (!g.lastPaid || e.lastPaidAt > g.lastPaid)) g.lastPaid = e.lastPaidAt;
+        byName.set(nameKey, g);
+      }
+      const items = [...byName.values()].sort((a, b) => b.amount - a.amount);
       return {
         key: cat.id,
         name: cat.meta.name,
@@ -428,11 +440,19 @@ const CommittedReport: React.FC<{
                 <div style={{ width: `${pct}%`, height: '100%', backgroundColor: r.color }} />
               </div>
               {isOpen && (
-                <div style={{ margin: '0.4rem 0 0.2rem 1.15rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div style={{ margin: '0.4rem 0 0.2rem 1.15rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                   {r.items.map((it) => (
-                    <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--ha-muted)' }}>
-                      <span>{it.name}</span>
-                      <span className="tabular-nums">{formatCurrency(it.amount, currency)}</span>
+                    <div key={it.name} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', fontSize: '0.76rem', color: 'var(--ha-muted)' }}>
+                      <span>
+                        {it.name}
+                        {it.count > 1 && (
+                          <span style={{ color: 'var(--ha-red)', fontWeight: 600 }}> ×{it.count}</span>
+                        )}
+                        {it.lastPaid && (
+                          <span style={{ color: 'var(--ha-muted)' }}> · last paid {formatDate(it.lastPaid)}</span>
+                        )}
+                      </span>
+                      <span className="tabular-nums" style={{ whiteSpace: 'nowrap' }}>{formatCurrency(it.amount, currency)}</span>
                     </div>
                   ))}
                 </div>

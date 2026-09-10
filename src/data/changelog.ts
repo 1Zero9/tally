@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.3';
+export const APP_VERSION = '1.121.4';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.4',
+    date: '2026-09-10',
+    changes: [
+      'Duplicate detection now also catches copies made in a single import session — three "DD THREE IRELAND" bills added from the same statement are flagged, where before a duplicate had to span more than one source.',
+      'Reports → Committed: the per-category breakdown now shows one line per bill name. Where several records share a name it shows "×3" in red and the most recent payment date, so accidental duplicates stand out and you can tell which record is the live one.',
+    ],
+  },
   {
     version: '1.121.3',
     date: '2026-09-10',

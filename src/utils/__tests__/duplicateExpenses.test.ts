@@ -20,35 +20,26 @@ const base = (over: Partial<ExpenseItem>): ExpenseItem => ({
 });
 
 describe('groupPossibleDuplicates', () => {
-  it('flags same name+amount+cycle from different imports', () => {
-    const groups = groupPossibleDuplicates([
+  it('flags matching recurring bills whatever their source', () => {
+    const fromImports = groupPossibleDuplicates([
       base({ statementImportId: 'jan' }),
       base({ statementImportId: 'feb' }),
       base({ statementImportId: 'mar' }),
     ]);
-    expect(groups).toHaveLength(1);
-    expect(groups[0].items).toHaveLength(3);
-  });
+    expect(fromImports).toHaveLength(1);
+    expect(fromImports[0].items).toHaveLength(3);
 
-  it('does not flag two identical bills from the same single import', () => {
-    const groups = groupPossibleDuplicates([
+    // Three added in one review session from a single import — the case
+    // the old "needs more than one source" rule used to miss.
+    expect(groupPossibleDuplicates([
       base({ statementImportId: 'jan' }),
       base({ statementImportId: 'jan' }),
-    ]);
-    expect(groups).toHaveLength(0);
-  });
-
-  it('does not flag two identical bills both entered manually', () => {
-    const groups = groupPossibleDuplicates([base({}), base({})]);
-    expect(groups).toHaveLength(0);
-  });
-
-  it('flags a manual + imported identical pair', () => {
-    const groups = groupPossibleDuplicates([
-      base({}),
       base({ statementImportId: 'jan' }),
-    ]);
-    expect(groups).toHaveLength(1);
+    ])).toHaveLength(1);
+
+    // Manual + imported, and manual + manual.
+    expect(groupPossibleDuplicates([base({}), base({ statementImportId: 'jan' })])).toHaveLength(1);
+    expect(groupPossibleDuplicates([base({}), base({})])).toHaveLength(1);
   });
 
   it('keeps different amounts / cycles apart', () => {
