@@ -22,6 +22,10 @@ const SPIN_INTERVAL_MS = 60_000;
 const SPIN_INTRO_MS = 1_200; // greet with one spin shortly after the page settles
 const FRAME_MS = 120;
 
+/** Roughly when the on-load greeting spin has finished playing — the
+ *  welcome speech bubble (in TallyAgent) is timed to land just after it. */
+export const INTRO_SPIN_DONE_MS = SPIN_INTRO_MS + SPIN_FRAMES.length * FRAME_MS + 300;
+
 type Pos = { left: number; top: number };
 
 function launcherSize(): number {

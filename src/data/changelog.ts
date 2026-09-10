@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.119.9';
+export const APP_VERSION = '1.119.10';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.119.10',
+    date: '2026-09-10',
+    changes: [
+      'Just after its first spin on page load, the Tally Agent now pops a one-time "Welcome, {name} — I\'m here to help" bubble. It follows the same rules as the other prompts: shown once per visit, auto-hides, and stays quiet if you\'ve muted reminders or the privacy screen is up.',
+    ],
+  },
   {
     version: '1.119.9',
     date: '2026-09-10',

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { TabId } from '../Navbar';
-import { AgentLauncher } from './AgentLauncher';
+import { AgentLauncher, INTRO_SPIN_DONE_MS } from './AgentLauncher';
 import { AgentPanel } from './AgentPanel';
 import { pickNudgePrompt } from './nudgePrompts';
 
@@ -25,6 +25,10 @@ const NUDGE_GAP_MIN = 14 * 60_000;
 const NUDGE_GAP_MAX = 26 * 60_000;
 const NUDGE_MAX_PER_SESSION = 2;
 const NUDGE_VISIBLE_MS = 7_000;
+
+// One-time "welcome" bubble, shown just after Tally's on-load spin.
+const WELCOME_AFTER_MS = INTRO_SPIN_DONE_MS + 250;
+const WELCOME_VISIBLE_MS = 8_000;
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
@@ -50,9 +54,11 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   const openRef = useRef(open);
   const activeTabRef = useRef(activeTab);
   const blurredRef = useRef(blurred);
+  const firstNameRef = useRef(firstName);
   useEffect(() => { openRef.current = open; }, [open]);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
   useEffect(() => { blurredRef.current = blurred; }, [blurred]);
+  useEffect(() => { firstNameRef.current = firstName; }, [firstName]);
 
   // Privacy screen went up — hide any bubble and close the panel so the
   // assistant (which can echo household figures) isn't left open over the
@@ -82,6 +88,29 @@ export const TallyAgent: React.FC<TallyAgentProps> = ({
   useEffect(() => {
     if (open) setNudge(null);
   }, [open]);
+
+  // One-time welcome bubble, timed to land just after Tally's on-load
+  // spin. Fires once per page load; skipped if reminders are muted, the
+  // panel is already open, the privacy screen is up, or the tab is hidden.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(NUDGE_OFF_KEY) === '1') return;
+    } catch { /* storage blocked — carry on */ }
+
+    let hideTimer: number;
+    const showTimer = window.setTimeout(() => {
+      if (openRef.current || blurredRef.current || document.hidden) return;
+      const name = firstNameRef.current;
+      const greeting = name && name !== 'there' ? `Welcome, ${name}` : 'Welcome';
+      setNudge(`${greeting} — I'm here to help whenever you need a hand.`);
+      hideTimer = window.setTimeout(() => setNudge(null), WELCOME_VISIBLE_MS);
+    }, WELCOME_AFTER_MS);
+
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, []);
 
   // Occasional attention nudge.
   useEffect(() => {
