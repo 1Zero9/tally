@@ -68,7 +68,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   bare = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'unpaid' | 'overdue'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'unpaid' | 'overdue' | 'duplicates'>('all');
   const [sortBy, setSortBy] = useState<'amount-desc' | 'amount-asc' | 'renewal' | 'name'>('amount-desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
@@ -87,6 +87,21 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE);
   }, [searchQuery, selectedCategory, statusFilter, sortBy]);
+
+  // Possible duplicates: records sharing a normalised name + amount +
+  // billing cycle + currency with at least one other. Running "Add as
+  // bill" / "Add as expense" on the same statement line across several
+  // months' imports spins up a fresh record each time instead of matching
+  // the existing one, silently inflating every spending total.
+  const dupKey = (e: ExpenseItem) =>
+    `${e.name.trim().toLowerCase()}|${e.amount}|${e.billingCycle}|${e.currency}`;
+  const dupKeyCounts = expenses.reduce<Record<string, number>>((acc, e) => {
+    const k = dupKey(e);
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const isPossibleDuplicate = (e: ExpenseItem) => (dupKeyCounts[dupKey(e)] || 0) > 1;
+  const duplicateCount = expenses.filter(isPossibleDuplicate).length;
 
   // Filter items
   const filteredItems = expenses.filter((item) => {
@@ -110,6 +125,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     if (statusFilter === 'paused' && item.isActive) return false;
     if (statusFilter === 'unpaid' && item.isPaidThisCycle) return false;
     if (statusFilter === 'overdue' && !(item.isActive && !item.isPaidThisCycle && isOverdue(item.nextRenewalDate))) return false;
+    if (statusFilter === 'duplicates' && !isPossibleDuplicate(item)) return false;
 
     return true;
   });
@@ -157,6 +173,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     { id: 'paused', label: 'Paused', count: pausedCount },
     { id: 'unpaid', label: 'Unpaid', count: unpaidCount },
     { id: 'overdue', label: 'Overdue', count: overdueCount },
+    // Only worth showing once there's actually something to clean up.
+    ...(duplicateCount > 0 ? [{ id: 'duplicates' as const, label: 'Duplicates', count: duplicateCount }] : []),
   ];
 
   return (
@@ -254,7 +272,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           <div className="ha-ledger-status" role="group" aria-label="Filter by status">
             {STATUS_FILTERS.map(({ id, label, count }) => {
               const isSelected = statusFilter === id;
-              const isAlertFilter = id === 'overdue' || id === 'unpaid';
+              const isAlertFilter = id === 'overdue' || id === 'unpaid' || id === 'duplicates';
               return (
                 <button
                   key={id}
@@ -357,6 +375,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             const daysUntilContractEnd = item.contractEndDate ? daysUntilDate(item.contractEndDate) : null;
             const showContractBadge = item.isActive && daysUntilContractEnd !== null && daysUntilContractEnd <= 60;
             const isExpanded = expandedId === item.id;
+            const itemIsDuplicate = isPossibleDuplicate(item);
             const goal = item.linkedGoal;
             const goalPct = goal && goal.targetAmount > 0
               ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100))
@@ -397,6 +416,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <span className="ha-badge ha-badge-neutral" style={{ fontSize: '0.7rem' }}>
                         {cat.name}
                       </span>
+                      {itemIsDuplicate && (
+                        <span
+                          className="ha-badge ha-badge-lime"
+                          style={{ fontSize: '0.68rem' }}
+                          title="Another expense has the same name, amount and billing cycle. This is usually a duplicate from repeated statement imports — open each, keep one, delete the rest."
+                        >
+                          Possible duplicate
+                        </span>
+                      )}
                       {item.createdBy && (
                         <span className="ha-badge ha-badge-blue" style={{ fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
                           <User size={10} />

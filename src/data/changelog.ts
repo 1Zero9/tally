@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.0';
+export const APP_VERSION = '1.120.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.1',
+    date: '2026-09-10',
+    changes: [
+      'The Expenses list now flags possible duplicates — records that share a name, amount and billing cycle with another. A "Possible duplicate" badge appears on each, and a "Duplicates" filter shows them together so you can keep one and delete the rest. Repeated statement imports can create a fresh bill each time instead of matching the existing one, which quietly inflates every spending total.',
+    ],
+  },
   {
     version: '1.120.0',
     date: '2026-09-10',
