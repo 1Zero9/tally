@@ -7,6 +7,17 @@ import { logAudit } from '@/src/lib/audit';
 import { findPossibleDuplicate } from '@/src/lib/duplicateGuard';
 import type { BillingCycle } from '@/src/types/expense';
 
+// Shared relation shape for every Expense returned to the client. Keep the
+// selects narrow — the list can hold hundreds of rows.
+const EXPENSE_INCLUDE = {
+  createdBy: { select: { id: true, name: true, role: true } },
+  paymentAccount: { select: { id: true, name: true, type: true, institution: true } },
+  linkedGoal: { select: { id: true, name: true, targetAmount: true, currentAmount: true, currency: true, targetDate: true } },
+  // Which import spun this record up — shown on the row so duplicate bills
+  // from different months' statements can be told apart.
+  statementImport: { select: { id: true, label: true } },
+} as const;
+
 export async function GET() {
   const auth = await requireHouseholdUser();
   if ('error' in auth) return auth.error;
@@ -15,17 +26,7 @@ export async function GET() {
     const expenses = await prisma.expense.findMany({
       where: { householdId: auth.user.householdId },
       orderBy: { renewalDay: 'asc' },
-      include: {
-        createdBy: {
-          select: { id: true, name: true, role: true },
-        },
-        paymentAccount: {
-          select: { id: true, name: true, type: true, institution: true },
-        },
-        linkedGoal: {
-          select: { id: true, name: true, targetAmount: true, currentAmount: true, currency: true, targetDate: true },
-        },
-      },
+      include: EXPENSE_INCLUDE,
     });
 
     // Lazily roll forward any bills whose due date has passed.
@@ -45,17 +46,7 @@ export async function GET() {
             nextRenewalDate: rollover.nextRenewalDate,
             isPaidThisCycle: rollover.isPaidThisCycle,
           },
-          include: {
-            createdBy: {
-              select: { id: true, name: true, role: true },
-            },
-            paymentAccount: {
-              select: { id: true, name: true, type: true, institution: true },
-            },
-            linkedGoal: {
-              select: { id: true, name: true, targetAmount: true, currentAmount: true, currency: true, targetDate: true },
-            },
-          },
+          include: EXPENSE_INCLUDE,
         });
       })
     );
@@ -129,17 +120,7 @@ export async function POST(request: Request) {
         reimbursementReceived: body.reimbursementReceived != null ? Number(body.reimbursementReceived) : null,
         reimbursementReceivedDate: body.reimbursementReceivedDate || null,
       },
-      include: {
-        createdBy: {
-          select: { id: true, name: true, role: true },
-        },
-        paymentAccount: {
-          select: { id: true, name: true, type: true, institution: true },
-        },
-        linkedGoal: {
-          select: { id: true, name: true, targetAmount: true, currentAmount: true, currency: true, targetDate: true },
-        },
-      },
+      include: EXPENSE_INCLUDE,
     });
 
     if (newExpense.isPaidThisCycle) {
@@ -233,17 +214,7 @@ export async function PUT(request: Request) {
         reimbursementReceived: body.reimbursementReceived != null ? Number(body.reimbursementReceived) : null,
         reimbursementReceivedDate: body.reimbursementReceivedDate || null,
       },
-      include: {
-        createdBy: {
-          select: { id: true, name: true, role: true },
-        },
-        paymentAccount: {
-          select: { id: true, name: true, type: true, institution: true },
-        },
-        linkedGoal: {
-          select: { id: true, name: true, targetAmount: true, currentAmount: true, currency: true, targetDate: true },
-        },
-      },
+      include: EXPENSE_INCLUDE,
     });
 
     if (markingPaid) {

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.5';
+export const APP_VERSION = '1.120.6';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.6',
+    date: '2026-09-10',
+    changes: [
+      'Expense rows created from a statement import now name the import — "From “AIB Current — September”" instead of a generic "Created from statement import" — so duplicate bills that came from different months’ statements can be told apart at a glance. The import name is also searchable.',
+    ],
+  },
   {
     version: '1.120.5',
     date: '2026-09-10',

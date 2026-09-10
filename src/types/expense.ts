@@ -130,6 +130,10 @@ export interface ExpenseItem {
    *  manually-added expenses. Used to tell import-made duplicates apart
    *  from genuinely-parallel identical bills entered together. */
   statementImportId?: string | null;
+  /** Same import, resolved to its label (e.g. "AIB Current — September"),
+   *  shown on the row so duplicate bills from different months' statements
+   *  are distinguishable. */
+  statementImport?: { id: string; label: string } | null;
   createdAt?: string;
   updatedAt?: string;
 }

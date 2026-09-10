@@ -157,7 +157,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
       const matchMethod = item.paymentMethod.toLowerCase().includes(q);
       const matchCategory = getCategoryMeta(item.category, customCategories).name.toLowerCase().includes(q);
       const matchUser = item.createdBy?.name.toLowerCase().includes(q);
-      if (!matchName && !matchNotes && !matchMethod && !matchCategory && !matchUser) {
+      const matchImport = item.statementImport?.label.toLowerCase().includes(q);
+      if (!matchName && !matchNotes && !matchMethod && !matchCategory && !matchUser && !matchImport) {
         return false;
       }
     }
@@ -421,6 +422,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             const showContractBadge = item.isActive && daysUntilContractEnd !== null && daysUntilContractEnd <= 60;
             const isExpanded = expandedId === item.id;
             const itemIsDuplicate = isPossibleDuplicate(item);
+            // Provenance: name the actual import where we can, so duplicate
+            // bills from different months' statements are distinguishable.
+            const isAutoImportNote = item.notes === 'Created from statement import';
+            const userNote = isAutoImportNote ? null : (item.notes || null);
+            const provenanceNote = item.statementImport?.label
+              ? `From “${item.statementImport.label}”`
+              : (item.statementImportId ? 'Created from statement import' : null);
             const goal = item.linkedGoal;
             const goalPct = goal && goal.targetAmount > 0
               ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100))
@@ -506,11 +514,11 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <span style={{ fontWeight: overdue ? 700 : 400 }}>
                         {overdue ? 'Overdue — due ' : 'Due '}{formatDate(item.nextRenewalDate)}
                       </span>
-                      {item.notes && (
+                      {(userNote || provenanceNote) && (
                         <>
                           <span>•</span>
-                          <span style={{ color: 'var(--ha-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {item.notes}
+                          <span style={{ color: 'var(--ha-muted)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {userNote || provenanceNote}
                           </span>
                         </>
                       )}
@@ -731,9 +739,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     </div>
                   )}
 
-                  {item.notes && (
+                  {provenanceNote && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', paddingBottom: '0.25rem', lineHeight: 1.5 }}>
+                      {provenanceNote}
+                    </div>
+                  )}
+                  {userNote && (
                     <div style={{ fontSize: '0.82rem', color: 'var(--ha-ink)', paddingBottom: '0.25rem', lineHeight: 1.5 }}>
-                      {item.notes}
+                      {userNote}
                     </div>
                   )}
                 </div>
