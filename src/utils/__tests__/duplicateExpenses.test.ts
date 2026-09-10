@@ -59,6 +59,15 @@ describe('groupPossibleDuplicates', () => {
     expect(groups).toHaveLength(0);
   });
 
+  it('groups the same subscription when the raw statement descriptor differs', () => {
+    const groups = groupPossibleDuplicates([
+      base({ name: 'PAYPAL *SPOTIFY*P44DA5 35314369001 SW', amount: 22.99, statementImportId: 'jan' }),
+      base({ name: 'PAYPAL *SPOTIFY*P43CCA 35314369001 SW', amount: 22.99, statementImportId: 'feb' }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].items).toHaveLength(2);
+  });
+
   it('does flag a same-date one-off pulled from two overlapping imports', () => {
     const groups = groupPossibleDuplicates([
       base({ name: 'Starbucks', amount: 4.5, billingCycle: 'once', nextRenewalDate: '2026-07-02', statementImportId: 'jul-a' }),

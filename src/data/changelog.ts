@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.8';
+export const APP_VERSION = '1.121.9';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.9',
+    date: '2026-09-10',
+    changes: [
+      'Duplicate detection now matches on the merchant, not the exact name — so two records for the same subscription line up even when the raw statement descriptor differs (e.g. "PAYPAL *SPOTIFY*P44DA5 …" vs "…P43CCA …"). Those now show in "Review & merge" and collapse to one line in Reports → Committed.',
+    ],
+  },
   {
     version: '1.121.8',
     date: '2026-09-10',

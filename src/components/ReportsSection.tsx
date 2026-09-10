@@ -13,6 +13,7 @@ import {
 import { getOrderedCategories } from '../data/categories';
 import { convertCurrency, getMonthlyContribution, getAnnualEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { exportReportCSV } from '../utils/reportExport';
+import { merchantFingerprint } from '../utils/duplicateExpenses';
 import { OptimizationInsights } from './OptimizationInsights';
 import { MoneyFlowInsights } from './MoneyFlowInsights';
 import { TrendingUp, Store, Clock, Sparkles, Download, BarChart3, Wallet, ChevronRight } from 'lucide-react';
@@ -349,23 +350,25 @@ const CommittedReport: React.FC<{
   const active = expenses.filter((e) => e.isActive);
   const rows = getOrderedCategories(customCategories)
     .map((cat) => {
-      // One line per distinct bill/expense name — several records with the
-      // same name (usually accidental duplicates) collapse into one row
-      // showing the count and their combined amount, with the most recent
-      // payment date so the real one is easy to spot.
-      const byName = new Map<string, { name: string; amount: number; count: number; lastPaid: string | null }>();
+      // One line per distinct merchant — records that are the same bill
+      // (matching merchant fingerprint, ignoring statement-descriptor
+      // noise) collapse into one row showing the count, their combined
+      // amount, and the most recent payment date, so accidental
+      // duplicates stand out. The shortest name in the group is the label.
+      const byMerchant = new Map<string, { name: string; amount: number; count: number; lastPaid: string | null }>();
       for (const e of active) {
         if (e.category !== cat.id) continue;
         const amount = contributionFor(e);
         if (amount <= 0) continue;
-        const nameKey = e.name.trim().toLowerCase();
-        const g = byName.get(nameKey) ?? { name: e.name, amount: 0, count: 0, lastPaid: null };
+        const key = merchantFingerprint(e.name);
+        const g = byMerchant.get(key) ?? { name: e.name, amount: 0, count: 0, lastPaid: null };
         g.amount += amount;
         g.count += 1;
+        if (e.name.trim().length < g.name.trim().length) g.name = e.name;
         if (e.lastPaidAt && (!g.lastPaid || e.lastPaidAt > g.lastPaid)) g.lastPaid = e.lastPaidAt;
-        byName.set(nameKey, g);
+        byMerchant.set(key, g);
       }
-      const items = [...byName.values()].sort((a, b) => b.amount - a.amount);
+      const items = [...byMerchant.values()].sort((a, b) => b.amount - a.amount);
       return {
         key: cat.id,
         name: cat.meta.name,

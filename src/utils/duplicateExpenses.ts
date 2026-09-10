@@ -1,8 +1,27 @@
 import type { ExpenseItem } from '../types/expense';
+import { normalizeDescription } from '../lib/statementMatching';
+
+/**
+ * A stable merchant fingerprint for a bill name — its meaningful words,
+ * with statement noise dropped (transaction/terminal codes like "P44DA5",
+ * two-letter tokens, digit runs). This collapses
+ * "PAYPAL *SPOTIFY*P44DA5 35314369001 SW" and
+ * "PAYPAL *SPOTIFY*P43CCA 35314369001 SW" to the same thing, so two
+ * imports of one subscription line up even when the raw descriptor
+ * differs. Falls back to the plain lower-cased name when nothing
+ * meaningful survives.
+ */
+export function merchantFingerprint(name: string): string {
+  const words = normalizeDescription(name)
+    .split(' ')
+    .filter((t) => t.length >= 3 && /^[A-Z&']+$/.test(t))
+    .slice(0, 4);
+  return words.length ? words.join(' ') : name.trim().toLowerCase();
+}
 
 /**
  * The fingerprint that repeats when the same record is added more than
- * once. For a recurring bill that's name + amount + cycle + currency —
+ * once. For a recurring bill that's merchant + amount + cycle + currency —
  * each monthly copy has a different due date, which is exactly the tell.
  * A one-off is different: two €4.50 coffees on different days are separate
  * purchases, not a duplicate, so its date is part of the key and only a
@@ -10,7 +29,7 @@ import type { ExpenseItem } from '../types/expense';
  * overlapping statement imports) counts as a duplicate.
  */
 export const duplicateKey = (e: ExpenseItem) => {
-  const base = `${e.name.trim().toLowerCase()}|${e.amount}|${e.billingCycle}|${e.currency}`;
+  const base = `${merchantFingerprint(e.name)}|${e.amount}|${e.billingCycle}|${e.currency}`;
   return e.billingCycle === 'once' ? `${base}|${e.nextRenewalDate}` : base;
 };
 
