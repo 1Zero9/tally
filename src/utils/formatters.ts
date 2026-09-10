@@ -82,12 +82,19 @@ export function formatRenewalCountdown(days: number): {
 }
 
 /**
- * Formats date string into readable date format.
+ * Formats a date into UK / Ireland reading order — e.g. "2 Oct 2026".
+ * Accepts a plain `YYYY-MM-DD` calendar date or a full ISO timestamp.
+ * A date-only string is read as a *local* calendar date, not UTC
+ * midnight, so it never slips to the day before when the runtime is in a
+ * timezone behind UTC.
  */
 export function formatDate(dateString?: string): string {
   if (!dateString) return '—';
   try {
-    const d = new Date(dateString);
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+    const d = dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+      : new Date(dateString);
     if (isNaN(d.getTime())) return dateString;
     return d.toLocaleDateString('en-GB', {
       day: 'numeric',

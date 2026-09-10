@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FolderOpen, ExternalLink, Trash2, Search, ArrowUpRight } from 'lucide-react';
 import type { TabId } from './Navbar';
 import { getErrorMessage } from '../lib/errors';
+import { formatDate } from '../utils/formatters';
 import {
   ATTACHMENT_ALLOWED_TYPES,
   ATTACHMENT_HOUSEHOLD_CEILING_BYTES,
@@ -225,7 +226,7 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ onNavigate }) => {
                     </td>
                     <td className="tabular-nums" style={{ padding: '0.55rem 1rem', textAlign: 'right', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{formatBytes(r.size)}</td>
                     <td style={{ padding: '0.55rem 1rem', color: 'var(--ha-muted)' }}>{r.uploadedBy?.name || '—'}</td>
-                    <td style={{ padding: '0.55rem 1rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                    <td style={{ padding: '0.55rem 1rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{formatDate(r.createdAt)}</td>
                     <td style={{ padding: '0.55rem 1rem', whiteSpace: 'nowrap', textAlign: 'right' }}>
                       <a href={`/api/attachments/${r.id}`} target="_blank" rel="noopener noreferrer" className="ha-icon-btn" title="Open"><ExternalLink size={14} /></a>
                       <button className="ha-icon-btn" style={{ color: 'var(--ha-red)' }} onClick={() => remove(r.id, r.fileName)} title="Remove"><Trash2 size={14} /></button>

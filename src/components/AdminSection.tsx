@@ -172,7 +172,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           createdById: currentUser?.id,
-          notes: `Manual snapshot by ${currentUser?.name || 'Admin'} on ${new Date().toLocaleDateString()}`,
+          notes: `Manual snapshot by ${currentUser?.name || 'Admin'} on ${new Date().toLocaleDateString('en-GB')}`,
         }),
       });
 

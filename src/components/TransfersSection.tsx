@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { TransferItem } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { Edit2, Trash2, Plus, ArrowRight, ArrowLeftRight, Search } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { transferKindLabel } from '../utils/transfers';
@@ -211,7 +211,7 @@ export const TransfersSection: React.FC<TransfersSectionProps> = ({
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-                        <span>{item.date}</span>
+                        <span>{formatDate(item.date)}</span>
                         {item.note && (
                           <>
                             <span>•</span>

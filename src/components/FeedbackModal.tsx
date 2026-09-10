@@ -55,7 +55,7 @@ interface FeedbackModalProps {
 function formatDate(iso?: string): string {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   } catch {
     return '';
   }
@@ -79,7 +79,7 @@ function buildMarkdown(items: BugReportItem[]): string {
   const sections: string[] = [
     '# Tally feedback',
     '',
-    `Exported ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`,
+    `Exported ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`,
     '',
   ];
 

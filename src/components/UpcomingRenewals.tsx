@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ExpenseItem, CurrencyCode } from '../types/expense';
 import { getDaysUntilRenewal, convertCurrency } from '../utils/calculations';
-import { formatCurrency, formatRenewalCountdown } from '../utils/formatters';
+import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
 import { Edit2 } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 
@@ -173,7 +173,7 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
                     <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>
                       {item.paymentMethod || 'Direct Debit'} • {item.billingCycle}
                       {item.contractEndDate && (
-                        <> • Contract ends {item.contractEndDate}</>
+                        <> • Contract ends {formatDate(item.contractEndDate)}</>
                       )}
                       {item.vendorEmail && (
                         <> • {item.vendorEmail}</>

@@ -6,7 +6,7 @@ import type { ExpenseItem, IncomeItem, CurrencyCode, PresetItem, UserProfile, Ac
 import { loadCurrency, saveCurrency } from '@/src/services/storage';
 import { updateLiveRates } from '@/src/utils/currencies';
 import { calculateSpendingSummary, calculateIncomeSummary } from '@/src/utils/calculations';
-import { formatCurrency } from '@/src/utils/formatters';
+import { formatCurrency, formatDate } from '@/src/utils/formatters';
 import { Navbar } from '@/src/components/Navbar';
 import type { TabId } from '@/src/components/Navbar';
 import { TrendChart } from '@/src/components/TrendChart';
@@ -490,7 +490,7 @@ export default function TallyPage() {
           setExpenses((prev) => prev.map((e) => (e.id === tempId ? data.expense : e)));
           if (data.possibleDuplicate) {
             const d = data.possibleDuplicate;
-            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`);
+            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${formatDate(d.date)}. Both have been kept in case they're genuinely separate.`);
           }
           if (pendingScanImage && data.expense?.id) {
             const ext = pendingScanImage.mimeType.split('/')[1] || 'jpg';
@@ -761,7 +761,7 @@ export default function TallyPage() {
           setTransfers((prev) => (existingId ? prev.map((t) => (t.id === existingId ? resData.transfer : t)) : [resData.transfer, ...prev]));
           if (resData.possibleDuplicate) {
             const d = resData.possibleDuplicate;
-            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${d.date}. Both have been kept in case they're genuinely separate.`);
+            setDuplicateWarning(`This looks similar to an existing ${d.type} — "${d.label}" on ${formatDate(d.date)}. Both have been kept in case they're genuinely separate.`);
           }
           fetchDatabaseData();
         },

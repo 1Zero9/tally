@@ -5,7 +5,7 @@ import { CategorySelect } from './CategorySelect';
 import { AttachmentStrip } from './AttachmentStrip';
 import { PRESETS } from '../data/presets';
 import { CURRENCIES } from '../utils/currencies';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { X, ArrowRightLeft, Loader2, ChevronDown, Paperclip } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -342,7 +342,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 <ArrowRightLeft size={12} style={{ flexShrink: 0 }} />
                 <span>
                   Originally {formatCurrency(originalAmount, originalCurrency)}
-                  {exchangeRate != null && rateDate ? `, converted at ${exchangeRate.toFixed(4)} on ${rateDate}` : ''}
+                  {exchangeRate != null && rateDate ? `, converted at ${exchangeRate.toFixed(4)} on ${formatDate(rateDate)}` : ''}
                 </span>
               </div>
             )}

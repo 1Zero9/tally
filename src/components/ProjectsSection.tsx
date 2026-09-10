@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { ProjectRecord, ProjectLineItem, ExpenseItem, TransferItem, CurrencyCode, ProjectStatus } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { convertCurrency } from '../utils/calculations';
 import { CollapsibleSection } from './CollapsibleSection';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -224,7 +224,7 @@ const ProjectCard: React.FC<{
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.4rem' }}>
                       {it.links.map((l) => (
                         <span key={l.id} className="ha-badge ha-badge-neutral" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                          {l.date} · {l.label} · {formatCurrency(l.amountOverride ?? l.amount, l.currency)}
+                          {formatDate(l.date)} · {l.label} · {formatCurrency(l.amountOverride ?? l.amount, l.currency)}
                           <button onClick={() => api(`${base}/items/${it.id}`, 'PATCH', { removeLinkIds: [l.id] })} disabled={busy} style={{ border: 0, background: 'none', cursor: 'pointer', color: 'var(--ha-muted)', padding: 0, display: 'inline-flex' }} title="Unlink"><X size={11} /></button>
                         </span>
                       ))}
@@ -252,7 +252,7 @@ const ProjectCard: React.FC<{
                               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.76rem', padding: '0.2rem 0.25rem', cursor: 'pointer' }}>
                                 <input type="checkbox" checked={on} onChange={() => setLinkPicks((prev) => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n; })} />
                                 <span style={{ flex: 1, minWidth: 0 }}>
-                                  {r.date} · {r.label} · <span className="tabular-nums">{formatCurrency(r.amount, r.currency)}</span>
+                                  {formatDate(r.date)} · {r.label} · <span className="tabular-nums">{formatCurrency(r.amount, r.currency)}</span>
                                   <span style={{ color: 'var(--ha-muted)' }}> · {r.kind}</span>
                                 </span>
                               </label>

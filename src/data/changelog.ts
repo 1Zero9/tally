@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.4';
+export const APP_VERSION = '1.120.5';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.5',
+    date: '2026-09-10',
+    changes: [
+      'Dates now read in UK/Ireland order everywhere — "2 Oct 2026" instead of "2026-10-02". Applied to the Expenses list (due dates, contract end, last paid), Transactions, Reports timeline, statement review, Money Trails, Projects, Files and the receipt scanner, which had been showing the raw stored format.',
+    ],
+  },
   {
     version: '1.120.4',
     date: '2026-09-10',

@@ -23,7 +23,7 @@ import {
   Search,
 } from 'lucide-react';
 import type { ExpenseItem, IncomeItem, StatementTransactionItem, CurrencyCode, AccountItem, AccountType, ExpenseCategory, CustomCategoryItem } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { parseCsv, guessColumns, parseAmount, parseDateFlexible, detectRecurringCycle, buildAliasPattern, type ColumnGuess, type DetectedBillingCycle } from '../lib/statementMatching';
 import { uploadAttachment } from '../lib/attachments';
 import type { StatementAccountInfo } from '../lib/ai';
@@ -1751,7 +1751,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                       borderBottom: i < 3 ? '1px solid var(--ha-line)' : 'none',
                       backgroundColor: '#fafaf7',
                     }}>
-                      <span style={{ color: 'var(--ha-muted)', flexShrink: 0 }}>{r.date}</span>
+                      <span style={{ color: 'var(--ha-muted)', flexShrink: 0 }}>{formatDate(r.date)}</span>
                       <span style={{ color: 'var(--ha-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{r.rawDescription}</span>
                       <span style={{ color: r.direction === 'DEBIT' ? 'var(--ha-red)' : 'var(--ha-blue)', fontWeight: 600, flexShrink: 0 }}>
                         {r.direction === 'DEBIT' ? '−' : '+'}{formatCurrency(r.amount, householdCurrency)}
@@ -2349,7 +2349,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                 </div>
                               )}
                               <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-                                {tx.date}
+                                {formatDate(tx.date)}
                                 {tx.vendorName && tx.vendorName !== tx.rawDescription && <span> • {tx.rawDescription}</span>}
                                 {tx.notes && <span> • {tx.notes}</span>}
                               </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { CurrencyCode, CustomCategoryItem, ExpenseItem, HistoryPeriod } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { getCategoryMeta } from '../data/categories';
 import {
   bucketTransactionsByMonth,
@@ -699,7 +699,7 @@ const TimelineReport: React.FC<{
             <tbody>
               {transactions.map((t) => (
                 <tr key={t.id} style={{ borderBottom: '1px solid var(--ha-line)' }}>
-                  <td style={{ padding: '0.4rem 0.5rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{t.date}</td>
+                  <td style={{ padding: '0.4rem 0.5rem', color: 'var(--ha-muted)', whiteSpace: 'nowrap' }}>{formatDate(t.date)}</td>
                   <td style={{ padding: '0.4rem 0.5rem', color: 'var(--ha-ink)', fontWeight: 600 }}>{t.label}</td>
                   <td style={{ padding: '0.4rem 0.5rem', color: 'var(--ha-muted)' }}>
                     {t.category ? getCategoryMeta(t.category, customCategories).name : '—'}

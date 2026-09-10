@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/expense';
 import { getCategoryMeta, getOrderedCategories } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
-import { formatCurrency, formatBillingCycle } from '../utils/formatters';
+import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
 import { hasTextSelection } from '../utils/dom';
 import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal, Loader2 } from 'lucide-react';
 
@@ -504,7 +504,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <span>{item.paymentMethod || 'Direct Debit'}</span>
                       <span>•</span>
                       <span style={{ fontWeight: overdue ? 700 : 400 }}>
-                        {overdue ? 'Overdue — due ' : 'Due '}{item.nextRenewalDate}
+                        {overdue ? 'Overdue — due ' : 'Due '}{formatDate(item.nextRenewalDate)}
                       </span>
                       {item.notes && (
                         <>
@@ -681,13 +681,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <span>Vendor email: <strong style={{ color: 'var(--ha-ink)' }}>{item.vendorEmail}</strong></span>
                     )}
                     {item.contractEndDate && (
-                      <span>Contract ends: <strong style={{ color: 'var(--ha-ink)' }}>{item.contractEndDate}</strong></span>
+                      <span>Contract ends: <strong style={{ color: 'var(--ha-ink)' }}>{formatDate(item.contractEndDate)}</strong></span>
                     )}
                     {item.usageRating && (
                       <span>Usage: <strong style={{ color: 'var(--ha-ink)', textTransform: 'capitalize' }}>{item.usageRating}</strong></span>
                     )}
                     {item.lastPaidAt && (
-                      <span>Last paid: <strong style={{ color: 'var(--ha-ink)' }}>{new Date(item.lastPaidAt).toLocaleDateString()}</strong></span>
+                      <span>Last paid: <strong style={{ color: 'var(--ha-ink)' }}>{formatDate(item.lastPaidAt)}</strong></span>
                     )}
                     {item.createdBy && (
                       <span>Added by: <strong style={{ color: 'var(--ha-ink)' }}>{item.createdBy.name}</strong></span>
@@ -695,14 +695,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     {item.originalAmount != null && item.originalCurrency && (
                       <span>
                         Originally: <strong style={{ color: 'var(--ha-ink)' }}>{formatCurrency(item.originalAmount, item.originalCurrency)}</strong>
-                        {item.exchangeRate != null && item.rateDate ? ` (converted at ${item.exchangeRate.toFixed(4)} on ${item.rateDate})` : ''}
+                        {item.exchangeRate != null && item.rateDate ? ` (converted at ${item.exchangeRate.toFixed(4)} on ${formatDate(item.rateDate)})` : ''}
                       </span>
                     )}
                     {item.reimbursementExpected != null && item.reimbursementExpected > 0 && (
                       <span>
                         Reimbursement: <strong style={{ color: 'var(--ha-ink)' }}>
                           {item.reimbursementReceived != null && item.reimbursementReceived > 0
-                            ? `${formatCurrency(item.reimbursementReceived, item.currency)} received${item.reimbursementReceivedDate ? ` on ${item.reimbursementReceivedDate}` : ''} — net cost ${formatCurrency(getEffectiveAmount(item), item.currency)}`
+                            ? `${formatCurrency(item.reimbursementReceived, item.currency)} received${item.reimbursementReceivedDate ? ` on ${formatDate(item.reimbursementReceivedDate)}` : ''} — net cost ${formatCurrency(getEffectiveAmount(item), item.currency)}`
                             : `${formatCurrency(item.reimbursementExpected, item.currency)} expected (claim pending)`}
                         </strong>
                       </span>

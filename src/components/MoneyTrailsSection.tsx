@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { MoneyTrailItem, TransferItem, CurrencyCode } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { CollapsibleSection } from './CollapsibleSection';
 import { Route, Plus, Trash2, X, Check, Loader2, ArrowRight, Clock } from 'lucide-react';
 import { transferKindLabel } from '../utils/transfers';
@@ -135,7 +135,7 @@ const MoneyTrailCard: React.FC<{
                 <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', color: 'var(--ha-muted)', fontSize: '0.68rem', lineHeight: 1.2 }}>
                   <span className="tabular-nums" style={{ color: 'var(--ha-ink)', fontWeight: 600 }}>{formatCurrency(h.amount, h.currency)}</span>
                   <ArrowRight size={13} />
-                  <span>{h.date}</span>
+                  <span>{formatDate(h.date)}</span>
                 </span>
                 <span className="ha-badge ha-badge-blue" style={{ whiteSpace: 'nowrap' }}>{endpointLabel(h, 'to')}</span>
               </React.Fragment>
@@ -169,7 +169,7 @@ const MoneyTrailCard: React.FC<{
             {hops.map((h) => (
               <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', padding: '0.3rem 0.4rem', borderRadius: 'var(--ha-radius-sm)', background: 'var(--ha-bg-subtle, #fafafa)' }}>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  {h.date} · {endpointLabel(h, 'from')} <ArrowRight size={11} style={{ verticalAlign: 'middle' }} /> {endpointLabel(h, 'to')} · <span className="tabular-nums">{formatCurrency(h.amount, h.currency)}</span>
+                  {formatDate(h.date)} · {endpointLabel(h, 'from')} <ArrowRight size={11} style={{ verticalAlign: 'middle' }} /> {endpointLabel(h, 'to')} · <span className="tabular-nums">{formatCurrency(h.amount, h.currency)}</span>
                   {transferKindLabel(h) && <span style={{ color: '#B45309', fontWeight: 700 }}> · {transferKindLabel(h)}</span>}
                 </span>
                 <button
@@ -209,7 +209,7 @@ const MoneyTrailCard: React.FC<{
                     })}
                   />
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    {t.date} · {endpointLabel(t, 'from')} <ArrowRight size={11} style={{ verticalAlign: 'middle' }} /> {endpointLabel(t, 'to')} · <span className="tabular-nums">{formatCurrency(t.amount, t.currency)}</span>
+                    {formatDate(t.date)} · {endpointLabel(t, 'from')} <ArrowRight size={11} style={{ verticalAlign: 'middle' }} /> {endpointLabel(t, 'to')} · <span className="tabular-nums">{formatCurrency(t.amount, t.currency)}</span>
                     {t.trailId && <span style={{ color: 'var(--ha-amber, #B45309)' }}> · in another trail</span>}
                   </span>
                 </label>

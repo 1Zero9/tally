@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { StatementActivityItem } from '../types/expense';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { CollapsibleSection } from './CollapsibleSection';
 import { RotateCcw, Loader2, Search, History } from 'lucide-react';
 
@@ -178,7 +178,7 @@ export const StatementActivitySection: React.FC<StatementActivitySectionProps> =
                       <span className="ha-badge" style={{ backgroundColor: '#eef2fc', color: '#3155D9', fontSize: '0.68rem', fontWeight: 700 }}>{it.action}</span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
-                      {it.date} · <span className="tabular-nums">{formatCurrency(it.amount, it.currency)}</span>
+                      {formatDate(it.date)} · <span className="tabular-nums">{formatCurrency(it.amount, it.currency)}</span>
                       {it.target ? ` · ${it.target}` : ''} · from “{it.importLabel}”
                     </div>
                   </div>

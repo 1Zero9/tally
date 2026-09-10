@@ -3,7 +3,7 @@ import { X, ScanLine, Upload, CheckCircle2, Sparkles, ArrowRightLeft, Loader2 } 
 import { useModalA11y } from '../hooks/useModalA11y';
 import type { ExpenseItem, ExpenseCategory, BillingCycle, CurrencyCode } from '../types/expense';
 import { getCategoryMeta } from '../data/categories';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 interface ReceiptScanResult {
   vendor: string;
@@ -332,7 +332,7 @@ export const ScanReceiptModal: React.FC<ScanReceiptModalProps> = ({
                 {result.extracted.amount != null && (
                   <span>Amount: <strong style={{ color: 'var(--ha-ink)' }}>{formatCurrency(result.extracted.amount, (result.extracted.currency as CurrencyCode) || 'EUR')}</strong></span>
                 )}
-                {result.extracted.date && <span>Date: {result.extracted.date}</span>}
+                {result.extracted.date && <span>Date: {formatDate(result.extracted.date)}</span>}
                 {result.extracted.categoryGuess && <span>Category guess: {getCategoryMeta(result.extracted.categoryGuess).name}</span>}
                 <span>{result.extracted.isPaid ? 'Detected as already paid' : 'Detected as not yet paid'}</span>
                 {result.extracted.notes && <span style={{ fontStyle: 'italic' }}>{result.extracted.notes}</span>}
@@ -367,7 +367,7 @@ export const ScanReceiptModal: React.FC<ScanReceiptModalProps> = ({
                       <div style={{ fontSize: '0.85rem', color: 'var(--ha-ink)', marginTop: '0.5rem' }}>
                         ≈ <strong>{formatCurrency(conversion.convertedAmount, conversion.to)}</strong>
                         <span style={{ color: '#7C4A0B', fontWeight: 400 }}>
-                          {' '}(1 {conversion.from} = {conversion.rate.toFixed(4)} {conversion.to}, ECB rate {conversion.date})
+                          {' '}(1 {conversion.from} = {conversion.rate.toFixed(4)} {conversion.to}, ECB rate {formatDate(conversion.date)})
                         </span>
                       </div>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#7C4A0B', marginTop: '0.4rem', cursor: 'pointer' }}>
