@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.2';
+export const APP_VERSION = '1.120.3';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.3',
+    date: '2026-09-10',
+    changes: [
+      'Fixed missing icons in the Help guide — eight sections (How Tally works, Signing in, Overview, Budgets, Bills calendar, Reports, Files, Settings) had no icon because the guide gained sections the icon map was never updated for. Every section has one again.',
+    ],
+  },
   {
     version: '1.120.2',
     date: '2026-09-10',

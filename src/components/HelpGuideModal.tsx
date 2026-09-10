@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { UserProfile } from '../types/expense';
-import { X, Sparkles, Plus, UserPlus, Download, Bell, Mail, ShieldCheck, Landmark, ArrowLeftRight, Target, Activity, CalendarClock, UserCog, FileSpreadsheet, ScanLine, BookOpen, Lock, HelpCircle } from 'lucide-react';
+import { X, Sparkles, Plus, UserPlus, Download, Bell, Mail, ShieldCheck, Landmark, ArrowLeftRight, Target, Activity, CalendarClock, CalendarDays, UserCog, FileSpreadsheet, FolderOpen, ScanLine, BookOpen, Lock, HelpCircle, LogIn, LayoutDashboard, PiggyBank, BarChart3, Settings } from 'lucide-react';
 import { HELP_GUIDE_SECTIONS } from '../data/helpGuide';
 import { useOverlayClose } from '../hooks/useOverlayClose';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -13,18 +13,26 @@ interface HelpGuideModalProps {
 }
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
+  'how-tally-works': <BookOpen size={16} color="var(--ha-blue)" />,
+  signin: <LogIn size={16} color="var(--ha-blue)" />,
+  overview: <LayoutDashboard size={16} color="var(--ha-blue)" />,
   ask: <Sparkles size={16} color="var(--ha-blue)" />,
   expenses: <Plus size={16} color="var(--ha-blue)" />,
+  budgets: <PiggyBank size={16} color="var(--ha-blue)" />,
   assign: <UserCog size={16} color="var(--ha-blue)" />,
   scan: <ScanLine size={16} color="var(--ha-blue)" />,
+  billscalendar: <CalendarDays size={16} color="var(--ha-blue)" />,
   accounts: <Landmark size={16} color="var(--ha-blue)" />,
   statements: <FileSpreadsheet size={16} color="var(--ha-blue)" />,
   flow: <ArrowLeftRight size={16} color="var(--ha-blue)" />,
   goals: <Target size={16} color="var(--ha-blue)" />,
   planned: <CalendarClock size={16} color="var(--ha-blue)" />,
   moneymap: <Activity size={16} color="var(--ha-blue)" />,
+  reports: <BarChart3 size={16} color="var(--ha-blue)" />,
+  files: <FolderOpen size={16} color="var(--ha-blue)" />,
   renewals: <Bell size={16} color="var(--ha-blue)" />,
   vendor: <Mail size={16} color="var(--ha-blue)" />,
+  settings: <Settings size={16} color="var(--ha-blue)" />,
   sharing: <UserPlus size={16} color="var(--ha-blue)" />,
   privacy: <Lock size={16} color="var(--ha-blue)" />,
   faq: <HelpCircle size={16} color="var(--ha-blue)" />,
