@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.5';
+export const APP_VERSION = '1.121.6';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.6',
+    date: '2026-09-10',
+    changes: [
+      'Admin → Database: a "Clear cached answers" button for the Tally Agent. It reuses its previous "how do I" answers for speed; clearing the cache makes it answer the next few fresh against the current help guide. Money questions are never cached, so nothing about the household\'s own data is touched.',
+    ],
+  },
   {
     version: '1.121.5',
     date: '2026-09-10',

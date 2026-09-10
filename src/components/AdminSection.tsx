@@ -38,6 +38,10 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
   // Activity log state
   const [auditEntries, setAuditEntries] = useState<AuditLogItem[]>([]);
 
+  // Tally Agent answer cache
+  const [kbCount, setKbCount] = useState<number | null>(null);
+  const [isClearingKb, setIsClearingKb] = useState(false);
+
   // Sub-tabs in Admin
   const [adminTab, setAdminTab] = useState<'users' | 'family-costs' | 'database' | 'activity'>('users');
 
@@ -66,9 +70,41 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
     }
   };
 
+  const fetchKbCount = async () => {
+    try {
+      const res = await fetch('/api/assistant/kb');
+      const data = await res.json();
+      if (data.status === 'ok') setKbCount(data.count ?? 0);
+    } catch (err) {
+      console.error('Failed to load assistant cache size:', err);
+    }
+  };
+
+  const handleClearKb = async () => {
+    if (!window.confirm('Clear the Tally Agent’s cached answers for this household? Its next few "how do I" answers will be a little slower while it rebuilds. Nothing about your own money is affected.')) return;
+    setIsClearingKb(true);
+    setStatusMessage(null);
+    setErrorMessage(null);
+    try {
+      const res = await fetch('/api/assistant/kb', { method: 'DELETE' });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        setKbCount(0);
+        setStatusMessage(`Cleared ${data.cleared} cached answer${data.cleared === 1 ? '' : 's'}.`);
+      } else {
+        setErrorMessage(data.message || 'Could not clear the cache.');
+      }
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, 'Could not clear the cache.'));
+    } finally {
+      setIsClearingKb(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchBackups();
     fetchAuditLog();
+    fetchKbCount();
   }, []);
 
   // Handle Add User
@@ -778,6 +814,31 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
                 </div>
               )}
             </CollapsibleSection>
+
+            <div className="ha-card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--ha-ink)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <RefreshCw size={18} color="var(--ha-blue)" />
+                    <span>Tally Agent cache</span>
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', maxWidth: '620px' }}>
+                    The assistant reuses its previous answers to &quot;how do I&quot; questions so a repeat is instant. Those cached answers don&apos;t refresh when the help guide changes — clear the cache so the next such question is answered fresh. Questions about your own money are never cached and aren&apos;t affected.
+                    {kbCount !== null && <> Currently <strong>{kbCount}</strong> cached answer{kbCount === 1 ? '' : 's'}.</>}
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleClearKb}
+                  disabled={isClearingKb || kbCount === 0}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.82rem' }}
+                >
+                  <RefreshCw size={14} className={isClearingKb ? 'spin' : ''} />
+                  <span>Clear cached answers</span>
+                </button>
+              </div>
+            </div>
         </div>
       )}
 
@@ -807,6 +868,11 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
                     MEMBER_REMOVED: 'Removed member',
                     BACKUP_RESTORE: 'Restored backup',
                   };
+                  // Some entries carry a self-contained sentence in entityLabel
+                  // and read better without the generic "Deleted x:" prefix.
+                  const headline = entry.entityType === 'AssistantKbEntry' && entry.entityLabel
+                    ? entry.entityLabel
+                    : `${actionLabel[entry.action] || entry.action}${entry.entityLabel ? `: ${entry.entityLabel}` : ''}`;
                   return (
                     <div
                       key={entry.id}
@@ -818,8 +884,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({
                       }}
                     >
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ha-ink)' }}>
-                        {actionLabel[entry.action] || entry.action}
-                        {entry.entityLabel ? `: ${entry.entityLabel}` : ''}
+                        {headline}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--ha-muted)' }}>
                         {new Date(entry.createdAt).toLocaleString()} · {entry.actorName}

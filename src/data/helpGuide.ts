@@ -301,6 +301,7 @@ export const HELP_GUIDE_SECTIONS: HelpGuideSection[] = [
       'There must always be at least one Admin in a household — the app won\'t let you remove the last one. "Backup Admin" has identical permissions to "Admin" today — it\'s a separate role only so it\'s clear who the usual admin is, not a lesser one.',
       '"Database Snapshots" takes a full point-in-time backup of the entire household — accounts, goals, bills, income, transfers, statement imports and their matches, custom categories, budgets, money trails and projects — stored in the cloud. "Restore" replaces all of the household\'s current data with what\'s in that snapshot — a real undo, not a preview — so the confirmation shows the snapshot\'s age and record count before you commit to it.',
       'One snapshot happens automatically every day, tagged "Automatic" in the list, with the most recent 14 kept. A manual snapshot is only worth creating right before doing something risky, like a restore.',
+      'The "Database" tab also has "Clear cached answers" for the Tally Agent — it reuses its previous answers to "how do I" questions, and clearing the cache makes it answer the next few fresh (useful after a big update). Questions about your own money are never cached.',
       '"Recent activity" is a plain log of deletions, backup restores, member removal, and role changes — who did it and when. It\'s not a full edit history, just the actions worth being able to look back on.',
     ],
   },
