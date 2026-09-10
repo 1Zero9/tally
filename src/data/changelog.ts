@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.122.1';
+export const APP_VERSION = '1.122.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.122.2',
+    date: '2026-09-10',
+    changes: [
+      'Statement activity: the outcome pills are now colour-coded by kind — bill (blue), one-off expense (grey), income (gold), transfer (blue-grey), ignored/duplicate (red) — instead of all the same blue.',
+    ],
+  },
   {
     version: '1.122.1',
     date: '2026-09-10',

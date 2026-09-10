@@ -31,6 +31,16 @@ function kindOf(action: string): KindFilter {
   return 'expense';
 }
 
+// One badge colour per outcome kind, so the list scans at a glance.
+const KIND_BADGE: Record<KindFilter, { bg: string; fg: string }> = {
+  all: { bg: 'var(--ha-line)', fg: 'var(--ha-muted)' },
+  bill: { bg: 'var(--ha-blue-light)', fg: 'var(--ha-blue)' },
+  expense: { bg: 'var(--ha-line)', fg: 'var(--ha-muted)' },
+  transfer: { bg: 'var(--ha-info-tint)', fg: 'var(--ha-info)' },
+  income: { bg: 'var(--ha-lime-tint)', fg: '#8a6100' },
+  ignored: { bg: 'var(--ha-red-tint)', fg: 'var(--ha-red)' },
+};
+
 export const StatementActivitySection: React.FC<StatementActivitySectionProps> = ({ reloadSignal, onChanged }) => {
   const [items, setItems] = useState<StatementActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,12 +180,14 @@ export const StatementActivitySection: React.FC<StatementActivitySectionProps> =
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-              {visible.map((it) => (
+              {visible.map((it) => {
+                const badge = KIND_BADGE[kindOf(it.action)];
+                return (
                 <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0', borderBottom: '1px solid var(--ha-line)' }}>
                   <div style={{ flex: '1 1 300px', minWidth: 0 }}>
                     <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ha-ink)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }}>{it.merchant}</span>
-                      <span className="ha-badge" style={{ backgroundColor: '#eef2fc', color: '#3155D9', fontSize: '0.68rem', fontWeight: 700 }}>{it.action}</span>
+                      <span className="ha-badge" style={{ backgroundColor: badge.bg, color: badge.fg, fontSize: '0.68rem', fontWeight: 700 }}>{it.action}</span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--ha-muted)', marginTop: '2px' }}>
                       {formatDate(it.date)} · <span className="tabular-nums">{formatCurrency(it.amount, it.currency)}</span>
@@ -192,7 +204,8 @@ export const StatementActivitySection: React.FC<StatementActivitySectionProps> =
                     {busyId === it.id ? <Loader2 size={12} className="spin" /> : <RotateCcw size={12} />} Undo
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
