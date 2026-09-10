@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ExpenseItem, CurrencyCode } from '../types/expense';
 import { getDaysUntilRenewal, convertCurrency } from '../utils/calculations';
 import { formatCurrency, formatRenewalCountdown, formatDate } from '../utils/formatters';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Search } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 
 interface UpcomingRenewalsProps {
@@ -16,10 +16,23 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
   currency,
   onEditExpense,
 }) => {
+  const [query, setQuery] = useState('');
+
   // Recurring bills & contracts only — never one-off spending (a `once`
   // expense isn't a renewal, even if its isBill flag was left on, e.g. by an
   // older "Add as expense" from a statement import).
-  const activeItems = expenses.filter((e) => e.isActive && e.isBill !== false && e.billingCycle !== 'once');
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (e: ExpenseItem) =>
+    !q ||
+    e.name.toLowerCase().includes(q) ||
+    (e.vendor?.toLowerCase().includes(q) ?? false) ||
+    e.paymentMethod.toLowerCase().includes(q) ||
+    e.billingCycle.toLowerCase().includes(q) ||
+    (e.vendorEmail?.toLowerCase().includes(q) ?? false) ||
+    (e.notes?.toLowerCase().includes(q) ?? false);
+
+  const allActiveItems = expenses.filter((e) => e.isActive && e.isBill !== false && e.billingCycle !== 'once');
+  const activeItems = allActiveItems.filter(matchesQuery);
 
   const sortedRenewals = activeItems.map((item) => {
     const daysLeft = getDaysUntilRenewal(item.nextRenewalDate || `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${item.renewalDay}`, item.billingCycle);
@@ -60,6 +73,33 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
             <p style={{ fontSize: '0.85rem', color: 'var(--ha-muted)', maxWidth: '600px', marginTop: '0.25rem' }}>
               Chronological schedule of your recurring bills & contracts (mobile, electric, gas, subscriptions…). One-off spending doesn&apos;t show here — it&apos;s in Spending only.
             </p>
+
+            <div className="ha-ledger-search" style={{ marginTop: '0.9rem', maxWidth: '340px' }}>
+              <Search size={15} color="var(--ha-muted)" style={{ position: 'absolute', left: '0.75rem', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Search bills"
+                aria-label="Search bills"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="ha-input"
+                style={{ paddingLeft: '2.2rem', paddingRight: query ? '2rem' : '0.85rem', width: '100%', fontSize: '0.85rem' }}
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  style={{ position: 'absolute', right: '0.6rem', background: 'none', border: 'none', color: 'var(--ha-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            {q && (
+              <p style={{ fontSize: '0.78rem', color: 'var(--ha-muted)', marginTop: '0.4rem' }}>
+                {activeItems.length} of {allActiveItems.length} bills
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -102,6 +142,12 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
         </div>
       </div>
 
+      {q && sortedRenewals.length === 0 && (
+        <div className="ha-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', color: 'var(--ha-muted)', fontSize: '0.9rem' }}>
+          No bills match &ldquo;{query.trim()}&rdquo;.
+        </div>
+      )}
+
       {/* Due in next 7 days list */}
       {dueNext7Days.length > 0 && (
         <CollapsibleSection id="renewals-due-soon" title={`Due in next 7 days (${dueNext7Days.length})`}>
@@ -136,7 +182,8 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
       )}
 
       {/* Full Chronological Ledger */}
-      <CollapsibleSection id="renewals-full-schedule" title="Chronological schedule (Day 1 to 31)">
+      {sortedRenewals.length > 0 && (
+      <CollapsibleSection id="renewals-full-schedule" title={q ? `Matching bills (${sortedRenewals.length})` : 'Chronological schedule (Day 1 to 31)'}>
         <div>
           {sortedRenewals.map((item) => (
             <div key={item.id} className="ha-ledger-row">
@@ -205,6 +252,7 @@ export const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
           ))}
         </div>
       </CollapsibleSection>
+      )}
     </div>
   );
 };

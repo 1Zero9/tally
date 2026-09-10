@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.0';
+export const APP_VERSION = '1.121.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.1',
+    date: '2026-09-10',
+    changes: [
+      'The Bills tab now has a search box — filter the schedule by bill name, vendor, payment method, billing cycle or notes. The 7- and 30-day totals follow the search.',
+    ],
+  },
   {
     version: '1.121.0',
     date: '2026-09-10',
