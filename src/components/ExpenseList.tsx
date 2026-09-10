@@ -72,6 +72,41 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const [sortBy, setSortBy] = useState<'amount-desc' | 'amount-asc' | 'renewal' | 'name'>('amount-desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
+  // The row actions menu is positioned fixed, computed from the button's
+  // rect, so it escapes the surrounding card's `overflow: hidden` (which
+  // otherwise clips it on the last row) and flips above the button when
+  // there isn't room below.
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+
+  const closeActionsMenu = () => {
+    setOpenActionsId(null);
+    setMenuPos(null);
+  };
+
+  const openActionsMenu = (id: string, btn: HTMLElement, itemCount: number) => {
+    const r = btn.getBoundingClientRect();
+    const estHeight = itemCount * 36 + 24; // ~row height * items + divider + padding
+    const roomBelow = window.innerHeight - r.bottom;
+    const openUp = roomBelow < estHeight + 12 && r.top > roomBelow;
+    setMenuPos({
+      top: openUp ? Math.max(8, r.top - estHeight - 6) : r.bottom + 6,
+      right: Math.max(8, window.innerWidth - r.right),
+    });
+    setOpenActionsId(id);
+  };
+
+  // Close the menu if the page scrolls or the window resizes — a fixed
+  // menu would otherwise drift away from its button.
+  useEffect(() => {
+    if (!openActionsId) return;
+    const close = () => { setOpenActionsId(null); setMenuPos(null); };
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [openActionsId]);
   const allCategories = getOrderedCategories(customCategories);
 
   // A household ledger realistically holds tens to a few hundred records —
@@ -513,7 +548,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenActionsId(openActionsId === item.id ? null : item.id);
+                        if (openActionsId === item.id) {
+                          closeActionsMenu();
+                        } else {
+                          const menuItems = 3 + (item.isVariable ? 1 : 0) + (item.vendorEmail ? 1 : 0);
+                          openActionsMenu(item.id, e.currentTarget, menuItems);
+                        }
                       }}
                       className="ha-row-more"
                       title="More actions"
@@ -524,17 +564,22 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <MoreHorizontal size={17} />
                     </button>
 
-                    {openActionsId === item.id && (
+                    {openActionsId === item.id && menuPos && (
                       <>
                         <button
                           className="ha-row-menu-overlay"
                           aria-label="Close actions menu"
-                          onClick={(e) => { e.stopPropagation(); setOpenActionsId(null); }}
+                          onClick={(e) => { e.stopPropagation(); closeActionsMenu(); }}
                         />
-                        <div className="ha-row-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="ha-row-menu"
+                          role="menu"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, left: 'auto' }}
+                        >
                           <button
                             role="menuitem"
-                            onClick={() => { setOpenActionsId(null); onEditExpense(item); }}
+                            onClick={() => { closeActionsMenu(); onEditExpense(item); }}
                           >
                             <Edit2 size={14} />
                             <span>Edit expense</span>
@@ -543,7 +588,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                             <button
                               role="menuitem"
                               onClick={() => {
-                                setOpenActionsId(null);
+                                closeActionsMenu();
                                 const input = window.prompt(`New amount for "${item.name}" this cycle:`, String(item.amount));
                                 if (input === null) return;
                                 const parsed = Number(input);
@@ -558,7 +603,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           {item.vendorEmail && (
                             <button
                               role="menuitem"
-                              onClick={() => { setOpenActionsId(null); onContactVendor(item); }}
+                              onClick={() => { closeActionsMenu(); onContactVendor(item); }}
                             >
                               <Mail size={14} />
                               <span>Contact vendor</span>
@@ -566,7 +611,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           )}
                           <button
                             role="menuitem"
-                            onClick={() => { setOpenActionsId(null); onDuplicateExpense(item); }}
+                            onClick={() => { closeActionsMenu(); onDuplicateExpense(item); }}
                           >
                             <Copy size={14} />
                             <span>Duplicate</span>
@@ -575,7 +620,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           <button
                             role="menuitem"
                             className="is-destructive"
-                            onClick={() => { setOpenActionsId(null); onDeleteExpense(item.id); }}
+                            onClick={() => { closeActionsMenu(); onDeleteExpense(item.id); }}
                           >
                             <Trash2 size={14} />
                             <span>Delete</span>

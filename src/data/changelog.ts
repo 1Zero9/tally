@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.3';
+export const APP_VERSION = '1.120.4';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.120.4',
+    date: '2026-09-10',
+    changes: [
+      'Fixed the "More actions" menu on an expense row being clipped by the card edge when opened on the last row. It now positions itself against the button and flips above it when there isn\'t room below, closing on scroll.',
+    ],
+  },
   {
     version: '1.120.3',
     date: '2026-09-10',
