@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.120.6';
+export const APP_VERSION = '1.121.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.0',
+    date: '2026-09-10',
+    changes: [
+      'Statement review: when "Add as bill" matches a bill you already track, the row now offers a clear choice — "Link to <bill>" or "Add as a separate bill" — instead of a yes/no prompt whose default was to add a second copy.',
+      'Merge duplicates: the Expenses list header shows how many possible duplicate bills there are, with a "Review & merge" button. Pick which copy to keep; its payments, matched statement rows, receipts, goal and project links move to it and the rest are deleted. The Duplicates filter now groups copies of the same bill together.',
+    ],
+  },
   {
     version: '1.120.6',
     date: '2026-09-10',

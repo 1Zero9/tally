@@ -1031,6 +1031,7 @@ export default function TallyPage() {
                 onOpenPresetsModal={() => setIsPresetsModalOpen(true)}
                 onQuickUpdateAmount={handleQuickUpdateAmount}
                 onContactVendor={(item) => setContactVendorExpense(item)}
+                onMerged={fetchDatabaseData}
               />
             </CollapsibleSection>
 

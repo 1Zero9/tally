@@ -3,6 +3,8 @@ import type { ExpenseItem, CurrencyCode, CustomCategoryItem } from '../types/exp
 import { getCategoryMeta, getOrderedCategories } from '../data/categories';
 import { convertCurrency, getMonthlyEquivalent, getEffectiveAmount } from '../utils/calculations';
 import { formatCurrency, formatBillingCycle, formatDate } from '../utils/formatters';
+import { groupPossibleDuplicates } from '../utils/duplicateExpenses';
+import { MergeDuplicatesModal } from './MergeDuplicatesModal';
 import { hasTextSelection } from '../utils/dom';
 import { Search, ArrowUpDown, Edit2, Trash2, Copy, User, Plus, Sparkles, RefreshCw, Mail, ChevronDown, MoreHorizontal, Loader2 } from 'lucide-react';
 
@@ -39,6 +41,8 @@ interface ExpenseListProps {
   onOpenPresetsModal: () => void;
   onQuickUpdateAmount: (expense: ExpenseItem, newAmount: number) => void;
   onContactVendor: (expense: ExpenseItem) => void;
+  /** Called after duplicate records are merged, so the parent can refetch. */
+  onMerged?: () => void;
   customCategories?: CustomCategoryItem[];
   /** True only while the very first load is still in flight — lets the
    * list show a real loading state instead of momentarily flashing the
@@ -63,12 +67,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   onOpenPresetsModal,
   onQuickUpdateAmount,
   onContactVendor,
+  onMerged,
   customCategories = [],
   isLoading = false,
   bare = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'unpaid' | 'overdue' | 'duplicates'>('all');
+  const [showMergeModal, setShowMergeModal] = useState(false);
   const [sortBy, setSortBy] = useState<'amount-desc' | 'amount-asc' | 'renewal' | 'name'>('amount-desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
@@ -123,30 +129,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     setVisibleCount(INITIAL_VISIBLE);
   }, [searchQuery, selectedCategory, statusFilter, sortBy]);
 
-  // Possible duplicates: records sharing a normalised name + amount +
-  // billing cycle + currency with at least one other, *and* coming from
-  // more than one origin (different statement imports, or a mix of
-  // imported and manual). Running "Add as bill" / "Add as expense" on the
-  // same line across several months' imports spins up a fresh record each
-  // time instead of matching the existing one, silently inflating every
-  // spending total. Requiring multiple origins keeps two genuinely
-  // parallel identical bills entered together (e.g. two phone lines) from
-  // being flagged.
-  const dupKey = (e: ExpenseItem) =>
-    `${e.name.trim().toLowerCase()}|${e.amount}|${e.billingCycle}|${e.currency}`;
-  const dupOrigin = (e: ExpenseItem) => e.statementImportId ?? 'manual';
-  const dupGroups = expenses.reduce<Record<string, { count: number; origins: Set<string> }>>((acc, e) => {
-    const k = dupKey(e);
-    const g = acc[k] || (acc[k] = { count: 0, origins: new Set<string>() });
-    g.count += 1;
-    g.origins.add(dupOrigin(e));
-    return acc;
-  }, {});
-  const isPossibleDuplicate = (e: ExpenseItem) => {
-    const g = dupGroups[dupKey(e)];
-    return !!g && g.count > 1 && g.origins.size > 1;
-  };
-  const duplicateCount = expenses.filter(isPossibleDuplicate).length;
+  // Possible duplicates — see groupPossibleDuplicates. Running "Add as
+  // bill" / "Add as expense" on the same line across several months'
+  // imports spins up a fresh record each time instead of matching the
+  // existing one, silently inflating every spending total.
+  const duplicateGroups = groupPossibleDuplicates(expenses);
+  const duplicateIds = new Set(duplicateGroups.flatMap((g) => g.items.map((i) => i.id)));
+  const isPossibleDuplicate = (e: ExpenseItem) => duplicateIds.has(e.id);
+  const duplicateCount = duplicateIds.size;
 
   // Filter items
   const filteredItems = expenses.filter((item) => {
@@ -176,15 +166,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     return true;
   });
 
-  // Sort items
+  // Sort items — the Duplicates view forces name order so copies of the
+  // same bill sit together.
+  const effectiveSort = statusFilter === 'duplicates' ? 'name' : sortBy;
   const sortedItems = [...filteredItems].sort((a, b) => {
     const amountA = getMonthlyEquivalent(convertCurrency(a.amount, a.currency, currency), a.billingCycle);
     const amountB = getMonthlyEquivalent(convertCurrency(b.amount, b.currency, currency), b.billingCycle);
 
-    if (sortBy === 'amount-desc') return amountB - amountA;
-    if (sortBy === 'amount-asc') return amountA - amountB;
-    if (sortBy === 'renewal') return a.renewalDay - b.renewalDay;
-    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (effectiveSort === 'amount-desc') return amountB - amountA;
+    if (effectiveSort === 'amount-asc') return amountA - amountB;
+    if (effectiveSort === 'renewal') return a.renewalDay - b.renewalDay;
+    if (effectiveSort === 'name') return a.name.localeCompare(b.name) || a.nextRenewalDate.localeCompare(b.nextRenewalDate);
     return 0;
   });
 
@@ -260,6 +252,19 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           {isFiltered && (
             <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)' }}>
               {sortedItems.length} of {expenses.length} expenses
+            </p>
+          )}
+          {duplicateCount > 0 && (
+            <p style={{ fontSize: '0.8rem', color: 'var(--ha-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span>{duplicateGroups.length} possible duplicate {duplicateGroups.length === 1 ? 'bill' : 'bills'} ({duplicateCount} records)</span>
+              <button
+                type="button"
+                onClick={() => setShowMergeModal(true)}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', minHeight: 0 }}
+              >
+                Review &amp; merge
+              </button>
             </p>
           )}
         </div>
@@ -766,6 +771,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {showMergeModal && (
+        <MergeDuplicatesModal
+          groups={duplicateGroups}
+          customCategories={customCategories}
+          onClose={() => setShowMergeModal(false)}
+          onMerged={() => onMerged?.()}
+        />
       )}
     </div>
   );

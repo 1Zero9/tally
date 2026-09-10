@@ -235,6 +235,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [addingBillTxId, setAddingBillTxId] = useState<string | null>(null);
   const [billCycleInput, setBillCycleInput] = useState<Record<string, string>>({});
   const [billAmountInput, setBillAmountInput] = useState<Record<string, string>>({});
+  // Set when "Add as bill" hit an existing matching bill — the row shows a
+  // "link to it vs add a separate one" choice instead of a blunt confirm.
+  const [billDupPrompt, setBillDupPrompt] = useState<
+    { txId: string; duplicateOf: { id: string; name: string; amount: number }; extra: Record<string, unknown> } | null
+  >(null);
   const [renamingTxId, setRenamingTxId] = useState<string | null>(null);
   const [nicknameInput, setNicknameInput] = useState<Record<string, string>>({});
   const [renamingGroupKey, setRenamingGroupKey] = useState<string | null>(null);
@@ -854,16 +859,12 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         }
         return true;
       }
-      // Adding a recurring bill that already exists — offer to link or force.
-      if (data.duplicateOf && action === 'add_bill') {
-        const go = window.confirm(
-          `You already track a recurring bill "${data.duplicateOf.name}".\n\n` +
-          `OK = add a second one anyway.\nCancel = do nothing (use "Link to a bill" to attach this charge to the existing one).`,
-        );
-        if (go) {
-          inFlightTxIdsRef.current.delete(txId);
-          return resolveTx(txId, action, { ...extra, allowDuplicate: true }, opts);
-        }
+      // Adding a recurring bill that already exists — show an inline choice
+      // on the row (link to the existing bill, or add a separate one)
+      // rather than a blunt confirm whose default is "add anyway".
+      if (data.duplicateOf && action === 'add_bill' && !opts?.silent) {
+        setAddingBillTxId(null);
+        setBillDupPrompt({ txId, duplicateOf: data.duplicateOf, extra: extra ?? {} });
         return false;
       }
       // Surface a real failure instead of the row just silently not moving —
@@ -2437,7 +2438,42 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                                 </div>
                               )}
 
-                              {linkingTxId === tx.id ? (
+                              {billDupPrompt?.txId === tx.id ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--ha-radius-sm)', backgroundColor: 'var(--ha-lime-tint)', border: '1px solid var(--ha-lime)' }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--ha-ink)' }}>
+                                    You already track a bill like this — <strong>{billDupPrompt.duplicateOf.name}</strong> ({formatCurrency(billDupPrompt.duplicateOf.amount, householdCurrency)}). Linking this charge to it keeps your totals right.
+                                  </span>
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                    <button
+                                      disabled={isBusy}
+                                      onClick={async () => {
+                                        const prompt = billDupPrompt;
+                                        setBillDupPrompt(null);
+                                        await resolveTx(prompt.txId, 'link_expense', { expenseId: prompt.duplicateOf.id });
+                                      }}
+                                      className="btn btn-primary"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem' }}
+                                    >
+                                      {isBusy ? <Loader2 size={12} className="spin" /> : <Link2 size={12} />} Link to {billDupPrompt.duplicateOf.name}
+                                    </button>
+                                    <button
+                                      disabled={isBusy}
+                                      onClick={async () => {
+                                        const prompt = billDupPrompt;
+                                        setBillDupPrompt(null);
+                                        await resolveTx(prompt.txId, 'add_bill', { ...prompt.extra, allowDuplicate: true });
+                                      }}
+                                      className="btn btn-ghost"
+                                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}
+                                    >
+                                      Add as a separate bill
+                                    </button>
+                                    <button onClick={() => setBillDupPrompt(null)} className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '0.4rem 0.5rem' }}>
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : linkingTxId === tx.id ? (
                                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                                   <select
                                     className="ha-input"
