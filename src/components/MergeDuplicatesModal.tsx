@@ -122,7 +122,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
 
         <div style={{ padding: '1rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem', maxHeight: '65vh', overflowY: 'auto' }}>
           {error && (
-            <div style={{ fontSize: '0.8rem', color: 'var(--ha-red)', backgroundColor: 'var(--ha-red-tint)', borderRadius: 'var(--ha-radius-sm)', padding: '0.5rem 0.75rem' }}>
+            <div style={{ flexShrink: 0, fontSize: '0.8rem', color: 'var(--ha-red)', backgroundColor: 'var(--ha-red-tint)', borderRadius: 'var(--ha-radius-sm)', padding: '0.5rem 0.75rem' }}>
               {error}
             </div>
           )}
@@ -144,7 +144,7 @@ export const MergeDuplicatesModal: React.FC<MergeDuplicatesModalProps> = ({
               const keepId = keepBy[group.key] || pickKeeper(group.items);
               const busy = busyKey === group.key;
               return (
-                <div key={group.key} style={{ border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-md)', overflow: 'hidden' }}>
+                <div key={group.key} style={{ flexShrink: 0, border: '1px solid var(--ha-line)', borderRadius: 'var(--ha-radius-md)', overflow: 'hidden' }}>
                   <div style={{ padding: '0.6rem 0.85rem', backgroundColor: '#fafaf7', borderBottom: '1px solid var(--ha-line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, color: 'var(--ha-ink)', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
                       <span style={{ width: '9px', height: '9px', borderRadius: '2px', backgroundColor: sample.color || cat.color, display: 'inline-block' }} />

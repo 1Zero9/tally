@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.121.7';
+export const APP_VERSION = '1.121.8';
 
 export interface ChangelogEntry {
   version: string;
@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.121.8',
+    date: '2026-09-10',
+    changes: [
+      'Fixed the "Merge duplicates" dialog squashing its group cards when the list was long — each set is now fully visible (name, the copies to keep or merge, and the Merge button) and the list scrolls.',
+    ],
+  },
   {
     version: '1.121.7',
     date: '2026-09-10',
