@@ -62,8 +62,8 @@ NEXT_PUBLIC_APP_URL="http://localhost:5174"
 # 1. Install dependencies
 npm install
 
-# 2. Push schema to database and generate Prisma client
-npm run db:push
+# 2. Apply committed migrations and generate the Prisma client
+npx prisma migrate deploy
 npx prisma generate
 
 # 3. Seed initial workspace and admin account
@@ -74,6 +74,11 @@ npm run dev -- -p 5174
 ```
 
 Access the application in your browser at [http://localhost:5174](http://localhost:5174).
+
+> Schema changes go through Prisma Migrate (`npm run db:migrate`), not
+> `npm run db:push` — this project has no separate local dev database, so
+> `db:push` runs directly against the real database and is reserved for
+> one-off exploratory experiments, never normal setup or schema changes.
 
 ---
 
